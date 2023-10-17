@@ -1,3 +1,5 @@
+"""Request to crossref API for articles title information, the rate limit is 50 visits /s"""
+
 import asyncio
 import os
 import time
@@ -5,11 +7,10 @@ import time
 import httpx
 import pandas as pd
 
-import utils.log
+import sisyphus.utils.log
 
-"""Request to crossref API for articles title information, the rate limit is 50 visits /s"""
 
-logger = utils.log.log("log.txt")
+logger = sisyphus.utils.log.log("log.txt")
 PREFIX = "https://api.crossref.org/works/"
 METRICS = 1
 
