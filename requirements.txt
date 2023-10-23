@@ -1,0 +1,5 @@
+pylint
+httpx
+pandas
+python-dotenv
+tqdm
