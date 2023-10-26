@@ -13,5 +13,5 @@ def render2json(text: list[str], identifier: str, filename: str):
     
     with open(filename, "a", encoding="utf-8") as f:
         for job in jobs:
-            json_string = json.dumps(job)
+            json_string = json.dumps(job, ensure_ascii=False)
             f.write(json_string + '\n')
