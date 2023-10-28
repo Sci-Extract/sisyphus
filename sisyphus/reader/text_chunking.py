@@ -9,7 +9,7 @@ def tiktoken_len(text):
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=300,
-    chunk_overlap=0,
+    chunk_overlap=15,
     length_function=tiktoken_len
 )
 
