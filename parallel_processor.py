@@ -128,7 +128,7 @@ async def process_api_requests_from_file(
     # constants
     seconds_to_pause_after_rate_limit_error = 15
     seconds_to_sleep_each_loop = (
-        0.001  # 1 ms limits max throughput to 1,000 requests per second
+        0.01  # .1 ms limits max throughput to 100 requests per second
     )
 
     # initialize logging

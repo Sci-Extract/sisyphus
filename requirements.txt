@@ -3,3 +3,4 @@ httpx
 pandas
 python-dotenv
 tqdm
+playwright
