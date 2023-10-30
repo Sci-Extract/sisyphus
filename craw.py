@@ -5,7 +5,8 @@ import time
 import asyncio
 import pandas as pd
 
-df = pd.read_csv("data/elsevier_doi.csv")
+# test elsevier crawler
+df = pd.read_csv("data\\elsevier_doi.csv")
 doi_ls = df["doi"].tolist()[:10]
 
 els_api_key = "f6f2fb8ca79243871a31f1c3cd0b4204"
