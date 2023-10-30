@@ -2,7 +2,7 @@ import logging
 import os
 
 
-def log(log_file:str):
+def log(log_file="log.txt", logging_level=10):
 
     # create a log file if not exist
     if not os.path.exists(log_file):    
@@ -14,10 +14,10 @@ def log(log_file:str):
     stream_handler = logging.StreamHandler()
 
     file_handler.setLevel(logging.WARNING)
-    stream_handler.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.DEBUG)
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging_level,
         format="%(asctime)s (%(filename)s) [%(levelname)s]: %(message)s",
         handlers=[file_handler, stream_handler]
     )
