@@ -434,7 +434,7 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
             args=["--headless=new"],
             )
         context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-        await context.add_init_script(path="sisyphus\\lib\\stealth.min.js")
+        await context.add_init_script(path=f'{os.path.join("sisphus", "lib", "stealth.min.js")}')
 
         # instantiate crawlers.
         acs = AcsCrawler(rate_limit, status_tracker, sema, acs_queue, context, acs_save_dir)
