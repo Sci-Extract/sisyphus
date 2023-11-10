@@ -10,8 +10,7 @@ from sisyphus.crawler.async_playwright import manager
 _ = load_dotenv(find_dotenv())
 els_api_key = os.getenv("els_api_key") 
 
-df = pd.read_csv("data\\doi_list.csv")
+df = pd.read_csv("data/doi_list.csv") # prepared doi file
 doi_list: list[str] = df["doi"].dropna().unique().tolist()[:20]
-only_elsevier = [doi for doi in doi_list if doi.startswith("10.1016")]
 
-asyncio.run(manager(only_elsevier, els_api_key))
+asyncio.run(manager(doi_list, els_api_key=None))
