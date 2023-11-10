@@ -4,3 +4,4 @@ pandas
 python-dotenv
 tqdm
 playwright
+beautifulsoup4
