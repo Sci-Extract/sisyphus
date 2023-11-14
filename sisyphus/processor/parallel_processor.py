@@ -108,7 +108,7 @@ from logging import Logger
 import httpx  # for making API calls concurrently
 import tiktoken  # for counting tokens
 
-from ..utils.log import log # for logging rate limit warnings and other messages
+from ..utils.utilities import log # for logging rate limit warnings and other messages
  
 
 async def process_api_requests_from_file(
@@ -354,6 +354,8 @@ class APIRequest:
                 append_to_jsonl(data, save_filepath)
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
+                
+        # when success
         else:
             data = (
                 [self.request_json, response, self.metadata]

@@ -27,7 +27,7 @@ import httpx
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright, BrowserContext, Page
 
-from sisyphus.utils.log import log
+from sisyphus.utils.utilities import log
 from sisyphus.crawler.publishers_config import publishers_doi_prefix
 
 
