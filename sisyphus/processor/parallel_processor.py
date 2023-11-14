@@ -107,14 +107,9 @@ from logging import Logger
 
 import httpx  # for making API calls concurrently
 import tiktoken  # for counting tokens
-from dotenv import find_dotenv, load_dotenv
 
 from ..utils.log import log # for logging rate limit warnings and other messages
-
-
-
-_ = load_dotenv(find_dotenv())
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") 
+ 
 
 async def process_api_requests_from_file(
     requests_filepath: str,
@@ -268,9 +263,6 @@ async def process_api_requests_from_file(
         logger.info(
             f"""Parallel processing complete. Results saved to {save_filepath}"""
         )
-        logger.critical(
-            f"{status_tracker.num_tasks_started} have been fulfilled."
-        )
         if status_tracker.num_tasks_failed > 0:
             logger.warning(
                 f"{status_tracker.num_tasks_failed} / {status_tracker.num_tasks_started} requests failed. Errors logged to {save_filepath}."
@@ -307,8 +299,8 @@ class APIRequest:
     token_consumption: int
     attempts_left: int
     metadata: dict
-    result: list = field(default_factory=list)
     logger: Logger
+    result: list = field(default_factory=list)
 
     async def call_api(
         self,
@@ -343,7 +335,6 @@ class APIRequest:
         except (
             Exception
         ) as e:  # catching naked exceptions is bad practice, but in this case we'll log & save them
-            # it's really bad, since the error within this block can all be treated as the connection error, sad...
             self.logger.warning(f"Request {self.task_id} failed with Exception {e}")
             status_tracker.num_other_errors += 1
             error = e

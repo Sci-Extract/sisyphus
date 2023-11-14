@@ -2,8 +2,14 @@ import argparse
 import asyncio
 import os
 
+from dotenv import load_dotenv, find_dotenv
+
 from sisyphus.processor.parallel_processor import process_api_requests_from_file
 
+
+_ = load_dotenv(find_dotenv())
+
+# prepare jsonl data first.
 
 if __name__ == "__main__":
     # parse command line arguments
