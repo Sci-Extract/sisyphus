@@ -5,3 +5,9 @@ python-dotenv
 tqdm
 playwright
 beautifulsoup4
+langchain
+openai
+tiktoken
+numpy
+scipy
+scikit-learn

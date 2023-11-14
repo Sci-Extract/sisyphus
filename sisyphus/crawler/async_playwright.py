@@ -7,7 +7,7 @@ How to use:
 just prepare DOIs list, e.g. 10.1021/... and your own els_api_key (if do not have, set els_api_key to None). More important, have a nice internet connection and have full access to the publishers.
 
 Developers:
-apply os system: windows, if you want to use on linux or macos, please change some path format to make it consistent with your OS system.
+apply os system: windows, if you want to use on linux or macos, please change some path format to make it consistent with your OS system, better used on windows system.
 please feel free to customize this code for your own project. Remind that when introducing new crawler object, Be sure that all the init process in manage() function is compatible.
 if you want to add some cool features such as downloading SI, you can customize in the BaseCrawler._manipulation function.
 Notice that sometimes you might need to manually remove your data_articles folder to ensure right implementation.
@@ -68,8 +68,10 @@ class BaseCrawler(ABC):
         self.retry_doi = defaultdict(int)
         self.detect_state = False # during fetch process, True for being detected.
         self.single_crawler = False
+        self.pulse_rate = False # indicate rate change
 
     async def run(self, doi_list: list[str]):
+        restore_speed = self.rate_limit
         list_not_finished = True
         doi_generator = self._gen_doi(doi_list)
 
@@ -85,6 +87,7 @@ class BaseCrawler(ABC):
                     doi = self.queue.get_nowait()
                     asyncio.create_task(self._fetch(doi))
                     self.remain_requests -= 1
+                    self.pulse_rate = True
                     logger.info(f"{type(self).__name__} [{doi}]: created.")
 
                 elif list_not_finished:
@@ -93,6 +96,7 @@ class BaseCrawler(ABC):
                         self.task_in_progress += 1
                         asyncio.create_task(self._fetch(next_doi))
                         self.remain_requests -= 1
+                        self.pulse_rate = True
                         logger.info(f"{type(self).__name__} [{next_doi}]: created.")
 
                     except StopIteration:
@@ -101,7 +105,10 @@ class BaseCrawler(ABC):
 
             # restore of requests
             current_time = time.time()
-            restore_speed = self.rate_limit
+            # add randomness to every request.
+            if self.pulse_rate:
+                restore_speed = self.rate_limit * round(random.uniform(0.8, 1.2), 1)
+                self.pulse_rate = False
             restore_request = restore_speed * (current_time - self.last_update_time)
             self.remain_requests = min(self.remain_requests + restore_request, 1) # set maximum value to 1 to avoid of accumulation.
             self.last_update_time = current_time

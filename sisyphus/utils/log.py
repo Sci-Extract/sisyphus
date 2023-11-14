@@ -13,12 +13,14 @@ def log(log_file="log.txt", logging_level=10):
     file_handler = logging.FileHandler(log_file)
     stream_handler = logging.StreamHandler()
 
+    formatter = logging.Formatter("%(asctime)s (%(filename)s) [%(levelname)s]: %(message)s")
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+
     file_handler.setLevel(logging.WARNING)
     stream_handler.setLevel(logging.DEBUG)
 
-    logging.basicConfig(
-        level=logging_level,
-        format="%(asctime)s (%(filename)s) [%(levelname)s]: %(message)s",
-        handlers=[file_handler, stream_handler]
-    )
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    logger.setLevel(logging_level)
     return logger
