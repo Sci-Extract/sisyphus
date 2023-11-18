@@ -7,9 +7,10 @@ import os
 import pandas as pd
 
 
-
-def log(log_file="log.txt", logging_level=10):
-
+log_dir_path = os.path.join(os.getcwd(), "log")
+def log(log_file_name="log.txt", logging_level=10):
+    log_file = os.path.join(log_dir_path, log_file_name)
+    
     # create a log file if not exist
     if not os.path.exists(log_file):    
         with open(log_file, "w"):
