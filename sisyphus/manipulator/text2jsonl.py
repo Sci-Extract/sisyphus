@@ -2,42 +2,63 @@
 main api: converter
 """
 import json
+import os
+import re
 
 import tiktoken
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
-def tiktoken_len(text):
-    tokens = tokenizer.encode(text)
-    return len(tokens)
+sci_notation = ["ca.", "calc.", "no.", "e.g.", "i.e."]
+sci_notation_pattern = r'(ca\.)|(calc\.)|(no\.)|(e\.g\.)|(i\.e\.)'
 
-def chunk_text(text: str, chunk_size) -> list[str]:
-    text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=chunk_size,
-    chunk_overlap=15,
-    length_function=tiktoken_len
-    )
-    strip_text = text.replace("\n", " ")
-    texts = text_splitter.create_documents([strip_text])
-    ret = [text.page_content for text in texts]
-    return ret
+def detect_sci_dot(after_dot: str, before_dot: str):
+    if re.match(r"\w", after_dot):
+        return True
+    elif re.search(sci_notation_pattern, before_dot, re.I):
+        return True
+    else:
+        return False
+
+    
+# Split a text into smaller chunks of size n, preferably ending at the end of a sentence
+def create_chunks(text, n):
+    """Returns successive n-sized chunks from provided text."""
+    tokens = tokenizer.encode(text)
+    i = 0
+    while i < len(tokens):
+        # Find the nearest end of sentence within a range of 0.5 * n and 1.5 * n tokens
+        j = min(i + int(1.5 * n), len(tokens))
+        while j > i + int(0.5 * n):
+            # Decode the tokens and check for full stop or newline
+            chunk = tokenizer.decode(tokens[i:j])
+            dot_of_science = False if j == len(tokens) else detect_sci_dot(tokenizer.decode(tokens[j:j+1]), tokenizer.decode(tokens[j-4: j])) # judge whether the dot is the regular one. return False if it is. -4: comply with sci_notation_pattern.
+            if chunk.endswith('.') and not dot_of_science:
+                break
+            j -= 1
+        # If no end of sentence found, use n tokens as the chunk size
+        if j == i + int(0.5 * n):
+            j = min(i + n, len(tokens))
+        yield tokens[i:j]
+        i = j
 
 MODEL = "text-embedding-ada-002"
 
-def render2json(text: list[str], identifier: str, filename: str):
+def render2json(text: list[str], identifier: str, file_dir: str, file_name: str):
     requests = text
     jobs = [{"model": MODEL, "input": request, "metadata": {"file_name": identifier}} for request in requests]
+    file_path = os.path.join(file_dir, file_name)
     
-    with open(filename, "a", encoding="utf-8") as f:
+    with open(f"{file_path}.jsonl", "a", encoding="utf-8") as f:
         for job in jobs:
             json_string = json.dumps(job, ensure_ascii=False)
             f.write(json_string + '\n')
 
-def converter(text: str, metadata:str, jsonl_file_name: str, chunk_size:int = 300) -> None:
+def converter(text: str, metadata:str, jsonl_file_dir: str, jsonl_file_name: str, chunk_size:int = 300) -> None:
     """
     Chunking text and then convert to jsonl with given metadata, noticing that default chunk_size was set to 300.
     """
-    text_ls = chunk_text(text, chunk_size)
-    render2json(text_ls, metadata, jsonl_file_name)
+    generator = create_chunks(text, chunk_size)
+    text_ls = [tokenizer.decode(g) for g in generator]
+    render2json(text_ls, metadata, jsonl_file_dir, jsonl_file_name)
     
