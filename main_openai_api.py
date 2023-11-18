@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_tokens_per_minute", type=int, default=1_000_000 * 0.5)
     parser.add_argument("--token_encoding_name", default="cl100k_base")
     parser.add_argument("--max_attempts", type=int, default=5)
-    parser.add_argument("--logging_level", default=10)
+    parser.add_argument("--logging_level", default=30)
     args = parser.parse_args()
 
     if args.save_filepath is None:

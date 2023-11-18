@@ -157,7 +157,7 @@ async def process_api_requests_from_file(
     logger.debug(f"Initialization complete.")
 
     # initialize file reading
-    with open(requests_filepath) as file:
+    with open(requests_filepath, encoding='utf-8') as file:
         # `requests` will provide requests one at a time
         requests = file.__iter__()
         logger.debug(f"File opened. Entering main loop")
