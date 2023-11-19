@@ -54,7 +54,7 @@ def render2json(text: list[str], identifier: str, file_dir: str, file_name: str)
             json_string = json.dumps(job, ensure_ascii=False)
             f.write(json_string + '\n')
 
-def converter(text: str, metadata:str, jsonl_file_dir: str, jsonl_file_name: str, chunk_size:int = 300) -> None:
+def converter(text: str, metadata:str, jsonl_file_name: str, jsonl_file_dir: str ="data", chunk_size: int = 300) -> None:
     """
     Chunking text and then convert to jsonl with given metadata, noticing that default chunk_size was set to 300.
     """

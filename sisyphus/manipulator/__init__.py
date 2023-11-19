@@ -14,11 +14,21 @@ def get_target_dir_txt(dir_path: str) -> str:
         content = file.read()
         return content
 
-def pipeline_embedding_construct(source_path: str, article_dirs: list[str], output_dir: str, output_jsonl_name: str):
-    """source_path: the path where the articles located. article_dirs: target articles dirnames. output_dir: location where your output jsonl files store.
+def pipeline_embedding_construct(source_path: str, article_dirs: list[str], output_jsonl_name: str):
+    """source_path: the paraent folder of articles. 
+    article_dirs: target articles directory names.
+    * suggested file structure:
+    articles/
+        <article_name_1>
+            <article_name_1>.txt
+            <article_name_1>.xml/html
+            <SI>
+        <article_name_2>
+        ... 
+    output_dir: location where your output jsonl files store.
     output_josnl_name: name of the jsonl file.
     """
     for article_dir in article_dirs:
         dir_path = os.path.join(source_path, article_dir)
         content = get_target_dir_txt(dir_path)
-        converter(content, metadata=article_dir, jsonl_file_dir=output_dir, jsonl_file_name=output_jsonl_name) # the name of article directory is usually the name of the article identity
+        converter(content, metadata=article_dir, jsonl_file_name=output_jsonl_name) # the name of article directory is usually the name of the article identity

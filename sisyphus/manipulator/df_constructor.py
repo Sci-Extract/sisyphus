@@ -4,6 +4,7 @@ main api: build_similarity, select_top_n. both return dataframe.
 """
 
 import json
+import os
 
 import pandas as pd
 import numpy as np
@@ -39,8 +40,10 @@ def build_similarity(result_jsonl_file_name: str, standard_json_file_name: str, 
     df = construct_df(result_jsonl_file_name)
     standard_vector = construct_df(standard_json_file_name)["embedding"][0]
     df["similarity"] = df["embedding"].apply(lambda vector: dot(vector, standard_vector))
+    save_file_dir = "data"
     if save_file_name:
-        df.to_csv(save_file_name + '.csv', index=False)
+        save_file_path = os.path.join(save_file_dir, save_file_name + ".csv")
+        df.to_csv(save_file_path, index=False)
     return df
 
 def select_top_n(df: DataFrame, top_n: int) -> DataFrame:
