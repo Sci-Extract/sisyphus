@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import os
+import time
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     if args.save_filepath is None:
         args.save_filepath = args.requests_filepath.replace(".jsonl", "_results.jsonl")
 
+    start = time.perf_counter()
     # run script
     asyncio.run(
         process_api_requests_from_file(
@@ -42,4 +44,6 @@ if __name__ == "__main__":
             logging_level=int(args.logging_level),
         )
     )
+    end = time.perf_counter()
+    print(f"Runtime: {end-start:.2f}s")
     
