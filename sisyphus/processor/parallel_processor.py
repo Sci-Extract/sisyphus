@@ -161,7 +161,9 @@ async def process_api_requests_from_file(
         # `requests` will provide requests one at a time
         requests = file.__iter__()
         logger.debug(f"File opened. Entering main loop")
-        async with httpx.AsyncClient(verify=False) as session:  # Initialize ClientSession here
+        timeout = httpx.Timeout(10.0, connect=20.0, pool=20.0)
+        limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
+        async with httpx.AsyncClient(verify=False, timeout=timeout, limits=limits) as session:  # Initialize ClientSession here
             while True:
                 # get next request (if one is not already waiting for capacity)
                 if next_request is None:
