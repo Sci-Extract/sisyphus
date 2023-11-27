@@ -75,6 +75,8 @@ class ErrorRequestsTracker:
         return True
         
     def construct_redo_jsonl(self, jsonl_file_path: str):
+        """make sure the jsonl file contains only singleton task.
+        """
         redo_tasks = []
         with open(jsonl_file_path, encoding='utf-8') as file:
             for line in file:
@@ -100,12 +102,17 @@ class ErrorRequestsTracker:
 
             open(redo_path, 'w', encoding='utf-8').close() # remove in case of duplicate collection.
     
-    def write_to_file(self, contents, file_path):
-        with open(file_path, 'a', encoding='utf-8') as f:
+    def write_to_file(self, contents, file_path, write_mode='a'):
+        with open(file_path, write_mode, encoding='utf-8') as f:
             for content in contents:
                 f.write(json.dumps(content, ensure_ascii=False) + '\n')
 
-    def rerun(self, jsonl_file_path: str, result_jsonl_path: str):
-        self.get_errors_id(result_jsonl_path)
-        self.construct_redo_jsonl(jsonl_file_path)
+    def remove_fails(self, jsonl_file_path):
+        temp_list = []
+        with open(jsonl_file_path, encoding='utf-8') as f:
+            for line in f:
+                temp_list.append(json.loads(line))
+
+        without_fails = [line_json for line_json in temp_list if line_json[1] != "Failed"]
+        self.write_to_file(without_fails, jsonl_file_path, write_mode='w')
         

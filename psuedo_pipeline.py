@@ -86,6 +86,7 @@ while True:
     if re.search(r'redo', output_path):
         embedding_error_tracker.merge_back(output_path, embedding_result_jsonl)
     if not errors_flag: # no error detect
+        embedding_error_tracker.remove_fails(embedding_result_jsonl)
         break
     input_path = embedding_error_tracker.construct_redo_jsonl(embedding_jsonl)
     cprint("prepare for the failed embedding requests, system dormant time: 10 s")
@@ -172,6 +173,7 @@ while True:
     if re.search(r'redo', output_path):
         completion_cls_error_tracker.merge_back(output_path, completion_cls_result_jsonl)
     if not errors_flag: # no error detect
+        embedding_error_tracker.remove_fails(completion_cls_result_jsonl)
         break
     input_path = completion_cls_error_tracker.construct_redo_jsonl(completion_cls_jsonl)
     cprint("prepare for the failed completion requests, system dormant time: 10 s")
@@ -212,6 +214,7 @@ while True:
     if re.search(r'redo', output_path):
         completion_sum_error_tracker.merge_back(output_path, completion_sum_result_jsonl)
     if not errors_flag: # no error detect
+        embedding_error_tracker.remove_fails(completion_sum_result_jsonl)
         break
     input_path = completion_sum_error_tracker.construct_redo_jsonl(completion_sum_jsonl)
     cprint("prepare for the failed completion requests, system dormant time: 10 s")
