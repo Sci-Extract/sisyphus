@@ -4,7 +4,10 @@ logger || counter || xlsx to csv || get cosine similarity
 """
 import logging
 import os
+import json
+
 import pandas as pd
+from termcolor import cprint
 
 
 log_dir_path = os.path.join(os.getcwd(), "log")
@@ -54,4 +57,55 @@ class X2C:
         df = pd.read_excel(file_read)
         file_out = self.file_name + ".csv"
         df.to_csv(file_out, index=False) 
+        
+class ErrorRequestsTracker:
+    def __init__(self):
+        self.task_id = []
+    
+    def get_errors_id(self, result_jsonl_file_path: str):
+        self.task_id = [] # initialize it for every times
+        with open(result_jsonl_file_path, encoding="utf-8") as file:
+            for line in file:
+                line_json = json.loads(line)
+                if line_json[1] == "Failed": # indicate this request was failed
+                    self.task_id.append(line_json[2]["task_id"])
+        if not bool(len(self.task_id)): # no error
+            cprint("No errors, head to next step", "red")
+            return False
+        return True
+        
+    def construct_redo_jsonl(self, jsonl_file_path: str):
+        redo_tasks = []
+        with open(jsonl_file_path, encoding='utf-8') as file:
+            for line in file:
+                line_json = json.loads(line)
+                if line_json["metadata"]["task_id"] in self.task_id:
+                    redo_tasks.append(line_json)
+        redo_file_path = jsonl_file_path.replace('.jsonl', '_redo.jsonl')
+        with open(redo_file_path, 'w', encoding='utf-8') as file:
+            for task in redo_tasks:
+                file.write(json.dumps(task, ensure_ascii=False) + '\n')
+        return redo_file_path
+    
+    def merge_back(self, redo_path, primal_path):
+        responses = []
+        if os.path.exists(redo_path):
+            with open(redo_path, encoding='utf-8') as f:
+                for line in f:
+                    line_json = json.loads(line)
+                    if line_json[1] != "Failed":
+                        responses.append(line_json)
+            if responses:
+                self.write_to_file(responses, primal_path)
+
+            open(redo_path, 'w', encoding='utf-8').close() # remove in case of duplicate collection.
+    
+    def write_to_file(self, contents, file_path):
+        with open(file_path, 'a', encoding='utf-8') as f:
+            for content in contents:
+                f.write(json.dumps(content, ensure_ascii=False) + '\n')
+
+    def rerun(self, jsonl_file_path: str, result_jsonl_path: str):
+        self.get_errors_id(result_jsonl_path)
+        self.construct_redo_jsonl(jsonl_file_path)
         

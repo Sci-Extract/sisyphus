@@ -10,7 +10,7 @@ from sisyphus.crawler.async_playwright import manager
 _ = load_dotenv(find_dotenv())
 els_api_key = os.getenv("els_api_key") 
 
-df = pd.read_csv("data/doi_list.csv") # prepared doi file
-doi_list: list[str] = df["doi"].dropna().unique().tolist()[:20]
+df = pd.read_csv("data_forcrawler_test\\doi_list.csv") # prepared doi file
+doi_list: list[str] = df["doi"].dropna().unique().tolist()[:30]
 
-asyncio.run(manager(doi_list, els_api_key=None))
+asyncio.run(manager(doi_list, els_api_key=els_api_key))

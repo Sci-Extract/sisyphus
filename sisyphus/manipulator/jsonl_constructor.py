@@ -4,6 +4,7 @@ main api: converter
 import json
 import os
 import re
+from typing import Generator
 
 import tiktoken
 
@@ -42,23 +43,55 @@ def create_chunks(text, n):
         yield tokens[i:j]
         i = j
 
-MODEL = "text-embedding-ada-002"
+def get_target_dir_txt(dir_path: str) -> str:
+    files = os.listdir(dir_path)
+    txt_file = [file for file in files if file.endswith('.txt')][0] # normally there is only one txt file, if there is plural number, modify the code.
+    file_path = os.path.join(dir_path, txt_file)
+    with open(file_path, encoding='utf-8') as file:
+        content = file.read()
+        return content
 
-def render2json(text: list[str], identifier: str, file_dir: str, file_name: str):
+def embedding_json_formatter(text: list[str], identifier: str, file_dir: str, file_name: str, task_id_generator: Generator | None, write_mode):
+    model = "text-embedding-ada-002"
     requests = text
-    jobs = [{"model": MODEL, "input": request, "metadata": {"file_name": identifier}} for request in requests]
+    if bool(task_id_generator):
+        jobs = [{"model": model, "input": request, "metadata": {"file_name": identifier, "task_id": next(task_id_generator)}} for request in requests]
+    else:
+        jobs = [{"model": model, "input": request, "metadata": {"file_name": identifier, "task_id": 0}} for request in requests]
     file_path = os.path.join(file_dir, file_name)
+    write_jsonl(file_path, jobs, write_mode)
+
+def write_jsonl(file_path, jobs, write_mode):
     
-    with open(f"{file_path}.jsonl", "a", encoding="utf-8") as f:
+    with open(file_path, write_mode, encoding="utf-8") as f:
         for job in jobs:
             json_string = json.dumps(job, ensure_ascii=False)
             f.write(json_string + '\n')
 
-def converter(text: str, metadata:str, jsonl_file_name: str, jsonl_file_dir: str ="data", chunk_size: int = 300) -> None:
+def converter_embedding(text: str, file_name:str, jsonl_file_name: str, task_id_generator: Generator, write_mode, jsonl_file_dir: str ="data", chunk_size: int = 300) -> None:
     """
     Chunking text and then convert to jsonl with given metadata, noticing that default chunk_size was set to 300.
     """
     generator = create_chunks(text, chunk_size)
     text_ls = [tokenizer.decode(g) for g in generator]
-    render2json(text_ls, metadata, jsonl_file_dir, jsonl_file_name)
+    embedding_json_formatter(text_ls, file_name, jsonl_file_dir, jsonl_file_name, task_id_generator, write_mode)
     
+
+def completion_json_formatter(system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-1106", temperature: float = 0.0, response_format={"type": "json_object"}):
+    json_format = {
+    "messages": [
+        {
+            "role": "system",
+            "content": system_message
+        },
+        {
+            "role": "user",
+            "content": user_message
+        }
+    ],
+    "model": model,
+    "temperature": temperature,
+    "response_format": response_format,
+    "metadata": {"file_name": article_name, "task_id": task_id}
+}
+    return json_format
