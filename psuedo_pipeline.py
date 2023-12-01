@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 import json
 import os
 import re
@@ -6,14 +7,17 @@ import shutil
 import time
 
 from dotenv import load_dotenv, find_dotenv
+from datetime import datetime
 from numpy import array
 from openai import OpenAI
-from termcolor import colored, cprint
+from typing import Literal
+from termcolor import cprint
 
 from sisyphus.processor.parallel_processor import process_api_requests_from_file
-from sisyphus.utils.utilities import ErrorRequestsTracker
+from sisyphus.utils.utilities import ErrorRequestsTracker, Elapsed
 from sisyphus.manipulator import create_embedding_jsonl, create_completion_jsonl
 from sisyphus.manipulator.df_constructor import build_similarity, select_top_n, construct_df_completion_cls
+from pipeline_input import query, system_message, prompt_cls, prompt_sum
 
 # load environment
 _ = load_dotenv(find_dotenv())
@@ -38,187 +42,98 @@ completion_sum_result_jsonl = completion_sum_jsonl.replace('.jsonl', '_results.j
 
 text_filtered = os.path.join('data', "text_filtered.csv")
 
-
-
-# create embedding jsonl
-cprint("Embedding process start...",  "red", attrs=["bold"])
-create_embedding_jsonl("E:\\Projects\\backup\\IC_JA")
-cprint("Making requests to openai...")
-
-# check exsitence
-if os.path.exists(embedding_jsonl):
-    pass
-else:
-    raise FileNotFoundError
-
-if os.path.exists(embedding_result_jsonl):
-    cprint("result file already exists, move to temp file", on_color="on_cyan")
-    file_name = os.path.basename(embedding_result_jsonl)
-    temp_file_path = os.path.join("temp", file_name)
-    number = 1
+@Elapsed
+def until_all_done(
+    error_tracker: ErrorRequestsTracker,
+    input_file,
+    output_file,
+    request_url: Literal["https://api.openai.com/v1/embeddings", "https://api.openai.com/v1/chat/completions"],
+    max_requests_per_minute: float,
+    max_tokens_per_minute: float
+):
+    input_path = input_file # copuy
+    # get embedding result
     while True:
-        if os.path.exists(temp_file_path):
-            temp_file_path = temp_file_path.replace('.jsonl', f'_{number}.jsonl')
-            number += 1
-        else:
+        output_path = input_path.replace('.jsonl', '_results.jsonl')
+        asyncio.run(process_api_requests_from_file(
+            requests_filepath=input_path,
+            save_filepath=output_path,
+            request_url=request_url,
+            api_key=api_key,
+            max_requests_per_minute=max_requests_per_minute,
+            max_tokens_per_minute=max_tokens_per_minute,
+            token_encoding_name="cl100k_base",
+            max_attempts=int(3),
+            logging_level=int(30), # warning level
+        ))
+        errors_flag = error_tracker.get_errors_id(output_path)
+        if re.search(r'redo', output_path):
+            error_tracker.merge_back(output_path, output_file)
+        if not errors_flag: # no error detect
+            error_tracker.remove_fails(output_file)
             break
-    shutil.move(embedding_result_jsonl, temp_file_path)
-
-start = time.perf_counter()
-embedding_error_tracker = ErrorRequestsTracker()
-input_path = embedding_jsonl # for reference
-
-# get embedding result
-while True:
-    output_path = input_path.replace('.jsonl', '_results.jsonl')
-    asyncio.run(process_api_requests_from_file(
-        requests_filepath=input_path,
-        save_filepath=output_path,
-        request_url=embedding_url,
-        api_key=api_key,
-        max_requests_per_minute=float(3000*0.5),
-        max_tokens_per_minute=float(1000000*0.5),
-        token_encoding_name="cl100k_base",
-        max_attempts=int(3),
-        logging_level=int(30), # warning level
-    ))
-    errors_flag = embedding_error_tracker.get_errors_id(output_path)
-    if re.search(r'redo', output_path):
-        embedding_error_tracker.merge_back(output_path, embedding_result_jsonl)
-    if not errors_flag: # no error detect
-        embedding_error_tracker.remove_fails(embedding_result_jsonl)
-        break
-    input_path = embedding_error_tracker.construct_redo_jsonl(embedding_jsonl)
-    cprint("prepare for the failed embedding requests, system dormant time: 10 s")
-    time.sleep(10)
-
-end = time.perf_counter()
-cprint(f"Embedding process finished, Runtime: {end - start:.2f}", "red", attrs=["bold"])
+        input_path = error_tracker.construct_redo_jsonl(embedding_jsonl) # embedding_jsonl has full record of texts
+        cprint("prepare for the failed embedding requests, system dormant time: 10 s\n")
+        time.sleep(10)
 
 
+def pipeline(extract_from: str, query: str, system_message: str, prompt_cls: str, prompt_sum: str):
+    # create embedding jsonl
+    cprint("Embedding process start...\n",  "green", attrs=["bold"])
+    create_embedding_jsonl(extract_from, chunk_size=200) # IC_JA
+    cprint("Making requests to openai...\n")
+
+    embedding_error_tracker = ErrorRequestsTracker()
+    until_all_done(embedding_error_tracker, embedding_jsonl, embedding_result_jsonl, "https://api.openai.com/v1/embeddings", float(3000), float(1000000))
+
+    # create embedding of paradigm
+    cprint("Embedding paradigm sentence start...\n", "green", attrs=["bold"])
+    client = OpenAI(api_key=api_key)
+    standard_vector = array(client.embeddings.create(input=query, model="text-embedding-ada-002").data[0].embedding)
+    cprint("Embedding paradigm sentence finished\n", "red", attrs=["bold"])
+
+    # create similarity
+    embedding_df = build_similarity(embedding_result_jsonl, standard_vector, save_file_name="text_similarity.csv")
+    selected_df, text_selected_file = select_top_n(embedding_df, top_n=5, save_file_name="text_selected.csv")
+
+    # create completion jsonl (classify)
+    cprint("Completion_cls process start...\n", "green", attrs=["bold"])
+    create_completion_jsonl(text_selected_file, completion_cls_jsonl, system_message, prompt_cls, 'json')
+
+    completion_cls_error_tracker = ErrorRequestsTracker()
+    until_all_done(completion_cls_error_tracker, completion_cls_jsonl, completion_cls_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(90000))
+
+    # create completion jsonl (summarize)
+    cprint("Completion_sum process start...\n", "green", attrs=["bold"])
+    df = construct_df_completion_cls(completion_cls_result_jsonl)
+    df = df[df['response'] != False]
+    df.to_csv(text_filtered, index=False)
+    create_completion_jsonl(text_filtered, completion_sum_jsonl, system_message, prompt_sum, 'json', embedding_jsonl)
+
+    completion_sum_error_tracker = ErrorRequestsTracker()
+    until_all_done(completion_sum_error_tracker, completion_sum_jsonl, completion_sum_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(90000))
+
+    return until_all_done.elapsed
+
+# extract_from = "E:\\Projects\\backup\\TEST"
 
 
-# create embedding of paradigm
-cprint("Start embedding the paradigm sentence", "red")
-query = "Description of the properties of NLO materials, include the name of nlo material (e.g. KBBF, Na4B8O9F10), second harmonic generation SHG (e.g. 0.8 pm/V, 3 × KDP), band gaps Eg (e.g. 6.2 eV), birefringence, phase match, absorption edge, laser induced damage thersholds (LIDT). reports values unit such as (eV, pm/V, MW/cm2, nm), and the SHG value is sometimes given in multiples of KDP or AgGaS2."
-client = OpenAI(api_key=api_key)
-standard_vector = array(client.embeddings.create(input=query, model="text-embedding-ada-002").data[0].embedding)
-cprint("Finish embedding the paradigm sentence", "red")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--extract_from", help="The source directory of articles")
+    args = parser.parse_args()
 
-# create similarity
-embedding_df = build_similarity(embedding_result_jsonl, standard_vector, save_file_name="text_similarity.csv")
-selected_df, text_selected_file = select_top_n(embedding_df, top_n=5, save_file_name="text_selected.csv")
+    if not os.path.exists("data"):
+        os.mkdir("data")
+    if len(os.listdir("data")) != 0:
+        # move to temp
+        current_datetime = datetime.now()
+        current_hour = current_datetime.hour
+        current_minute = current_datetime.minute
+        move_to = os.path.join("temp", f"data_{current_hour}_{current_minute}")
+        shutil.move("data", move_to)
 
+        os.mkdir("data") # recreate one
 
-
-
-# create completion jsonl (classify)
-cprint("Completion process start...", "red")
-system_message = "You are reading a piece of text from chemistry articles about nonlinear optical (nlo) materials and you are required to response based on the context provided by the user."
-prompt_sum = \
-"""The text is quoted by triple backticks.
-nlo properties: second harmonic generation coefficient (dij), band gaps (Eg), birefringence, absorption edge (cutoff edge), or LIDT
-Summarize the text into json format, only include nlo compound which has at least one property, the json schema should comply with:
-{
-    "compound_name": <name>,
-    "shg": {"value": <value>, "unit": <unit>},
-    "eg": {"value": <value>, "unit": <unit>},
-    "birefringence": {<value>, "unit": <unit>},
-    "lidt": {<value>, "unit": <unit>}
-}
-if find multiple nlo compounds, the response should be a list of json.
-if the value is given by the times of standard material, then the unit is set to the standard material (e.g. "unit": "KDP")
-Filled with null if any field not find.
-
-"""
-prompt_cls = \
-"""The text is quoted by triple backticks.
-
-Judge whether the text has the desired information, Return True if all criteria listed below match, False if any do not.
-a. Includes at least one chemical compound (e.g. KBBF, BaB2O4, abbreviation or pronoun).
-b. Includes at least one nonlinear optical (nlo) materials property correspond to the specific chemical compound, such as second harmonic generation coefficient (dij), band gaps (Eg), birefringence, absorption edge (cutoff edge), or LIDT.
-c. Contains at least one numerical value corresponding to a nonlinear optical (nlo) materials property.
-
-Sequentially examine each criteria.
-If any criterion is not met, return False.
-output json comply with schema:
-{
-  "a": true/false,
-  "b": true/false,
-  "c": true/false
-}
-
-"""
-create_completion_jsonl(text_selected_file, completion_cls_jsonl, system_message, prompt_cls, 'json')
-
-start = time.perf_counter()
-completion_cls_error_tracker = ErrorRequestsTracker()
-input_path = completion_cls_jsonl # for reference
-
-# get embedding result
-while True:
-    output_path = input_path.replace('.jsonl', '_results.jsonl')
-    asyncio.run(process_api_requests_from_file(
-        requests_filepath=input_path,
-        save_filepath=output_path,
-        request_url=completion_url,
-        api_key=api_key,
-        max_requests_per_minute=float(3500*0.5),
-        max_tokens_per_minute=float(90000),
-        token_encoding_name="cl100k_base",
-        max_attempts=int(3),
-        logging_level=int(30), # warning level
-    ))
-    errors_flag = completion_cls_error_tracker.get_errors_id(output_path)
-    if re.search(r'redo', output_path):
-        completion_cls_error_tracker.merge_back(output_path, completion_cls_result_jsonl)
-    if not errors_flag: # no error detect
-        embedding_error_tracker.remove_fails(completion_cls_result_jsonl)
-        break
-    input_path = completion_cls_error_tracker.construct_redo_jsonl(completion_cls_jsonl)
-    cprint("prepare for the failed completion requests, system dormant time: 10 s")
-    time.sleep(10)
-
-end = time.perf_counter()
-cprint(f"Completion classify process finished, Runtime: {end - start:.2f}s", "red", attrs=["bold"])
-
-
-
-
-# create completion jsonl (summarize)
-cprint("Completion process start...", "red")
-df = construct_df_completion_cls(completion_cls_result_jsonl)
-df = df[df['response'] != False]
-df.to_csv(text_filtered, index=False)
-create_completion_jsonl(text_filtered, completion_sum_jsonl, system_message, prompt_sum, 'json', embedding_jsonl)
-
-start = time.perf_counter()
-completion_sum_error_tracker = ErrorRequestsTracker()
-input_path = "data\\completion_sum_redo.jsonl" # for reference
-
-# get embedding result
-while True:
-    output_path = input_path.replace('.jsonl', '_results.jsonl')
-    asyncio.run(process_api_requests_from_file(
-        requests_filepath=input_path,
-        save_filepath=output_path,
-        request_url=completion_url,
-        api_key=api_key,
-        max_requests_per_minute=float(3500*0.5),
-        max_tokens_per_minute=float(90000),
-        token_encoding_name="cl100k_base",
-        max_attempts=int(3),
-        logging_level=int(30), # warning level
-    ))
-    errors_flag = completion_sum_error_tracker.get_errors_id(output_path)
-    if re.search(r'redo', output_path):
-        completion_sum_error_tracker.merge_back(output_path, completion_sum_result_jsonl)
-    if not errors_flag: # no error detect
-        embedding_error_tracker.remove_fails(completion_sum_result_jsonl)
-        break
-    input_path = completion_sum_error_tracker.construct_redo_jsonl(completion_sum_jsonl)
-    cprint("prepare for the failed completion requests, system dormant time: 10 s")
-    time.sleep(10)
-
-end = time.perf_counter()
-cprint(f"Completion summary process finished, Runtime: {end - start:.2f}", "red", attrs=["bold"])
+    PROCESS_TIME = pipeline(args.extract_from, query, system_message, prompt_cls, prompt_sum)
+    cprint(f"Execution time: {PROCESS_TIME:.2f}s", "cyan", attrs=["bold"])

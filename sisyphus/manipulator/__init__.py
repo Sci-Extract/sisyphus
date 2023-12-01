@@ -38,7 +38,7 @@ def task_id_generator_function():
         yield task_id
         task_id += 1
 
-def create_embedding_jsonl(source: str):
+def create_embedding_jsonl(source: str, chunk_size: int = 300):
     """source_path: the paraent folder of articles. 
     article_dirs: target articles directory names.
     * suggested file structure:
@@ -65,7 +65,7 @@ def create_embedding_jsonl(source: str):
     for article in os.listdir(source):
         article_path = os.path.join(source, article)
         content = get_target_dir_txt(article_path)
-        converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=300) # modify the name if needed
+        converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=chunk_size) # modify the name if needed
     
 def create_completion_jsonl(source: str, file_path: str, system_message: str, prompt: str, required_format: Literal["json", "text"], text_jsonl: str = None, model="gpt-3.5-turbo-1106", temperature: float = 0.0):
     if required_format == "json":

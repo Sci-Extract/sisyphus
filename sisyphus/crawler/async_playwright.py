@@ -199,8 +199,12 @@ class BaseCrawler(ABC):
 
     def _save(self, content: str, doi: str):
             doi_suffix = doi.split('/')[1]
+            # create article dir
+            dir_name = doi_suffix
+            dir_path = os.path.join(self.save_dir, dir_name)
+            os.makedirs(dir_path, exist_ok=True)
             file_name = doi_suffix + ".html"
-            file_path = os.path.join(self.save_dir, file_name)
+            file_path = os.path.join(dir_path, file_name)
             with open(file_path, "w", encoding='utf-8') as file:
                  file.write(content)
 
@@ -368,7 +372,11 @@ class ElsevierRetriever(BaseCrawler):
     def _save(self, content: str, doi: str):
             doi_suffix = doi.split('/')[1]
             file_name = doi_suffix + ".xml"
-            file_path = os.path.join(self.save_dir, file_name)
+            # create article dir
+            dir_name = doi_suffix
+            dir_path = os.path.join(self.save_dir, dir_name)
+            os.makedirs(dir_path, exist_ok=True)
+            file_path = os.path.join(dir_path, file_name)
             with open(file_path, "w", encoding='utf-8') as file:
                  file.write(content)
 

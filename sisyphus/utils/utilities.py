@@ -4,6 +4,7 @@ logger || counter || xlsx to csv || get cosine similarity
 """
 import logging
 import os
+import time
 import json
 
 import pandas as pd
@@ -70,7 +71,7 @@ class ErrorRequestsTracker:
                 if line_json[1] == "Failed": # indicate this request was failed
                     self.task_id.append(line_json[2]["task_id"])
         if not bool(len(self.task_id)): # no error
-            cprint("No errors, head to next step", "red")
+            cprint("No errors, head to next step\n")
             return False
         return True
         
@@ -116,3 +117,17 @@ class ErrorRequestsTracker:
         without_fails = [line_json for line_json in temp_list if line_json[1] != "Failed"]
         self.write_to_file(without_fails, jsonl_file_path, write_mode='w')
         
+
+class Elapsed:
+    def __init__(self, func):
+        self.elapsed : float = 0
+        self.func = func
+
+    def __call__(self, *args, **kwargs):
+        start = time.perf_counter()
+        ret = self.func(*args, **kwargs)
+        end = time.perf_counter()
+        self.elapsed += end - start
+        cprint(f"Process finished, Runtime: {end - start:.2f}s\n", "red", attrs=["bold"])
+        return ret
+    
