@@ -33,5 +33,4 @@ with open(file, encoding="utf-8") as f:
         if line_json[1] != "Failed":
             json_strings_ls.append(line_json[1]["choices"][0]["message"]["content"])
 
-def get_primal_data(file):
-    write_to_file('TEST_out_numericalmaybe.jsonl', *json_strings_ls)
+write_to_file('TEST_out_numericalmaybe.jsonl', *json_strings_ls)

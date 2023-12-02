@@ -101,7 +101,7 @@ def pipeline(extract_from: str, query: str, system_message: str, prompt_cls: str
     create_completion_jsonl(text_selected_file, completion_cls_jsonl, system_message, prompt_cls, 'json')
 
     completion_cls_error_tracker = ErrorRequestsTracker()
-    until_all_done(completion_cls_error_tracker, completion_cls_jsonl, completion_cls_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(90000))
+    until_all_done(completion_cls_error_tracker, completion_cls_jsonl, completion_cls_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(60000))
 
     # create completion jsonl (summarize)
     cprint("Completion_sum process start...\n", "green", attrs=["bold"])
@@ -111,7 +111,7 @@ def pipeline(extract_from: str, query: str, system_message: str, prompt_cls: str
     create_completion_jsonl(text_filtered, completion_sum_jsonl, system_message, prompt_sum, 'json', embedding_jsonl)
 
     completion_sum_error_tracker = ErrorRequestsTracker()
-    until_all_done(completion_sum_error_tracker, completion_sum_jsonl, completion_sum_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(90000))
+    until_all_done(completion_sum_error_tracker, completion_sum_jsonl, completion_sum_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(60000))
 
     return until_all_done.elapsed
 
