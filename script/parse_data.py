@@ -25,12 +25,12 @@ def write_to_file(filename, *json_strings):
             if transformed_json:
                 file.write(transformed_json + '\n')  # Write each transformed JSON to a new line
 
-# Example usage
-json_strings_ls = []
-with open(file, encoding="utf-8") as f:
-    for line in f:
-        line_json = json.loads(line)
-        if line_json[1] != "Failed":
-            json_strings_ls.append(line_json[1]["choices"][0]["message"]["content"])
 
-write_to_file('TEST_out_numericalmaybe.jsonl', *json_strings_ls)
+def output(in_file, out_file):
+    json_string_ls = []
+    with open(in_file, encoding="utf-8") as f:
+        for line in f:
+            line_json = json.loads(line)
+            if line_json[1] != "Failed":
+                json_string_ls.append(line_json[1]["choices"][0]["message"]["content"])
+    write_to_file(out_file, *json_string_ls)

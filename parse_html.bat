@@ -5,7 +5,8 @@ rem set PYTHON_SCRIPT=file_name.py
 echo Activating Conda environment: %CONDA_ENV_NAME%
 call conda activate %CONDA_ENV_NAME%
 
-call pip list
+echo Prase html/xml to plain text...
+call python py_3.8.py
 
 rem echo Running Python script: %PYTHON_SCRIPT%
 rem python %PYTHON_SCRIPT%

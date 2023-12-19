@@ -75,7 +75,7 @@ class ErrorRequestsTracker:
             return False
         return True
         
-    def construct_redo_jsonl(self, jsonl_file_path: str):
+    def construct_redo_jsonl(self, jsonl_file_path: str, input_file: str):
         """make sure the jsonl file contains only singleton task.
         """
         redo_tasks = []
@@ -84,7 +84,7 @@ class ErrorRequestsTracker:
                 line_json = json.loads(line)
                 if line_json["metadata"]["task_id"] in self.task_id:
                     redo_tasks.append(line_json)
-        redo_file_path = jsonl_file_path.replace('.jsonl', '_redo.jsonl')
+        redo_file_path = input_file.replace('.jsonl', '_redo.jsonl')
         with open(redo_file_path, 'w', encoding='utf-8') as file:
             for task in redo_tasks:
                 file.write(json.dumps(task, ensure_ascii=False) + '\n')

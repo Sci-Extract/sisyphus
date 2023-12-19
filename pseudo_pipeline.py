@@ -17,7 +17,7 @@ from sisyphus.processor.parallel_processor import process_api_requests_from_file
 from sisyphus.utils.utilities import ErrorRequestsTracker, Elapsed
 from sisyphus.manipulator import create_embedding_jsonl, create_completion_jsonl
 from sisyphus.manipulator.df_constructor import build_similarity, select_top_n, construct_df_completion_cls
-from pipeline_input import query, system_message, prompt_cls, prompt_sum
+from input.PVC_input import query, system_message, prompt_cls, prompt_sum
 
 # load environment
 _ = load_dotenv(find_dotenv())
@@ -72,8 +72,8 @@ def until_all_done(
         if not errors_flag: # no error detect
             error_tracker.remove_fails(output_file)
             break
-        input_path = error_tracker.construct_redo_jsonl(embedding_jsonl) # embedding_jsonl has full record of texts
-        cprint("prepare for the failed embedding requests, system dormant time: 10 s\n")
+        input_path = error_tracker.construct_redo_jsonl(embedding_jsonl, input_file) # embedding_jsonl has full record of texts
+        cprint("prepare for the failed requests, system dormant time: 10 s\n")
         time.sleep(10)
 
 
@@ -101,7 +101,7 @@ def pipeline(extract_from: str, query: str, system_message: str, prompt_cls: str
     create_completion_jsonl(text_selected_file, completion_cls_jsonl, system_message, prompt_cls, 'json')
 
     completion_cls_error_tracker = ErrorRequestsTracker()
-    until_all_done(completion_cls_error_tracker, completion_cls_jsonl, completion_cls_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(60000))
+    until_all_done(completion_cls_error_tracker, completion_cls_jsonl, completion_cls_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500*0.8), float(60000*0.8))
 
     # create completion jsonl (summarize)
     cprint("Completion_sum process start...\n", "green", attrs=["bold"])
@@ -111,7 +111,9 @@ def pipeline(extract_from: str, query: str, system_message: str, prompt_cls: str
     create_completion_jsonl(text_filtered, completion_sum_jsonl, system_message, prompt_sum, 'json', embedding_jsonl)
 
     completion_sum_error_tracker = ErrorRequestsTracker()
-    until_all_done(completion_sum_error_tracker, completion_sum_jsonl, completion_sum_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500), float(60000))
+    time.sleep(10)
+    cprint("successive request, sleep for 10 seconds", "red", attrs=["bold"])
+    until_all_done(completion_sum_error_tracker, completion_sum_jsonl, completion_sum_result_jsonl, "https://api.openai.com/v1/chat/completions", float(3500*0.8), float(60000*0.8))
 
     return until_all_done.elapsed
 
@@ -136,4 +138,9 @@ if __name__ == "__main__":
         os.mkdir("data") # recreate one
 
     PROCESS_TIME = pipeline(args.extract_from, query, system_message, prompt_cls, prompt_sum)
-    cprint(f"Execution time: {PROCESS_TIME:.2f}s", "cyan", attrs=["bold"])
+    cprint(f"Execution time: {PROCESS_TIME:.2f}s\n", "cyan", attrs=["bold"])
+
+    # process results
+    from script.parse_data import output
+    output(completion_sum_result_jsonl, "output.jsonl")
+    cprint("Result save to output.jsonl")

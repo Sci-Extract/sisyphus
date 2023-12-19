@@ -42,12 +42,14 @@ def create_embedding_jsonl(source: str, chunk_size: int = 300):
     """source_path: the paraent folder of articles. 
     article_dirs: target articles directory names.
     * suggested file structure:
-    articles/
-        <article_name_1>
-            <article_name_1>.txt
-            <article_name_1>.xml/html
-            <SI>
-        <article_name_2>
+    source/
+        publisher1/
+            article_name_1
+                article_name_1.txt
+                article_name_1.xml/html
+                SI
+            article_name_2
+        publisher2/
         ... 
     output_dir: location where your output jsonl files store.
     output_josnl_name: name of the jsonl file.
@@ -62,10 +64,13 @@ def create_embedding_jsonl(source: str, chunk_size: int = 300):
         open(file_path, 'w', encoding='utf-8').close() # clear the content
 
     task_id_generator = task_id_generator_function()
-    for article in os.listdir(source):
-        article_path = os.path.join(source, article)
-        content = get_target_dir_txt(article_path)
-        converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=chunk_size) # modify the name if needed
+    for publisher in os.listdir(source):
+        publisher_dir = os.path.join(source, publisher)
+        for article in os.listdir(publisher_dir):
+            article_path = os.path.join(publisher_dir, article)
+            content = get_target_dir_txt(article_path)
+            if content: # sometimes failed to get RSC articles, it's empty text.
+                converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=chunk_size) # modify the name if needed
     
 def create_completion_jsonl(source: str, file_path: str, system_message: str, prompt: str, required_format: Literal["json", "text"], text_jsonl: str = None, model="gpt-3.5-turbo-1106", temperature: float = 0.0):
     if required_format == "json":
