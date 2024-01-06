@@ -236,6 +236,7 @@ class RscCrawler(BaseCrawler):
         return False
     
     async def _manipulation(self, page: Page, source_html, doi, download_source=True, download_pdf=False):
+        # their may not have this option in old papers.
         await page.get_by_role("link", name="Article HTML").click()
 
         # brief wait till img element pops up.
@@ -444,18 +445,20 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
             categorize(doi)
 
     async with async_playwright() as p:
-        # browser = await p.chromium.launch(headless=False) # uncomment to see processing
-        browser = await p.chromium.launch(
-            # ignore_default_args=["--headless"],
-            # args=["--headless=new"],
-            headless=False
-            )
+        browser = await p.chromium.launch(headless=False) # uncomment to see processing
+        # browser = await p.chromium.launch(
+        #     # ignore_default_args=["--headless"],
+        #     # args=["--headless=new"],
+        #     headless=False
+        #     )
         context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+        context_for_rsc = await p.chromium.launch_persistent_context(headless=False, executable_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", user_data_dir="C:\\Users\\Soike\\AppData\\Local\\Google\\Chrome\\User Data")
         await context.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
+        await context_for_rsc.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
 
         # instantiate crawlers.
         acs = AcsCrawler(rate_limit, status_tracker, sema, acs_queue, context, acs_save_dir)
-        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context, rsc_save_dir)
+        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context_for_rsc, rsc_save_dir)
         spr = SpringerCrawler(rate_limit, status_tracker, sema, spr_queue, context, spr_save_dir)
         nat = NatureCrawler(rate_limit, status_tracker, sema, nat_queue, context, nat_save_dir)
         aas = AaasCrawler(rate_limit, status_tracker, sema, aas_queue, context, aas_save_dir)
@@ -469,6 +472,7 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
         await asyncio.gather(*tasks)
         
         await context.close()
+        await context_for_rsc.close()
         await browser.close()
 
         end_execute = time.ctime()

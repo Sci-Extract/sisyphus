@@ -6,13 +6,14 @@ import logging
 import os
 import time
 import json
+from functools import wraps
 
 import pandas as pd
 from termcolor import cprint
 
 
-log_dir_path = os.path.join(os.getcwd(), "log")
 def log(log_file_name="log.txt", logging_level=10):
+    log_dir_path = os.path.join(os.getcwd(), "log")
     log_file = os.path.join(log_dir_path, log_file_name)
     
     # create a log file if not exist
@@ -20,19 +21,20 @@ def log(log_file_name="log.txt", logging_level=10):
         with open(log_file, "w"):
             pass
 
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
     file_handler = logging.FileHandler(log_file)
     stream_handler = logging.StreamHandler()
 
-    formatter = logging.Formatter("%(asctime)s (%(filename)s) [%(levelname)s]: %(message)s")
+    formatter = logging.Formatter("%(asctime)s (%(filename)s:%(lineno)d) [%(levelname)s]: %(message)s")
     file_handler.setFormatter(formatter)
     stream_handler.setFormatter(formatter)
 
     file_handler.setLevel(logging.WARNING)
     stream_handler.setLevel(logging.DEBUG)
 
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
+    if not logger.handlers: # in case that the logger add replicate handlers when calling the function twice
+        logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
     logger.setLevel(logging_level)
     return logger
 
@@ -70,7 +72,7 @@ class ErrorRequestsTracker:
                 line_json = json.loads(line)
                 if line_json[1] == "Failed": # indicate this request was failed
                     self.task_id.append(line_json[2]["task_id"])
-        if not bool(len(self.task_id)): # no error
+        if not self.task_id: # no error
             cprint("No errors, head to next step\n")
             return False
         return True
@@ -130,4 +132,35 @@ class Elapsed:
         self.elapsed += end - start
         cprint(f"Process finished, Runtime: {end - start:.2f}s\n", "red", attrs=["bold"])
         return ret
-    
+
+import shutil
+from datetime import datetime
+
+
+class MoveOriginalFolder(object):
+    """
+    Decorator for removing the formal folder files.
+    """
+
+    def __init__(self, folder_path):
+        self.folder_path = folder_path
+        self.temp_path = "temp"
+
+    def __call__(self, func):
+        if not os.path.exists(self.folder_path):
+            os.mkdir(self.folder_path)
+        if len(os.listdir(self.folder_path)) != 0:
+            # move to temp
+            current_datetime = datetime.now()
+            current_hour = current_datetime.hour
+            current_minute = current_datetime.minute
+            move_to = os.path.join(self.temp_path, f"{self.folder_path}_{current_hour}_{current_minute}")
+            shutil.move(self.folder_path, move_to)
+
+            os.mkdir(self.folder_path) # recreate one
+
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+
+        return async_wrapper

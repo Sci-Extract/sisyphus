@@ -38,8 +38,9 @@ def task_id_generator_function():
         yield task_id
         task_id += 1
 
-def create_embedding_jsonl(source: str, chunk_size: int = 300):
-    """source_path: the paraent folder of articles. 
+def create_embedding_jsonl(source: str, chunk_size: int = 300) -> str:
+    """retrun the create file path, 
+    source_path: the paraent folder of articles. 
     article_dirs: target articles directory names.
     * suggested file structure:
     source/
@@ -71,8 +72,9 @@ def create_embedding_jsonl(source: str, chunk_size: int = 300):
             content = get_target_dir_txt(article_path)
             if content: # sometimes failed to get RSC articles, it's empty text.
                 converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=chunk_size) # modify the name if needed
+    return file_path
     
-def create_completion_jsonl(source: str, file_path: str, system_message: str, prompt: str, required_format: Literal["json", "text"], text_jsonl: str = None, model="gpt-3.5-turbo-1106", temperature: float = 0.0):
+def create_completion_jsonl(df, file_path: str, system_message: str, prompt: str, required_format: Literal["json", "text"], text_jsonl: str = None, model="gpt-3.5-turbo-1106", temperature: float = 0.0):
     if required_format == "json":
         response_format={"type": "json_object"}
     elif required_format == "text":
@@ -81,7 +83,6 @@ def create_completion_jsonl(source: str, file_path: str, system_message: str, pr
         raise ValueError
     
     jobs = []
-    df = pd.read_csv(source)
     if text_jsonl:
         gen_text = get_text_by_id(df["task_id"].tolist(), text_jsonl)
 

@@ -104,176 +104,243 @@ from dataclasses import (
     field,
 )  # for storing API inputs, outputs, and metadata
 from logging import Logger
+from typing import Generator, IO, Literal, Optional
 
 import httpx  # for making API calls concurrently
+import openai
+import pydantic
 import tiktoken  # for counting tokens
+from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 from ..utils.utilities import log # for logging rate limit warnings and other messages
- 
 
-async def process_api_requests_from_file(
-    requests_filepath: str,
-    save_filepath: str,
-    request_url: str,
-    api_key: str,
-    max_requests_per_minute: float,
-    max_tokens_per_minute: float,
-    token_encoding_name: str,
-    max_attempts: int,
-    logging_level: int,
-):
-    """Processes API requests in parallel, throttling to stay under rate limits."""
-    # constants
-    seconds_to_pause_after_rate_limit_error = 15
-    seconds_to_sleep_each_loop = (
-        0.01  # .1 ms limits max throughput to 100 requests per second
-    )
+# pydantic models
+#from mof_absorb_pydantic import Compounds
 
-    # initialize logging
-    logger = log(logging_level=logging_level)
-    logger.debug(f"Logging initialized at level {logging_level}")
+@dataclass
+class ProcessRequest:
+    """Base class for request process, implementation by inheritance"""
 
-    # infer API endpoint and construct request header
-    api_endpoint = api_endpoint_from_url(request_url)
-    request_header = {"Authorization": f"Bearer {api_key}"}
+    client: AsyncOpenAI
+    max_requests_per_minute: float
+    max_tokens_per_minute: float
+    max_attempts: int
+    token_encoding_name: str = "cl100k_base"
+    logging_level: int = 10 # for debug
+    
+    def __post_init__(self):
+        self.logger = log(logging_level=self.logging_level)
 
-    # initialize trackers
-    queue_of_requests_to_retry = asyncio.Queue()
-    task_id_generator = (
-        task_id_generator_function()
-    )  # generates integer IDs of 1, 2, 3, ...
-    status_tracker = (
-        StatusTracker()
-    )  # single instance to track a collection of variables
-    next_request = None  # variable to hold the next request to call
+    async def _process_request(self, requests_generator: Generator, save_filepath: str, mode: Literal["embeddings", "completions"], bucket: "Bucket", requests_rate: float = 0.001, probe_size: int = 0, completion_tokens: int = 15, usage_need_gap: bool = False, pydantic_model: BaseModel = None):
+        """Process requests parallelly. For completion task, set probe_size to get average token consumption. for simple request, set usage_need_gap to False"""
 
-    # initialize available capacity counts
-    available_request_capacity = max_requests_per_minute
-    available_token_capacity = max_tokens_per_minute
-    last_update_time = time.time()
+        if mode not in ['embeddings', 'completions']:
+            raise ValueError("mode only have two choices: embeddings/completions")
 
-    # initialize flags
-    file_not_finished = True  # after file is empty, we'll skip reading it
-    logger.debug(f"Initialization complete.")
+        seconds_to_pause_after_rate_limit_error = 15
 
-    # initialize file reading
-    with open(requests_filepath, encoding='utf-8') as file:
-        # `requests` will provide requests one at a time
-        requests = file.__iter__()
-        logger.debug(f"File opened. Entering main loop")
-        timeout = httpx.Timeout(10.0, connect=20.0, pool=20.0, read=30.0)
-        limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
-        async with httpx.AsyncClient(verify=False, timeout=timeout, limits=limits) as session:  # Initialize ClientSession here
-            while True:
-                # get next request (if one is not already waiting for capacity)
-                if next_request is None:
-                    if not queue_of_requests_to_retry.empty():
-                        next_request = queue_of_requests_to_retry.get_nowait()
-                        logger.debug(
-                            f"Retrying request {next_request.task_id}: {next_request}"
+        self.logger.debug(f"Logging initialized at level {self.logging_level}")
+
+        queue_of_requests_to_retry = asyncio.Queue()
+        task_id_generator = self.task_id_generator()
+        status_tracker = StatusTracker()
+        completion_token_usage = TokenUsage() if usage_need_gap else None
+        next_request = None
+        file_not_finished = True
+
+        self.logger.debug(f"Initialization complete. Present at {mode} mode")
+        
+        while True:
+            # if a rate limit error was hit recently, pause to cool down
+            seconds_since_rate_limit_error = (
+                time.time() - status_tracker.time_of_last_rate_limit_error
+            )
+            if (
+                seconds_since_rate_limit_error
+                < seconds_to_pause_after_rate_limit_error
+            ):
+                remaining_seconds_to_pause = (
+                    seconds_to_pause_after_rate_limit_error
+                    - seconds_since_rate_limit_error
+                )
+                await asyncio.sleep(remaining_seconds_to_pause)
+                # ^e.g., if pause is 15 seconds and final limit was hit 5 seconds ago
+                self.logger.warn(
+                    f"Pausing to cool down until {time.ctime(status_tracker.time_of_last_rate_limit_error + seconds_to_pause_after_rate_limit_error)}"
+                )
+
+            # check if there is remain requests
+            if next_request is None:
+                if file_not_finished:
+                    try:
+                        request_info = json.loads(next(requests_generator)) # the raw json according with openai request format, can include metadata field.
+                        token_consumption = num_tokens_consumed_from_request(request_info, mode, self.token_encoding_name, max_tokens=completion_tokens)
+                        next_request = APIRequest(
+                            task_id=next(task_id_generator),
+                            request_json=request_info,
+                            token_consumption=token_consumption,
+                            attempts_left=self.max_attempts,
+                            metadata=request_info.pop("metadata", None),
+                            logger=self.logger,
+                            pydantic_model=pydantic_model,
+                            completion_token_usage=completion_token_usage
                         )
-                    elif file_not_finished:
-                        try:
-                            # get new request
-                            request_json = json.loads(next(requests))
-                            next_request = APIRequest(
-                                task_id=next(task_id_generator),
-                                request_json=request_json,
-                                token_consumption=num_tokens_consumed_from_request(
-                                    request_json, api_endpoint, token_encoding_name
-                                ),
-                                attempts_left=max_attempts,
-                                metadata=request_json.pop("metadata", None),
-                                logger=logger
-                            )
-                            status_tracker.num_tasks_started += 1
-                            status_tracker.num_tasks_in_progress += 1
-                            logger.debug(
-                                f"Reading request {next_request.task_id}: {next_request}"
-                            )
-                        except StopIteration:
-                            # if file runs out, set flag to stop reading it
-                            logger.debug("Read file exhausted")
-                            file_not_finished = False
+                        status_tracker.num_tasks_in_progress += 1
+                        status_tracker.num_tasks_started += 1
 
-                # update available capacity
-                current_time = time.time()
-                seconds_since_update = current_time - last_update_time
-                available_request_capacity = min(
-                    available_request_capacity
-                    + max_requests_per_minute * seconds_since_update / 60.0,
-                    max_requests_per_minute,
-                )
-                available_token_capacity = min(
-                    available_token_capacity
-                    + max_tokens_per_minute * seconds_since_update / 60.0,
-                    max_tokens_per_minute,
-                )
-                last_update_time = current_time
+                        # when setting probe
+                        if probe_size == status_tracker.num_tasks_started:
+                            raise StopIteration
+                        
+                    except StopIteration:
+                        file_not_finished = False
+                        self.logger.debug("Reads all data")
 
-                # if enough capacity available, call API
-                if next_request:
-                    next_request_tokens = next_request.token_consumption
-                    if (
-                        available_request_capacity >= 1
-                        and available_token_capacity >= next_request_tokens
-                    ):
-                        # update counters
-                        available_request_capacity -= 1
-                        available_token_capacity -= next_request_tokens
-                        next_request.attempts_left -= 1
+                elif not queue_of_requests_to_retry.empty():
+                    next_request = queue_of_requests_to_retry.get_nowait()
+            
+            # update available capacity
+            bucket.update_capacity()
 
-                        # call API
-                        asyncio.create_task(
-                            next_request.call_api(
-                                session=session,
-                                request_url=request_url,
-                                request_header=request_header,
-                                retry_queue=queue_of_requests_to_retry,
-                                save_filepath=save_filepath,
-                                status_tracker=status_tracker,
-                            )
+            if next_request:
+                if bucket.has_capacity(next_request.token_consumption):
+                    asyncio.create_task(
+                        next_request.call_api(
+                            client=self.client,
+                            mode=mode,
+                            retry_queue=queue_of_requests_to_retry,
+                            save_filepath=save_filepath,
+                            status_tracker=status_tracker
                         )
-                        next_request = None  # reset next_request to empty
-
-                # if all tasks are finished, break
-                if status_tracker.num_tasks_in_progress == 0:
-                    break
-
-                # main loop sleeps briefly so concurrent tasks can run (it did'nt stop any registered task...)
-                await asyncio.sleep(seconds_to_sleep_each_loop)
-
-                # if a rate limit error was hit recently, pause to cool down
-                seconds_since_rate_limit_error = (
-                    time.time() - status_tracker.time_of_last_rate_limit_error
-                )
-                if (
-                    seconds_since_rate_limit_error
-                    < seconds_to_pause_after_rate_limit_error
-                ):
-                    remaining_seconds_to_pause = (
-                        seconds_to_pause_after_rate_limit_error
-                        - seconds_since_rate_limit_error
                     )
-                    await asyncio.sleep(remaining_seconds_to_pause)
-                    # ^e.g., if pause is 15 seconds and final limit was hit 5 seconds ago
-                    logger.warn(
-                        f"Pausing to cool down until {time.ctime(status_tracker.time_of_last_rate_limit_error + seconds_to_pause_after_rate_limit_error)}"
-                    )
+                    bucket.set_capacity(next_request.token_consumption)
+                    next_request.attempts_left -= 1
+                    next_request = None
+            
+            if status_tracker.num_tasks_in_progress == 0:
+                
+                break
+
+            # sleep in main loop so that task can run
+            await asyncio.sleep(requests_rate)
 
         # after finishing, log final status
-        logger.info(
+        self.logger.info(
             f"""Parallel processing complete. Results saved to {save_filepath}"""
         )
         if status_tracker.num_tasks_failed > 0:
-            logger.warning(
-                f"{status_tracker.num_tasks_failed} / {status_tracker.num_tasks_started} requests failed. Errors logged to {save_filepath}."
+            self.logger.warning(
+                f"{status_tracker.num_tasks_failed} / {status_tracker.num_tasks_started} requests failed."
             )
         if status_tracker.num_rate_limit_errors > 0:
-            logger.warning(
+            self.logger.warning(
                 f"{status_tracker.num_rate_limit_errors} rate limit errors received. Consider running at a lower rate."
             )
+        if status_tracker.num_task_validate_errors > 0:
+            self.logger.warning(
+                f"{status_tracker.num_task_validate_errors} / {status_tracker.num_tasks_started} requests failed with validation."
+            )
 
+        if probe_size:
+            assert len(completion_token_usage.completion_tokens) == probe_size, f'something went wrong, {completion_token_usage.completion_tokens}'
+            completion_tokens_average = sum(completion_token_usage.completion_tokens) / len(completion_token_usage.completion_tokens) # the average token in completion
+            remain_tokens = completion_token_usage.x_ratelimit_remaining_tokens[-1] # the remain tokens of last time stamp
+            return remain_tokens, completion_tokens_average
+        if usage_need_gap:
+            remain_tokens = completion_token_usage.x_ratelimit_remaining_tokens[-1]
+            return remain_tokens
+
+    def task_id_generator(self):
+        """Generate integers 0, 1, 2, and so on."""
+        task_id = 0
+        while True:
+            yield task_id
+            task_id += 1
+        
+
+class EmbeddingRequest(ProcessRequest):
+    """Making requests for embedding process"""
+    mode = 'embeddings'
+    async def embedding_helper(self, requests_generator: Generator, save_filepath: str):
+        """Implementation method"""
+        bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+        await self._process_request(requests_generator=requests_generator, save_filepath=save_filepath, mode=self.mode, bucket=bucket)
+
+class CompletionRequest(ProcessRequest):
+    """Making requests for completions"""
+    mode = 'completions'
+    async def completion_helper(self, requests_generator: Generator, save_filepath: str, probe_size: int = 10, pydantic_model: BaseModel = None):
+        """Implementation method"""
+
+        probe_bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+        
+        # Probe
+        remain_tokens, completion_tokens_ave = await self._process_request(
+            requests_generator=requests_generator,
+            save_filepath=save_filepath,
+            mode=self.mode, bucket=probe_bucket,
+            probe_size=probe_size,
+            pydantic_model=pydantic_model,
+            usage_need_gap=True,
+        )
+        self.logger.warning(f"The estimated token completion consumption set to {completion_tokens_ave} tokens")
+        
+        # token rehabilitation
+        await self.token_rehabilitation(remain_tokens)
+
+        # process rest requests
+        bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+        await self._process_request(
+            requests_generator=requests_generator,
+            save_filepath=save_filepath, 
+            mode=self.mode, 
+            bucket=bucket, 
+            completion_tokens=completion_tokens_ave,
+            pydantic_model=pydantic_model,
+            usage_need_gap=True,
+        )
+            
+    async def token_rehabilitation(self, remain_tokens):
+        if (token_to_restore := self.max_tokens_per_minute - remain_tokens) > 0:
+            time_to_sleep = token_to_restore / self.max_tokens_per_minute * 60
+            self.logger.warning(f"token rehabilitation for {time_to_sleep} s")
+            await asyncio.sleep(time_to_sleep)
+            
+
+
+@dataclass
+class Bucket:
+    """GCRA implementation, update capacity"""
+    last_update_time: float
+    max_capacity_requests: float
+    max_capacity_tokens: float
+
+    def __post_init__(self):
+        self.present_capacity_requests = self.max_capacity_requests
+        self.present_capacity_tokens = self.max_capacity_tokens
+    
+    def update_capacity(self):
+        self.current_time = time.time()
+        elapse = self.current_time - self.last_update_time
+        self.present_capacity_requests = min(self.present_capacity_requests + elapse * self.max_capacity_requests / 60,
+                                    self.max_capacity_requests)
+        self.present_capacity_tokens = min(self.present_capacity_tokens + elapse * self.max_capacity_tokens / 60,
+                                    self.max_capacity_tokens)
+        self.last_update_time = self.current_time
+    
+    def set_capacity(self, value):
+        self.present_capacity_requests -= 1
+        self.present_capacity_tokens -= value
+
+    def has_capacity(self, value):
+        return True if (self.present_capacity_requests > 1 and self.present_capacity_tokens > value) else False
+
+    def get_last_update_time(self):
+        return self.last_update_time
+    
+    def get_capacities(self):
+        return self.present_capacity_requests, self.present_capacity_tokens
 
 # dataclasses
 
@@ -288,8 +355,19 @@ class StatusTracker:
     num_tasks_failed: int = 0
     num_rate_limit_errors: int = 0
     num_api_errors: int = 0  # excluding rate limit errors, counted above
+    num_task_validate_errors: int = 0 # pydantic validation errors
     num_other_errors: int = 0
     time_of_last_rate_limit_error: int = 0  # used to cool off after hitting rate limits
+
+@dataclass
+class TokenUsage():
+    """Track completion token usage"""
+    # returned by openai: "usage": {"prompt_tokens": 437, "completion_tokens": 20, "total_tokens": 457}
+    prompt_tokens: list[int] = field(default_factory=list)
+    completion_tokens: list[int] = field(default_factory=list)
+    total_tokens: list[int] = field(default_factory=list)
+    
+    x_ratelimit_remaining_tokens: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -302,13 +380,14 @@ class APIRequest:
     attempts_left: int
     metadata: dict
     logger: Logger
+    pydantic_model: Optional[BaseModel]
     result: list = field(default_factory=list)
+    completion_token_usage: Optional[TokenUsage] = None
 
     async def call_api(
         self,
-        session: httpx.AsyncClient,
-        request_url: str,
-        request_header: dict,
+        client: AsyncOpenAI,
+        mode: Literal['embeddings', 'completions'],
         retry_queue: asyncio.Queue,
         save_filepath: str,
         status_tracker: StatusTracker,
@@ -316,117 +395,118 @@ class APIRequest:
         """Calls the OpenAI API and saves results."""
         self.logger.info(f"Starting request #{self.task_id}")
         error = None
-        try:
-            response = await session.post(
-                url=request_url, headers=request_header, json=self.request_json
-            )
-            response = response.json()
-            if "error" in response:
-                self.logger.warning(
-                    f"Request {self.task_id} failed with error {response['error']}"
-                )
-                status_tracker.num_api_errors += 1
-                error = response
-                if "Rate limit" in response["error"].get("message", ""):
-                    status_tracker.time_of_last_rate_limit_error = time.time()
-                    status_tracker.num_rate_limit_errors += 1
-                    status_tracker.num_api_errors -= (
-                        1  # rate limit errors are counted separately
-                    )
+        try:                                                                                                                                                                                                         
+            if mode == 'embeddings':
+                response = await client.embeddings.create(**self.request_json) # note that json metadata filed has been poped out
+                llm_result = dict(embedding=response.data[0].embedding)
+                
+            elif mode == 'completions':
+                raw_response = await client.chat.completions.with_raw_response.create(**self.request_json)
+                response = raw_response.parse()
+                llm_result = dict(content=response.choices[0].message.content)
+                # if pass in pydantic model then validate the llm result
+                if self.pydantic_model:
+                    content = json.loads(llm_result["content"])
+                    model = self.pydantic_model.model_validate(content)
+                    llm_result = dict(content=model.model_dump_json())
+            else:
+                raise ValueError('choose between embeddings/completions')
+            
+        except openai.APIConnectionError as e:
+            status_tracker.num_api_errors += 1
+            self.logger.warning(f"/APICONNECTION/ Request {self.task_id}: The server could not be reached")
+            self.logger.warning(e.__cause__)  # an underlying Exception, likely raised within httpx.
+            error = e
 
-        except (
-            Exception
-        ) as e:  # catching naked exceptions is bad practice, but in this case we'll log & save them
-            self.logger.warning(f"Request {self.task_id} failed with Exception {e}")
+        except openai.RateLimitError as e:
+            status_tracker.time_of_last_rate_limit_error = time.time()
+            status_tracker.num_rate_limit_errors += 1
+            self.logger.warning(f"/RATELIMIT/ Request {self.task_id}: a 429 status code was received; we should back off a bit.")
+            error = e
+            
+        except openai.APIStatusError as e:
+            status_tracker.num_api_errors += 1
+            self.logger.warning(f"/APISTATUS/ Request {self.task_id}: another non-200-range status code was received")
+            self.logger.warning(e.status_code)
+            self.logger.warning(e.response)
+            error = e
+        
+        except pydantic.ValidationError as e:
+            status_tracker.num_task_validate_errors += 1
+            self.logger.warning(f"/VALIDATION/ Request {self.task_id}: {e.json()}")
+            error = e
+            
+        except (Exception) as e:  # catching naked exceptions is bad practice, but in this case we'll log & save them
+            self.logger.warning(f"Request {self.task_id}: failed with Exception {e}")
             status_tracker.num_other_errors += 1
             error = e
+
         if error:
             self.result.append(error)
             if self.attempts_left:
                 retry_queue.put_nowait(self)
             else:
                 self.logger.error(
-                    f"Request [{self.task_id}]: {self.request_json} failed after all attempts. Saving errors: {self.result}"
+                    f"Request [{self.task_id}]: failed after all attempts. Saving errors: {self.result}"
                 )
                 data = (
                     [self.request_json, "Failed", self.metadata]
                     if self.metadata
                     else [self.request_json, "Failed"]
                 )
-                append_to_jsonl(data, save_filepath)
+                self.append_to_jsonl(data, save_filepath)
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
                 
         # when success
         else:
+            # real token usage for probe
+            if self.completion_token_usage:
+                self.completion_token_usage.x_ratelimit_remaining_tokens.append(int(raw_response.headers.get('x-ratelimit-remaining-tokens')))
+                self.completion_token_usage.prompt_tokens.append(response.usage.prompt_tokens)
+                self.completion_token_usage.completion_tokens.append(response.usage.total_tokens - response.usage.prompt_tokens) # usage has no completion tokens attribute, calculate the difference.
             data = (
-                [self.request_json, response, self.metadata]
+                [self.request_json, llm_result, self.metadata]
                 if self.metadata
-                else [self.request_json, response]
+                else [self.request_json, llm_result]
             )
-            append_to_jsonl(data, save_filepath)
+            self.append_to_jsonl(data, save_filepath)
+
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
             self.logger.debug(f"Request {self.task_id} saved to {save_filepath}")
 
-
-# functions
-
-
-def api_endpoint_from_url(request_url):
-    """Extract the API endpoint from the request URL."""
-    match = re.search("^https://[^/]+/v\\d+/(.+)$", request_url)
-    return match[1]
-
-
-def append_to_jsonl(data, filename: str) -> None:
-    """Append a json payload to the end of a jsonl file."""
-    json_string = json.dumps(data)
-    with open(filename, "a") as f:
-        f.write(json_string + "\n")
+    def append_to_jsonl(self, data, filename: str) -> None:
+        """Append a json payload to the end of a jsonl file."""
+        json_string = json.dumps(data)
+        with open(filename, "a") as f:
+            f.write(json_string + "\n")
 
 
 def num_tokens_consumed_from_request(
     request_json: dict,
-    api_endpoint: str,
+    mode: str,
     token_encoding_name: str,
+    max_tokens: int = 15,
+    n: int = 1
 ):
     """Count the number of tokens in the request. Only supports completion and embedding requests."""
     encoding = tiktoken.get_encoding(token_encoding_name)
     # if completions request, tokens = prompt + n * max_tokens
-    if api_endpoint.endswith("completions"):
-        max_tokens = request_json.get("max_tokens", 15)
-        n = request_json.get("n", 1)
+    if mode == "completions":
         completion_tokens = n * max_tokens
-
-        # chat completions
-        if api_endpoint.startswith("chat/"):
-            num_tokens = 0
-            for message in request_json["messages"]:
-                num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-                for key, value in message.items():
-                    num_tokens += len(encoding.encode(value))
-                    if key == "name":  # if there's a name, the role is omitted
-                        num_tokens -= 1  # role is always required and always 1 token
-            num_tokens += 2  # every reply is primed with <im_start>assistant
-            return num_tokens + completion_tokens
-        # normal completions
-        else:
-            prompt = request_json["prompt"]
-            if isinstance(prompt, str):  # single prompt
-                prompt_tokens = len(encoding.encode(prompt))
-                num_tokens = prompt_tokens + completion_tokens
-                return num_tokens
-            elif isinstance(prompt, list):  # multiple prompts
-                prompt_tokens = sum([len(encoding.encode(p)) for p in prompt])
-                num_tokens = prompt_tokens + completion_tokens * len(prompt)
-                return num_tokens
-            else:
-                raise TypeError(
-                    'Expecting either string or list of strings for "prompt" field in completion request'
-                )
+        num_tokens = 0
+        for message in request_json["messages"]:
+            num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+            for key, value in message.items():
+                num_tokens += len(encoding.encode(value))
+                if key == "name":  # if there's a name, the role is omitted
+                    num_tokens -= 1  # role is always required and always 1 token
+        num_tokens += 2  # every reply is primed with <im_start>assistant
+        return num_tokens + completion_tokens
+        
     # if embeddings request, tokens = input tokens
-    elif api_endpoint == "embeddings":
+    elif mode == "embeddings":
         input = request_json["input"]
         if isinstance(input, str):  # single input
             num_tokens = len(encoding.encode(input))
@@ -441,91 +521,5 @@ def num_tokens_consumed_from_request(
     # more logic needed to support other API calls (e.g., edits, inserts, DALL-E)
     else:
         raise NotImplementedError(
-            f'API endpoint "{api_endpoint}" not implemented in this script'
+            f'Please provide the right mode, either completions or embeddings'
         )
-
-
-def task_id_generator_function():
-    """Generate integers 0, 1, 2, and so on."""
-    task_id = 0
-    while True:
-        yield task_id
-        task_id += 1
-
-
-# run script
-
-
-if __name__ == "__main__":
-    # parse command line arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--requests_filepath")
-    parser.add_argument("--save_filepath", default=None)
-    parser.add_argument("--request_url", default="https://api.openai.com/v1/embeddings")
-    parser.add_argument("--api_key", default=os.getenv("OPENAI_API_KEY"))
-    parser.add_argument("--max_requests_per_minute", type=int, default=3_000 * 0.5)
-    parser.add_argument("--max_tokens_per_minute", type=int, default=1_000_000 * 0.5)
-    parser.add_argument("--token_encoding_name", default="cl100k_base")
-    parser.add_argument("--max_attempts", type=int, default=5)
-    parser.add_argument("--logging_level", default=10)
-    args = parser.parse_args()
-
-    if args.save_filepath is None:
-        args.save_filepath = args.requests_filepath.replace(".jsonl", "_results.jsonl")
-
-    # run script
-    asyncio.run(
-        process_api_requests_from_file(
-            requests_filepath=args.requests_filepath,
-            save_filepath=args.save_filepath,
-            request_url=args.request_url,
-            api_key=args.api_key,
-            max_requests_per_minute=float(args.max_requests_per_minute),
-            max_tokens_per_minute=float(args.max_tokens_per_minute),
-            token_encoding_name=args.token_encoding_name,
-            max_attempts=int(args.max_attempts),
-            logging_level=int(args.logging_level),
-        )
-    )
-
-
-# For quick test
-
-# if __name__ == "__main__":
-#     # run script
-#     asyncio.run(
-#         process_api_requests_from_file(
-#             requests_filepath="embedding_text.jsonl",
-#             save_filepath="embedding_result.jsonl",
-#             request_url="https://api.openai.com/v1/embeddings",
-#             api_key=OPENAI_API_KEY,
-#             max_requests_per_minute=3_000 * 0.5,
-#             max_tokens_per_minute=1_000_000 * 0.5,
-#             token_encoding_name="cl100k_base",
-#             max_attempts=5,
-#             logging_level=logging.DEBUG,
-#         )
-#     )
-
-
-"""
-APPENDIX
-
-The example requests file at openai-cookbook/examples/data/example_requests_to_parallel_process.jsonl contains 10,000 requests to text-embedding-ada-002.
-
-It was generated with the following code:
-
-```python
-import json
-
-filename = "data/example_requests_to_parallel_process.jsonl"
-n_requests = 10_000
-jobs = [{"model": "text-embedding-ada-002", "input": str(x) + "\n"} for x in range(n_requests)]
-with open(filename, "w") as f:
-    for job in jobs:
-        json_string = json.dumps(job)
-        f.write(json_string + "\n")
-```
-
-As with all jsonl files, take care that newlines in the content are properly escaped (json.dumps does this automatically).
-"""
