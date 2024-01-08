@@ -1,16 +1,16 @@
 """
-Structure:
+HOW TO USE:
+Just prepares DOIs list, e.g. 10.1021/... and your own els_api_key (if do not have, set els_api_key to None). More important, have a nice internet connection and have full access to the publishers.
+
+LOGIC:
 Code Schema, build a class for each publisher, among the crawler classes, their request are independent, within each class, their has a rate limit bond. then create a function to manage the input DOIs, in which, 
 create a event loop to arrange tasks till all finished (if task_in_progress come to 0 and DOIs have been depleted).
 
-How to use:
-just prepare DOIs list, e.g. 10.1021/... and your own els_api_key (if do not have, set els_api_key to None). More important, have a nice internet connection and have full access to the publishers.
-
-Developers:
-apply os system: windows, if you want to use on linux or macos, please change some path format to make it consistent with your OS system, better used on windows system.
-please feel free to customize this code for your own project. Remind that when introducing new crawler object, Be sure that all the init process in manage() function is compatible.
-if you want to add some cool features such as downloading SI, you can customize in the BaseCrawler._manipulation function.
-Notice that sometimes you might need to manually remove your data_articles folder to ensure right implementation.
+For Developers:
+- applied os system: windows, if you want to use on linux or macos, please change some path format to make it consistent with your OS system, better used on windows system.
+- please feel free to customize this code for your own project. Remind that when introducing new crawler object, Be sure that all the init process in manage() function is compatible.
+- if you want to add some cool features such as downloading SI, you can customize in the BaseCrawler._manipulation function.
+- Notice that sometimes you might need to manually remove your data_articles folder to ensure right implementation.
 """
 
 import asyncio
@@ -276,8 +276,8 @@ class WileyCrawler(BaseCrawler):
 
 class ElsevierRetriever(BaseCrawler):
     """
-    ElsevierRetriever use official supply API endpoint to get articles, which kinda different with the others...
-    For more informations, please refer to "https://dev.elsevier.com/documentation/FullTextRetrievalAPI.wadl", the max requests per second is 10 (maybe varied by time. for details, please refer to "https://dev.elsevier.com/api_key_settings.html")
+    ElsevierRetriever use official supply API endpoint to get articles, which is kinda different with the others...
+    For more information, please refer to "https://dev.elsevier.com/documentation/FullTextRetrievalAPI.wadl", the max requests per second is 10 (maybe varied by time. for details, please refer to "https://dev.elsevier.com/api_key_settings.html")
     the logic is consistent with "BaseCrawler"
     """
     def __init__(self, rate_limit: float, status_tracker: "StatusTracker", sema: asyncio.Semaphore, queue: asyncio.Queue, context: "BrowserContext", save_dir: str, els_api_key: str|None, retry_attempts: int = 3):
@@ -452,13 +452,13 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
         #     headless=False
         #     )
         context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-        context_for_rsc = await p.chromium.launch_persistent_context(headless=False, executable_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", user_data_dir="C:\\Users\\Soike\\AppData\\Local\\Google\\Chrome\\User Data")
+        # context_for_rsc = await p.chromium.launch_persistent_context(headless=False, executable_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", user_data_dir="C:\\Users\\Soike\\AppData\\Local\\Google\\Chrome\\User Data")
         await context.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
-        await context_for_rsc.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
+        # await context_for_rsc.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
 
         # instantiate crawlers.
         acs = AcsCrawler(rate_limit, status_tracker, sema, acs_queue, context, acs_save_dir)
-        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context_for_rsc, rsc_save_dir)
+        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context, rsc_save_dir)
         spr = SpringerCrawler(rate_limit, status_tracker, sema, spr_queue, context, spr_save_dir)
         nat = NatureCrawler(rate_limit, status_tracker, sema, nat_queue, context, nat_save_dir)
         aas = AaasCrawler(rate_limit, status_tracker, sema, aas_queue, context, aas_save_dir)
@@ -472,7 +472,7 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
         await asyncio.gather(*tasks)
         
         await context.close()
-        await context_for_rsc.close()
+        # await context_for_rsc.close()
         await browser.close()
 
         end_execute = time.ctime()

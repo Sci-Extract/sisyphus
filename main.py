@@ -5,7 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 
 from sisyphus.processor.llm_extraction import Extraction
 
-from mof_absorb_pydantic import Compounds
+from parse_result_absorb import Compounds
 
 _ = load_dotenv(find_dotenv())
 

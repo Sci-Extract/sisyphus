@@ -14,21 +14,25 @@ from ..utils.utilities import MoveOriginalFolder
 
 class Extraction:
 
-    def __init__(self, from_: str, save_filepath: str, query_and_prompts: dict[str,str], embedding_limit: Tuple[float], completion_limit: Tuple[float], max_attempts: int, logging_level: int = 10, pydantic_model: BaseModel = None):
+    def __init__(self, from_: str, save_filepath: str, query_and_prompts: dict[str,str], embedding_limit: Tuple[float] = (3000, 1000000), completion_limit: Tuple[float] = (3000, 60000), max_attempts: int = 5, logging_level: int = 10, pydantic_model: BaseModel = None):
         """Main api for llm Extraction, please ensure your environ has your openai api key. The processes include embedding, classification and summarise.
 
         :param from_: the file path to the articles
         :type from_: str
         :param save_filepath: the file path where you save results
         :type save_filepath: str
-        :paramembedding_limit: a tuple (request_limit, token_limit)
-        :type max_requests_per_minute: Tuple[float]
-        :param max_tokens_per_minute: a tuple (request_limit, token_limit)
-        :type max_tokens_per_minute: Tuple[float]
+        :query_and_prompts: a dict contain query, system_message, prompt_cls, prompt_sum keys and correspond values
+        :type query_and_prompts: dict[str, str]
+        :param embedding_limit: a tuple (request_limit, token_limit)
+        :type embedding_limit: Tuple[float]
+        :param completion_limit: a tuple (request_limit, token_limit)
+        :type completion_limit: Tuple[float]
         :param max_attempts: the maximum retries for single request
         :type max_attempts: int
         :param logging_level: logging level, defaults to 10
         :type logging_level: int, optional
+        :param pydantic_model: pydantic model for parsing results
+        :type pydantic_model: BaseModel, optional
         """
 
         self.from_ = from_
@@ -105,7 +109,8 @@ class Extraction:
                 g = iter(file)
                 await completion_messenger.completion_helper(
                     requests_generator=g,
-                    save_filepath=os.path.join("data", "completion_cls_results.jsonl")
+                    save_filepath=os.path.join("data", "completion_cls_results.jsonl"),
+                    need_gap_to_restore=True
                 )
                 
             df_to_extract = get_candidates(os.path.join("data", "completion_cls_results.jsonl"), os.path.join("data", "embedding.jsonl"))
