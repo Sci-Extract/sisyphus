@@ -426,7 +426,7 @@ class APIRequest:
                 if self.pydantic_model:
                     content = json.loads(llm_result["content"])
                     model = self.pydantic_model.model_validate(content)
-                    llm_result = dict(content=model.model_dump_json())
+                    llm_result = dict(content=model.model_dump())
             else:
                 raise ValueError('choose between embeddings/completions')
             
