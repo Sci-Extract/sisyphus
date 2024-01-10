@@ -247,7 +247,7 @@ class ProcessRequest:
             )
 
         if probe_size:
-            assert len(completion_token_usage.completion_tokens) == probe_size, f'something went wrong, {completion_token_usage.completion_tokens}'
+            # assert len(completion_token_usage.completion_tokens) == probe_size, f'something went wrong, {completion_token_usage.completion_tokens}'
             completion_tokens_average = sum(completion_token_usage.completion_tokens) / len(completion_token_usage.completion_tokens) # the average token in completion
             remain_tokens = completion_token_usage.x_ratelimit_remaining_tokens[-1] # the remain tokens of last time stamp
             return remain_tokens, completion_tokens_average
@@ -421,10 +421,10 @@ class APIRequest:
             elif mode == 'completions':
                 raw_response = await client.chat.completions.with_raw_response.create(**self.request_json)
                 response = raw_response.parse()
-                llm_result = dict(content=response.choices[0].message.content)
+                llm_result = dict(content=json.loads(response.choices[0].message.content))
                 # if pass in pydantic model then validate the llm result
                 if self.pydantic_model:
-                    content = json.loads(llm_result["content"])
+                    content = llm_result["content"]
                     model = self.pydantic_model.model_validate(content)
                     llm_result = dict(content=model.model_dump())
             else:

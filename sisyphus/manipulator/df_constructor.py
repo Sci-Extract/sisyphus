@@ -84,7 +84,7 @@ def get_candidates(jsonl_file_path, corpus_file: str):
         elif isinstance(raw_response, dict):
             flag = False
             for key in raw_response:
-                if raw_response[key] == 'False' or 'false' or False:
+                if raw_response[key] in ('False','false',False):
                     flag = True
                     break
             if flag:
