@@ -132,8 +132,8 @@ class ProcessRequest:
     def __post_init__(self):
         self.logger = log(logging_level=self.logging_level)
 
-    async def _process_request(self, requests_generator: Generator, save_filepath: str, mode: Literal["embeddings", "completions"], bucket: "Bucket", requests_rate: float = 0.001, probe_size: int = 0, completion_tokens: int = 15, usage_need_gap: bool = False, pydantic_model: BaseModel = None):
-        """Process requests parallelly. For completion task, set probe_size to get average token consumption. for simple request, set usage_need_gap to False (note that it only returns the remain token, not sleep to pause execution)"""
+    async def _process_request(self, requests_generator: Generator, save_filepath: str, mode: Literal["embeddings", "completions"], bucket: "Bucket", requests_rate: float = 0.001, probe_size: int = 0, completion_tokens: int = 15, record_usage: bool = False, pydantic_model: BaseModel = None):
+        """Process requests parallelly. For completion task, set probe_size to get average token consumption. for simple request, set record_usage to False (note that it only returns the remain token, not sleep to pause execution)"""
 
         if mode not in ['embeddings', 'completions']:
             raise ValueError("mode only have two choices: embeddings/completions")
@@ -145,7 +145,7 @@ class ProcessRequest:
         queue_of_requests_to_retry = asyncio.Queue()
         task_id_generator = self.task_id_generator()
         status_tracker = StatusTracker()
-        completion_token_usage = TokenUsage() if usage_need_gap or probe_size else None
+        completion_token_usage = TokenUsage() if record_usage or probe_size else None
         next_request = None
         file_not_finished = True
 
@@ -164,11 +164,11 @@ class ProcessRequest:
                     seconds_to_pause_after_rate_limit_error
                     - seconds_since_rate_limit_error
                 )
-                await asyncio.sleep(remaining_seconds_to_pause)
-                # ^e.g., if pause is 15 seconds and final limit was hit 5 seconds ago
                 self.logger.warn(
                     f"Pausing to cool down until {time.ctime(status_tracker.time_of_last_rate_limit_error + seconds_to_pause_after_rate_limit_error)}"
                 )
+                await asyncio.sleep(remaining_seconds_to_pause)
+                # ^e.g., if pause is 15 seconds and final limit was hit 5 seconds ago
 
             # check if there are remain requests
             if next_request is None:
@@ -246,14 +246,14 @@ class ProcessRequest:
                 f"{status_tracker.num_task_validate_errors} / {status_tracker.num_tasks_started} requests failed with validation."
             )
 
-        if probe_size:
+        if completion_token_usage:
             # assert len(completion_token_usage.completion_tokens) == probe_size, f'something went wrong, {completion_token_usage.completion_tokens}'
             completion_tokens_average = sum(completion_token_usage.completion_tokens) / len(completion_token_usage.completion_tokens) # the average token in completion
             remain_tokens = completion_token_usage.x_ratelimit_remaining_tokens[-1] # the remain tokens of last time stamp
-            return remain_tokens, completion_tokens_average
-        if usage_need_gap: # when probe size is set to 0 and need gap
-            remain_tokens = completion_token_usage.x_ratelimit_remaining_tokens[-1]
-            return remain_tokens
+            remain_requests = completion_token_usage.x_ratelimit_remaining_requests[-1]
+            last_time_stamp = completion_token_usage.last_time_stamp[-1]
+            self.logger.warning(f"OPENAI quota: remaining requests: {remain_requests}, remaining tokens: {remain_tokens}")
+            return (last_time_stamp, remain_requests, remain_tokens, completion_tokens_average) if probe_size else (last_time_stamp, remain_requests, remain_tokens)
 
     def task_id_generator(self):
         """Generate integers 0, 1, 2, and so on."""
@@ -271,41 +271,47 @@ class EmbeddingRequest(ProcessRequest):
         bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
         await self._process_request(requests_generator=requests_generator, save_filepath=save_filepath, mode=self.mode, bucket=bucket)
 
+
 class CompletionRequest(ProcessRequest):
     """Making requests for completions"""
     mode = 'completions'
-    async def completion_helper(self, requests_generator: Generator, save_filepath: str, probe_size: int = 10, pydantic_model: BaseModel = None, need_gap_to_restore: bool = False):
-        """Implementation method"""
-
-        probe_bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+    async def completion_helper(self, requests_generator: Generator, save_filepath: str, probe_size: int = 10, pydantic_model: BaseModel = None, start_capacity: tuple = None):
+        """Implementation method, return last timestamp of api call and  api left request, token quota"""
+        if start_capacity:
+            last_time_stamp, remain_requests, remain_tokens = start_capacity
+            probe_bucket = Bucket(last_update_time=last_time_stamp, max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+            probe_bucket.update_primal_capacity(remain_requests, remain_tokens)
+        else:
+            probe_bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
         
-        # Probe
-        remain_tokens, completion_tokens_ave = await self._process_request(
+        # Probe process
+        probe_last_time_stamp, probe_remain_requests, probe_remain_tokens, completion_tokens_ave = await self._process_request(
             requests_generator=requests_generator,
             save_filepath=save_filepath,
             mode=self.mode, bucket=probe_bucket,
             probe_size=probe_size,
             pydantic_model=pydantic_model,
-            usage_need_gap=True,
+            record_usage=True,
         )
         self.logger.warning(f"The estimated token completion consumption is set to {completion_tokens_ave} tokens")
-        
-        # token rehabilitation
-        await self.token_rehabilitation(remain_tokens)
 
         # process rest requests
-        bucket = Bucket(last_update_time=time.time(), max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
-        remain_tokens = await self._process_request(
+        bucket = Bucket(last_update_time=probe_last_time_stamp, max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)
+        # update start capacity
+        bucket.update_primal_capacity(remain_requests=probe_remain_requests, remain_tokens=probe_remain_tokens)
+
+        f_last_time_stamp, f_remain_requests, f_remain_tokens = await self._process_request(
             requests_generator=requests_generator,
             save_filepath=save_filepath, 
             mode=self.mode, 
             bucket=bucket, 
             completion_tokens=completion_tokens_ave,
             pydantic_model=pydantic_model,
-            usage_need_gap=True,
+            record_usage=True,
         )
-        if need_gap_to_restore: # the maximum wait time - 1 min
-            await self.token_rehabilitation(remain_tokens)
+
+        # final time, requests and tokens quota.
+        return f_last_time_stamp, f_remain_requests, f_remain_tokens
 
     async def completion_helper_with_no_probe(self, requests_generator: Generator, save_filepath: str, pydantic_model: BaseModel = None):
         """For small tasks use this method"""
@@ -337,6 +343,11 @@ class Bucket:
     def __post_init__(self):
         self.present_capacity_requests = self.max_capacity_requests
         self.present_capacity_tokens = self.max_capacity_tokens
+    
+    def update_primal_capacity(self, remain_requests: float, remain_tokens: float):
+        """Successive requests start with a smaller capacity"""
+        self.present_capacity_requests = remain_requests
+        self.present_capacity_tokens = remain_tokens
     
     def update_capacity(self):
         self.current_time = time.time()
@@ -386,6 +397,8 @@ class TokenUsage():
     total_tokens: list[int] = field(default_factory=list)
     
     x_ratelimit_remaining_tokens: list[int] = field(default_factory=list)
+    x_ratelimit_remaining_requests: list[int] = field(default_factory=list)
+    last_time_stamp: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -433,6 +446,7 @@ class APIRequest:
         except openai.APIConnectionError as e:
             status_tracker.num_api_errors += 1
             self.logger.warning(f"/APICONNECTION/ Request {self.task_id}: The server could not be reached")
+            self.logger.warning(e)
             self.logger.warning(e.__cause__)  # an underlying Exception, likely raised within httpx.
             error = e
 
@@ -481,6 +495,8 @@ class APIRequest:
             # real token usage for probe
             if self.completion_token_usage:
                 self.completion_token_usage.x_ratelimit_remaining_tokens.append(int(raw_response.headers.get('x-ratelimit-remaining-tokens')))
+                self.completion_token_usage.x_ratelimit_remaining_requests.append(int(raw_response.headers.get('x-ratelimit-remaining-requests')))
+                self.completion_token_usage.last_time_stamp.append(time.time())
                 self.completion_token_usage.prompt_tokens.append(response.usage.prompt_tokens)
                 self.completion_token_usage.completion_tokens.append(response.usage.total_tokens - response.usage.prompt_tokens) # usage has no completion tokens attribute, calculate the difference.
             data = (

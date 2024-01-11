@@ -14,7 +14,7 @@ from ..utils.utilities import MoveOriginalFolder
 
 class Extraction:
 
-    def __init__(self, from_: str, save_filepath: str, query_and_prompts: dict[str,str], embedding_limit: Tuple[float] = (3000, 1000000), completion_limit: Tuple[float] = (3000, 60000), max_attempts: int = 5, logging_level: int = 10, pydantic_model: BaseModel = None):
+    def __init__(self, from_: str, save_filepath: str, query_and_prompts: dict[str,str], embedding_limit: Tuple[float] = (3000, 1000000), completion_limit: Tuple[float] = (3000, 60000), max_attempts: int = 5, logging_level: int = 10):
         """Main api for llm Extraction, please ensure your environ has your openai api key. The processes include embedding, classification and summarise.
 
         :param from_: the file path to the articles
@@ -48,12 +48,11 @@ class Extraction:
         self.system_message = query_and_prompts["system_message"]
         self.prompt_cls = query_and_prompts["prompt_cls"]
         self.prompt_sum = query_and_prompts["prompt_sum"]
-        self.pydantic_model = pydantic_model
 
     @MoveOriginalFolder(folder_path="data")
-    async def extract(self, save_folder="data"):
+    async def extract(self, save_folder="data", pydantic_model: BaseModel = None, sample_size: int = None):
         # httpx configs
-        timeout = httpx.Timeout(10.0, connect=20.0, pool=20.0, read=30.0)
+        timeout = httpx.Timeout(10.0, connect=30.0, pool=30.0, read=30.0)
         limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
 
         async with AsyncOpenAI(
@@ -76,7 +75,7 @@ class Extraction:
                 logging_level=self.logging_level
             )
 
-            embedding_reqeust_file = create_embedding_jsonl(source=self.from_, chunk_size=200)
+            embedding_reqeust_file = create_embedding_jsonl(source=self.from_, chunk_size=200, sample_size=sample_size)
             with open(embedding_reqeust_file, encoding='utf-8') as file:
                 g = iter(file)
                 await embedding_messenger.embedding_helper(
@@ -107,10 +106,11 @@ class Extraction:
             )
             with open(os.path.join("data", "completion_cls.jsonl"), encoding='utf-8') as file:
                 g = iter(file)
-                await completion_messenger.completion_helper(
+                g, probe_size = self.choose_probe_size(g)
+                next_start_capacity = await completion_messenger.completion_helper(
                     requests_generator=g,
                     save_filepath=os.path.join("data", "completion_cls_results.jsonl"),
-                    need_gap_to_restore=True
+                    probe_size=probe_size
                 )
                 
             df_to_extract = get_candidates(os.path.join("data", "completion_cls_results.jsonl"), os.path.join("data", "embedding.jsonl"))
@@ -123,8 +123,51 @@ class Extraction:
             )
             with open(os.path.join("data", "completion_sum.jsonl"), encoding='utf-8') as file:
                 g = iter(file)
+                g, probe_size = self.choose_probe_size(g)
                 await completion_messenger.completion_helper(
+                    probe_size=probe_size,
                     requests_generator=g,
                     save_filepath=self.save_filepath,
-                    pydantic_model=self.pydantic_model
+                    pydantic_model=pydantic_model,
+                    start_capacity=next_start_capacity
                 )
+    
+    async def extract_fatal(self, request_json_file, save_filepath: str, pydantic_model: BaseModel = None):
+        """Use this method when last request exit without finishing. Need to pass the file name contains requests"""
+        # httpx configs
+        timeout = httpx.Timeout(10.0, connect=30.0, pool=30.0, read=30.0)
+        limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
+
+        async with AsyncOpenAI(
+            http_client=httpx.AsyncClient(verify=False, timeout=timeout, limits=limits),
+            max_retries=0,
+        ) as client:
+            completion_messenger = CompletionRequest(
+                client=client,
+                max_requests_per_minute=self.max_requests_per_minute_cp,
+                max_tokens_per_minute=self.max_tokens_per_minute_cp,
+                max_attempts=self.max_attempts,
+                logging_level=self.logging_level
+            )
+
+            with open(request_json_file, encoding='utf-8') as file:
+                g = iter(file)
+                g, probe_size = self.choose_probe_size(g)
+                
+                await completion_messenger.completion_helper(
+                    probe_size=probe_size,
+                    requests_generator=g,
+                    save_filepath=save_filepath,
+                    pydantic_model=pydantic_model
+                )
+
+    def choose_probe_size(self, g):
+        """choose the probe size based on the length of an iterator and return a new one"""
+        g_ls = list(g)
+        length = len(g_ls)
+        g = iter(g_ls)
+        if length > 100: # indicate big data input
+            probe_size = 30
+        else:
+            probe_size = 10 # default for completion_helper
+        return g, probe_size

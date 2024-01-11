@@ -147,20 +147,20 @@ class MoveOriginalFolder(object):
         self.temp_path = "temp"
 
     def __call__(self, func):
-        if not os.path.exists(self.folder_path):
-            os.mkdir(self.folder_path)
-        if len(os.listdir(self.folder_path)) != 0:
-            # move to temp
-            current_datetime = datetime.now()
-            current_hour = current_datetime.hour
-            current_minute = current_datetime.minute
-            move_to = os.path.join(self.temp_path, f"{self.folder_path}_{current_hour}_{current_minute}")
-            shutil.move(self.folder_path, move_to)
-
-            os.mkdir(self.folder_path) # recreate one
 
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
+            if not os.path.exists(self.folder_path):
+                os.mkdir(self.folder_path)
+            if len(os.listdir(self.folder_path)) != 0:
+                # move to temp
+                current_datetime = datetime.now()
+                current_hour = current_datetime.hour
+                current_minute = current_datetime.minute
+                move_to = os.path.join(self.temp_path, f"{self.folder_path}_{current_hour}_{current_minute}")
+                shutil.move(self.folder_path, move_to)
+
+            os.mkdir(self.folder_path) # recreate one
             return await func(*args, **kwargs)
 
         return async_wrapper

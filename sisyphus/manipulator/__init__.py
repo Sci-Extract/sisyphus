@@ -38,7 +38,7 @@ def task_id_generator_function():
         yield task_id
         task_id += 1
 
-def create_embedding_jsonl(source: str, chunk_size: int = 300) -> str:
+def create_embedding_jsonl(source: str, chunk_size: int = 300, sample_size: int = None) -> str:
     """retrun the create file path, 
     source_path: the paraent folder of articles. 
     article_dirs: target articles directory names.
@@ -63,6 +63,8 @@ def create_embedding_jsonl(source: str, chunk_size: int = 300) -> str:
     write_mode = get_write_mode(file_path)
     if write_mode == 'w':
         open(file_path, 'w', encoding='utf-8').close() # clear the content
+    
+    count = 0
 
     task_id_generator = task_id_generator_function()
     for publisher in os.listdir(source):
@@ -72,6 +74,10 @@ def create_embedding_jsonl(source: str, chunk_size: int = 300) -> str:
             content = get_target_dir_txt(article_path)
             if content: # sometimes failed to get RSC articles, it's empty text.
                 converter_embedding(content, file_name=article, task_id_generator=task_id_generator, write_mode='a', jsonl_file_name=jsonl_file_name, jsonl_file_dir=jsonl_file_dir, chunk_size=chunk_size) # modify the name if needed
+            if sample_size:
+                count += 1
+                if count == sample_size:
+                    return file_path
     return file_path
     
 def create_completion_jsonl(df, file_path: str, system_message: str, prompt: str, required_format: Literal["json", "text"], text_jsonl: str = None, model="gpt-3.5-turbo-1106", temperature: float = 0.0):
