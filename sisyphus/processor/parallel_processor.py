@@ -275,7 +275,7 @@ class EmbeddingRequest(ProcessRequest):
 class CompletionRequest(ProcessRequest):
     """Making requests for completions"""
     mode = 'completions'
-    async def completion_helper(self, requests_generator: Generator, save_filepath: str, probe_size: int = 10, pydantic_model: BaseModel = None, start_capacity: tuple = None):
+    async def completion_helper(self, requests_generator: Generator, save_filepath: str, probe_size: int = 10, pydantic_model: BaseModel = None, start_capacity: tuple = None, stop_flag: bool = False):
         """Implementation method, return last timestamp of api call and  api left request, token quota"""
         if start_capacity:
             last_time_stamp, remain_requests, remain_tokens = start_capacity
@@ -294,6 +294,10 @@ class CompletionRequest(ProcessRequest):
             record_usage=True,
         )
         self.logger.warning(f"The estimated token completion consumption is set to {completion_tokens_ave} tokens")
+        
+        if stop_flag:
+            self.logger.info("Maybe you are running test since the input data is small")
+            return probe_last_time_stamp, probe_remain_requests, probe_remain_tokens
 
         # process rest requests
         bucket = Bucket(last_update_time=probe_last_time_stamp, max_capacity_requests=self.max_requests_per_minute, max_capacity_tokens=self.max_tokens_per_minute)

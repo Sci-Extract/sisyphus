@@ -106,11 +106,12 @@ class Extraction:
             )
             with open(os.path.join("data", "completion_cls.jsonl"), encoding='utf-8') as file:
                 g = iter(file)
-                g, probe_size = self.choose_probe_size(g)
+                g, probe_size, stop_flag = self.choose_probe_size(g)
                 next_start_capacity = await completion_messenger.completion_helper(
                     requests_generator=g,
                     save_filepath=os.path.join("data", "completion_cls_results.jsonl"),
-                    probe_size=probe_size
+                    probe_size=probe_size,
+                    stop_flag=stop_flag
                 )
                 
             df_to_extract = get_candidates(os.path.join("data", "completion_cls_results.jsonl"), os.path.join("data", "embedding.jsonl"))
@@ -123,13 +124,14 @@ class Extraction:
             )
             with open(os.path.join("data", "completion_sum.jsonl"), encoding='utf-8') as file:
                 g = iter(file)
-                g, probe_size = self.choose_probe_size(g)
+                g, probe_size, stop_flag = self.choose_probe_size(g)
                 await completion_messenger.completion_helper(
                     probe_size=probe_size,
                     requests_generator=g,
                     save_filepath=self.save_filepath,
                     pydantic_model=pydantic_model,
-                    start_capacity=next_start_capacity
+                    start_capacity=next_start_capacity,
+                    stop_flag=stop_flag
                 )
     
     async def extract_fatal(self, request_json_file, save_filepath: str, pydantic_model: BaseModel = None):
@@ -162,12 +164,15 @@ class Extraction:
                 )
 
     def choose_probe_size(self, g):
-        """choose the probe size based on the length of an iterator and return a new one"""
+        """choose the probe size based on the length of an iterator and return a new one, stop_flag indicate small size input"""
         g_ls = list(g)
         length = len(g_ls)
         g = iter(g_ls)
+        stop_flag: bool = False
         if length > 100: # indicate big data input
             probe_size = 30
         else:
             probe_size = 10 # default for completion_helper
-        return g, probe_size
+        if length < probe_size:
+            stop_flag = True
+        return g, probe_size, stop_flag
