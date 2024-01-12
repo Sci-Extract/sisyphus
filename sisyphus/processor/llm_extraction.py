@@ -154,13 +154,14 @@ class Extraction:
 
             with open(request_json_file, encoding='utf-8') as file:
                 g = iter(file)
-                g, probe_size = self.choose_probe_size(g)
+                g, probe_size, stop_flag = self.choose_probe_size(g)
                 
                 await completion_messenger.completion_helper(
                     probe_size=probe_size,
                     requests_generator=g,
                     save_filepath=save_filepath,
-                    pydantic_model=pydantic_model
+                    pydantic_model=pydantic_model,
+                    stop_flag=stop_flag
                 )
 
     def choose_probe_size(self, g):
@@ -173,6 +174,6 @@ class Extraction:
             probe_size = 30
         else:
             probe_size = 10 # default for completion_helper
-        if length < probe_size:
+        if length <= probe_size:
             stop_flag = True
         return g, probe_size, stop_flag
