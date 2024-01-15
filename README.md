@@ -18,12 +18,12 @@
 
   `python main.py`
 
-  ### Contribution
-  - Please first give your suggestions or any problems in the issue and then considering pull request.
-  - The main logic applied to the extraction process are followed by embedding, classification, summarization. Developers can consider how to optimize those procedures.
- 
-  #### Tips
-  - Where you can adujust crucial prameters
-    - in *sisyphus/manipulator/__init__.py* creating_jsonl() function -> change the chunk_size (this controls the size of each sentence to be extracted) to find the best outcome for your system.
-    - in *sisyphus/crawler/download_si.py* download() function -> change the spawn rate (control the rate of the reqeust speed) to be compatible with your internet speed.
-  
+### Contribution
+- Please first give your suggestions or any problems in the issue and then considering pull request.
+- The main logic applied to the extraction process are followed by embedding, classification, summarization. Developers can consider how to optimize those procedures.
+
+#### Tips
+- Where you can adujust crucial prameters
+  - in *sisyphus/manipulator/__init__.py* creating_jsonl() function -> change the chunk_size (this controls the size of each sentence to be extracted) to find the best outcome for your system.
+  - in *sisyphus/crawler/download_si.py* download() function -> change the spawn rate (control the rate of the reqeust speed) to be compatible with your internet speed.
+
