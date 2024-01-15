@@ -170,6 +170,7 @@ class Extraction:
         length = len(g_ls)
         g = iter(g_ls)
         stop_flag: bool = False
+        assert length != 0 ,"Please refactor your prompt. Check whether they are comply with your article content or consider to loosen the rules in prompt_cls"
         if length > 100: # indicate big data input
             probe_size = 30
         else:

@@ -7,15 +7,11 @@ import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 
 from sisyphus.crawler.async_playwright import manager
+from sisyphus.utils.utilities import read_wos_excel
 
 
 _ = load_dotenv(find_dotenv())
 els_api_key = os.getenv("els_api_key") 
-
-# df = pd.read_csv("data_forcrawler_test\\doi_list.csv") # prepared doi file
-# doi_list: list[str] = df["doi"].dropna().unique().tolist()[:5]
-
-# asyncio.run(manager(doi_list, els_api_key=els_api_key))
 
 def parse_file(file) -> list[str]:
     doi_ls = []
@@ -29,9 +25,17 @@ def parse_file(file) -> list[str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--retrieval_dois", help=".txt file contains dois you want to retrieve")
+    parser.add_argument("--retrieval_dois", help=".txt/.xlsx file contains dois you want to retrieve")
     args = parser.parse_args()
 
-    doi_ls = parse_file(args.retrieval_dois)
+    file: str = args.retrieval_dois
+    file_extension = os.path.splitext(file)[1]
+    if file_extension == '.txt':
+        doi_ls = parse_file(file)
+    elif file_extension == '.xls':
+        doi_ls = read_wos_excel(file)
+    else:
+        print("file format not supported")
+
     doi_ls = list(set(doi_ls))
     asyncio.run(manager(doi_ls, els_api_key=els_api_key))

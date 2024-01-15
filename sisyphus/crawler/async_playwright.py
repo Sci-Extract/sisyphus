@@ -9,7 +9,7 @@ create a event loop to arrange tasks till all finished (if task_in_progress come
 For Developers:
 - applied os system: windows, if you want to use on linux or macos, please change some path format to make it consistent with your OS system, better used on windows system.
 - please feel free to customize this code for your own project. Remind that when introducing new crawler object, Be sure that all the init process in manage() function is compatible.
-- if you want to add some cool features such as downloading SI, you can customize in the BaseCrawler._manipulation function.
+- if you want to add some cool features such as downloading SI, you can customize in the BaseCrawler._manipulation function. UPDATE 1/15/2024, Now can retrieve Wiely, ACS, RSC SI.
 - Notice that sometimes you might need to manually remove your data_articles folder to ensure right implementation.
 """
 
@@ -24,6 +24,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 import httpx
+import pandas as pd
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright, BrowserContext, Page
 
@@ -35,9 +36,10 @@ from sisyphus.crawler.publishers_config import publishers_doi_prefix
 logger = log(logging_level=20)
 
 class BaseCrawler(ABC):
-    publisher_flag = False # for ACS, Wiley, set this to true, used to indicate clear cookies and force no more than one crawler visting specific publisher.
+    publisher_flag = False # for ACS, Wiley, set this to true, used to indicate clear cookies
+    publisher = None
 
-    def __init__(self, rate_limit: float, status_tracker: "StatusTracker", sema: asyncio.Semaphore, queue: asyncio.Queue, context: "BrowserContext", save_dir: str, retry_attempts: int = 1):
+    def __init__(self, rate_limit: float, status_tracker: "StatusTracker", sema: asyncio.Semaphore, queue: asyncio.Queue, context: "BrowserContext", save_dir: str, download_pdf: bool = False, retry_attempts: int = 1):
         """The base class for crawler
 
         :param rate_limit: frequency(per second) of requesting a single publisher
@@ -67,8 +69,9 @@ class BaseCrawler(ABC):
         self.remain_requests = 1 # init
         self.retry_doi = defaultdict(int)
         self.detect_state = False # during fetch process, True for being detected.
-        self.single_crawler = False
+        self.occupation = False # act as switch, control only one crawler working on same publisher at the same time
         self.pulse_rate = False # indicate rate change
+        self.download_pdf = download_pdf
 
     async def run(self, doi_list: list[str]):
         restore_speed = self.rate_limit
@@ -80,8 +83,7 @@ class BaseCrawler(ABC):
         
         while not self.detect_state:
 
-            # if the child class is not retrict to only one run at a time, "single_crawler" is always False...
-            if self.remain_requests >= 1 and not self.single_crawler:
+            if self.remain_requests >= 1 and not self.occupation:
 
                 if not self.queue.empty():
                     doi = self.queue.get_nowait()
@@ -136,10 +138,10 @@ class BaseCrawler(ABC):
         for doi in doi_list:
             yield doi
     
-    async def _manipulation(self, page: Page, source_html, doi, download_source=True, download_pdf=False):
+    async def _manipulation(self, page: Page, source_html, doi, download_source=True):
         if download_source:
             self._save(source_html, doi)
-        if download_pdf:
+        if self.download_pdf:
             pass # download pdf...
         
     async def _fetch(self, doi: str) -> None:
@@ -153,9 +155,9 @@ class BaseCrawler(ABC):
         url = self._doi2url(doi)
         async with self.sema:
             try:
+                self.occupation = True
                 if self.publisher_flag: # first clear, then navigate to url.
                     await self.context.clear_cookies()
-                    self.single_crawler = True
 
                 page = await self.context.new_page()
                 await page.goto(url, wait_until='domcontentloaded', timeout=60000)
@@ -191,28 +193,67 @@ class BaseCrawler(ABC):
                 await page.close()
                 if self.publisher_flag:
                     await self.context.clear_cookies()
-                    self.single_crawler = False
+                self.occupation = False
 
     @abstractmethod
     def _leak_fingerprint(self, source_html: str) -> bool:
         pass
 
     def _save(self, content: str, doi: str):
-            doi_suffix = doi.split('/')[1]
-            # create article dir
-            dir_name = doi_suffix
+            dir_name = self._get_dir_name(doi=doi)
             dir_path = os.path.join(self.save_dir, dir_name)
             os.makedirs(dir_path, exist_ok=True)
-            file_name = doi_suffix + ".html"
+            file_name = dir_name + ".html"
             file_path = os.path.join(dir_path, file_name)
             with open(file_path, "w", encoding='utf-8') as file:
                  file.write(content)
 
+    def _get_dir_name(self, doi:str):
+            return doi.split('/')[1]
+    
+
+    ####### SI IMPLEMENTATION #######
+        
+    def _store_si_metadata(self, doi, url):
+        dir_name = self._get_dir_name(doi)
+        dir_path = os.path.join(self.save_dir, dir_name)
+        metadata = dict(
+            url=url,
+            save_location=dir_path,
+            publisher=self.publisher
+        )
+        self.status_tracker.si_metadata.append(metadata)
+
+    def _retrieve_si(self, source, selector: str, doi: str):
+        """selector is css selector"""
+
+        def url_completion(original_url):
+            if self.publisher == 'ACS':
+                domain = 'https://pubs.acs.org'
+                url = domain + original_url
+            elif self.publisher == 'RSC':
+                url = original_url
+            elif self.publisher == 'Wiley':
+                domain = 'https://onlinelibrary.wiley.com'
+                url = domain + original_url
+            else:
+                url = original_url
+            return url
+                
+        soup = BeautifulSoup(source, 'html.parser')
+        elements = soup.select(selector=selector)
+        if len(elements) == 0:
+            return
+        for a in elements:
+            if a.has_attr('href'):
+                url = url_completion(original_url=a['href'])
+                self._store_si_metadata(doi, url)
 
 @dataclass
 class StatusTracker:
     # singleton class
     doi_for_next_iteration: list = field(default_factory=list)
+    si_metadata: list[dict] = field(default_factory=list)
 
 @dataclass
 class MetaInfo:
@@ -220,6 +261,7 @@ class MetaInfo:
     
 
 class AcsCrawler(BaseCrawler):
+    publisher = 'ACS'
     publisher_flag = True
 
     def _leak_fingerprint(self, source_html: str) -> bool:
@@ -230,12 +272,21 @@ class AcsCrawler(BaseCrawler):
             return True
         return False
     
+    async def _manipulation(self, page: Page, source_html, doi, download_source=True):
+        if download_source:
+            self._save(source_html, doi)
+        if self.download_pdf:
+            self._retrieve_si(source=source_html, selector='.sup-info-attachments>ul>li.decorationNone>ul>li>a.suppl-anchor', doi=doi)
 
 class RscCrawler(BaseCrawler):
+    publisher = 'RSC'
     def _leak_fingerprint(self, source_html: str) -> bool:
         return False
     
-    async def _manipulation(self, page: Page, source_html, doi, download_source=True, download_pdf=False):
+    async def _manipulation(self, page: Page, source_html, doi, download_source=True):
+        # get SI url first
+        if self.download_pdf:
+            self._retrieve_si(source=source_html, selector='ul.list__collection>li.list__item--dashed>a', doi=doi)
         # there may not have this option in old papers.
         if await page.get_by_role("link", name="Article HTML").is_visible():
             await page.get_by_role("link", name="Article HTML").click()
@@ -248,21 +299,25 @@ class RscCrawler(BaseCrawler):
     
 
 class SpringerCrawler(BaseCrawler):
+    publisher = 'Springer'
     def _leak_fingerprint(self, source_html: str) -> bool:
         return False
 
 
 class NatureCrawler(BaseCrawler):
+    publisher = 'Nature'
     def _leak_fingerprint(self, source_html: str) -> bool:
         return False
 
 
 class AaasCrawler(BaseCrawler):
+    publisher = 'AAAS'
     def _leak_fingerprint(self, source_html: str) -> bool:
         return False
 
 
 class WileyCrawler(BaseCrawler):
+    publisher = 'Wiley'
     publisher_flag = True
 
     def _leak_fingerprint(self, source_html: str) -> bool:
@@ -273,6 +328,11 @@ class WileyCrawler(BaseCrawler):
             return True
         return False
     
+    async def _manipulation(self, page: Page, source_html, doi, download_source=True):
+        if download_source:
+            self._save(source_html, doi)
+        if self.download_pdf:
+            self._retrieve_si(source=source_html, selector='table[class="support-info__table table article-section__table"]>tbody tr a', doi=doi)
 
 class ElsevierRetriever(BaseCrawler):
     """
@@ -280,6 +340,7 @@ class ElsevierRetriever(BaseCrawler):
     For more information, please refer to "https://dev.elsevier.com/documentation/FullTextRetrievalAPI.wadl", the max requests per second is 10 (maybe varied by time. for details, please refer to "https://dev.elsevier.com/api_key_settings.html")
     the logic is consistent with "BaseCrawler"
     """
+    publisher = 'Elsevier'
     def __init__(self, rate_limit: float, status_tracker: "StatusTracker", sema: asyncio.Semaphore, queue: asyncio.Queue, context: "BrowserContext", save_dir: str, els_api_key: str|None, retry_attempts: int = 3):
         super().__init__(rate_limit, status_tracker, sema, queue, context, save_dir, retry_attempts)
         self.els_api_key = els_api_key
@@ -348,20 +409,28 @@ class ElsevierRetriever(BaseCrawler):
           'X-ELS-APIKEY': self.els_api_key,
           'Accept': 'text/xml'
         }
+        error = None
         
         try:
             response = await client.get(url, headers=headers)
+            response.raise_for_status()
+
             self._save(response.text, doi)
             logger.info(f"{url} has been finished")
             self.task_in_progress -= 1
 
-        except Exception as e:
+        except httpx.HTTPStatusError as e:
             if response.status_code == 429:
                 self.requests_too_many = True
-                logger.error(f"Too many requests! error:{e}")
+                logger.error(f"elsevier: requst too many!")
             else:
-                logger.error(f"error: {e}")
+                logger.error(f"status error:{e}")
+            error = e
+        except Exception as e:
+            logger.error(f"error: {e}")
+            error = e
 
+        if error:
             if self.retry_doi[doi] < self.retry_attempts:
                 self.retry_doi[doi] += 1
                 self.queue.put_nowait(doi)
@@ -386,7 +455,7 @@ class ElsevierRetriever(BaseCrawler):
         return False
 
 
-async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.15, els_rate_limit: float = 5.0, concurrent_run_tasks: int = 5):
+async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.15, els_rate_limit: float = 5.0, concurrent_run_tasks: int = 5, download_pdf: bool = True, test_mode: bool = False):
     """Manage tasks, distribute them among 7 crawler instances
 
     :param doi_list: wanted dois
@@ -445,10 +514,9 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
             categorize(doi)
 
     async with async_playwright() as p:
+        launch_config = {"headless": False} if test_mode else {"ignore_default_args": ["--headless"], "args": ["--headless=new"]}
         browser = await p.chromium.launch(
-            ignore_default_args=["--headless"],
-            args=["--headless=new"],
-            # headless=False # uncomment to see processing
+            **launch_config
             )
         context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
         # if you need website cookies to enable some features, you need to use your own browser, but remind that cookies will be clear in acs and wil crawler everytimes.
@@ -457,12 +525,12 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
         # await context_for_rsc.add_init_script(path=f'{os.path.join("sisyphus", "lib", "stealth.min.js")}')
 
         # instantiate crawlers.
-        acs = AcsCrawler(rate_limit, status_tracker, sema, acs_queue, context, acs_save_dir)
-        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context, rsc_save_dir)
+        acs = AcsCrawler(rate_limit, status_tracker, sema, acs_queue, context, acs_save_dir, download_pdf)
+        rsc = RscCrawler(rate_limit, status_tracker, sema, rsc_queue, context, rsc_save_dir, download_pdf)
         spr = SpringerCrawler(rate_limit, status_tracker, sema, spr_queue, context, spr_save_dir)
         nat = NatureCrawler(rate_limit, status_tracker, sema, nat_queue, context, nat_save_dir)
         aas = AaasCrawler(rate_limit, status_tracker, sema, aas_queue, context, aas_save_dir)
-        wil = WileyCrawler(rate_limit, status_tracker, sema, wil_queue, context, wil_save_dir)
+        wil = WileyCrawler(rate_limit, status_tracker, sema, wil_queue, context, wil_save_dir, download_pdf)
         els = ElsevierRetriever(els_rate_limit, status_tracker, sema, els_queue, context, els_save_dir, els_api_key)
         
         crawler_instances: list[BaseCrawler] = [acs, rsc, spr, nat, aas, wil, els]
@@ -493,4 +561,7 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
             for crawler in [instance for instance in crawler_instances if instance.publisher_flag]:
                 if crawler.detect_state:
                     file.write(f"{type(crawler).__name__} has been detected\n")
-            
+    
+        if download_pdf:
+            df = pd.DataFrame(status_tracker.si_metadata)
+            df.to_csv("si_metadata.csv", index=False)
