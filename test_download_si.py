@@ -9,8 +9,8 @@ import time
 
 if __name__ == "__main__":
     start = time.perf_counter()
-    executable_path = "/the/path/to/your/chrome/execution"
-    user_data_dir = "/the/path/to/your/chrome/data/file"
+    executable_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    user_data_dir = "C:\\Users\\Soike\\AppData\\Local\\Google\\Chrome\\User Data"
     asyncio.run(downlaod(executable_path, user_data_dir, "SI_download_failed.txt"))
     end = time.perf_counter()
     print(f"cost {end - start} s")
