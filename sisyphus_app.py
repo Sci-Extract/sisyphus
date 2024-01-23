@@ -221,8 +221,8 @@ with MainTab:
             st.session_state["finish"] = True
 
 if st.session_state["finish"]:
-    from result_extract import show_csv
-    df = show_csv()
+    from script.result_extract import show_csv
+    df = show_csv("not decide")
     st.dataframe(df)
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
