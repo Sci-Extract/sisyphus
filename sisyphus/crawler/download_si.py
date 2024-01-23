@@ -15,8 +15,28 @@ class Controler(AsyncControler):
         super().__init__(error_savefile_path, max_redo_times, logging_level)
         self.browser = browser
 
-    def request_consumption(self, request):
+    def task_consumption(self, task):
         return 1
+    
+    async def implement(self, request, tracker: Tracker, sema: asyncio.Semaphore, redo_queue: asyncio.Queue, redo_times: int, task_id: int):
+        async with sema:
+            try:
+                self.logger.info(f"{task_id}: start")
+                #### the main task you prepare to do ####
+                await self.carrier(request_wrapper=request)
+
+                tracker.task_in_progress_num -= 1
+                self.logger.info(f"{task_id}: done")
+
+            # error handling logic
+            except Exception as e:
+                self.logger.warning(f"{task_id} failed: {e}")
+                tracker.task_failed += 1
+                if redo_times < self.max_redo_times:
+                    redo_queue.put_nowait(request)
+                else:
+                    tracker.task_failed_ls.append(request)
+                    self.logger.warning(f"{task_id} faild after {redo_times} attempts. Failed task saved to {self.error_savefile_path}")
 
     async def carrier(self, request_wrapper):
         download_event = asyncio.Event()
@@ -39,7 +59,10 @@ class Controler(AsyncControler):
             await page.close()
 
     def _save(self, result):
-        pass
+        return
+
+    def call_back(self, tracker):
+        return
 
 
 async def downlaod(executable_path, user_data_dir, error_savefile_path: str, si_metadata_file='si_metadata.csv', test_mode: bool = False, logging_level: int = 10):

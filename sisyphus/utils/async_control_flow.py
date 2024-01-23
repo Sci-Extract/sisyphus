@@ -17,19 +17,19 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Generator
+from typing import Generator, Optional
 
 from sisyphus.utils.utilities import log
 
 
 class Bucket:
-    def __init__(self, maximum_capacity: float, recovery_rate: float, init_time: float = time.time(), init_capacity: float = None):
+    def __init__(self, maximum_capacity: float, recovery_rate: float, init_capacity: Optional[float] = None):
         self.maximum_capacity = maximum_capacity
         self.recovery_rate = recovery_rate
-        self.last_update_time = init_time
-        self.current_time: float = None
+        self.last_update_time: Optional[float] = None
+        self.current_time: Optional[float] = None
         
-        if init_capacity is not None:
+        if init_capacity != None:
             if init_capacity > maximum_capacity:
                 raise ValueError("init_capacity cannot bigger than maximum_capacity")
             self.present_capacity = init_capacity
@@ -37,6 +37,8 @@ class Bucket:
             self.present_capacity = maximum_capacity
 
     def update(self):
+        if self.last_update_time is None:
+            self.last_update_time = time.time()
         self.current_time = time.time()
         time_elapsed = self.current_time - self.last_update_time
         self.present_capacity = min(self.present_capacity + time_elapsed * self.recovery_rate,
@@ -47,23 +49,25 @@ class Bucket:
         self.present_capacity -= consumption
 
     def has_capacity(self, consumption) -> bool:
-        return True if (self.present_capacity >= consumption) else False
+        return bool(self.present_capacity >= consumption)
 
 @dataclass
 class Tracker:
     task_start_num: int = 0
     task_in_progress_num: int = 0
     task_failed: int = 0
+    error_last_hit_time: float = 0
     task_failed_ls: list = field(default_factory=list)
 
 
 class AsyncControler(ABC):
-    def __init__(self, error_savefile_path: str, max_redo_times: int = 3, logging_level: int = 10):
+    def __init__(self, error_savefile_path: str, max_redo_times: int = 3, logging_level: int = 10, sleep_after_hit_error: int = 10):
         self.error_savefile_path = error_savefile_path
         self.max_redo_times = max_redo_times
         self.logger = log(logging_level=logging_level)
+        self.sleep_after_hit_error = sleep_after_hit_error
 
-    async def control_flow(self, input: Generator, bucket: Bucket, tracker: Tracker, most_concurrent_task_num: int):
+    async def control_flow(self, iterator: Generator, bucket: Bucket, tracker: Tracker, most_concurrent_task_num: int):
         """Theory:
         Spawn rate: bucket recovery_rate
         Digest rate: the implementation running rate
@@ -77,36 +81,47 @@ class AsyncControler(ABC):
         case 3: multiple workers
             with multiple workers, the rate limit is min(#workers * digest rate, spawn rate) e.g., workers = 3, digest rate = 1, spawn rate = 4, then 3 * 1 < 4, the overall rate is 3.
         """
-        redo_queue = asyncio.Queue()
+        redo_queue: asyncio.Queue = asyncio.Queue()
         sema = asyncio.Semaphore(most_concurrent_task_num)
-        redo_times_d = defaultdict(int)
-        input_run_out = False
-        next_request = None
+        redo_times_d: defaultdict = defaultdict(int)
+        iterator_run_out = False
+        next_task = None
+        task_id_d = {}
+        task_id_gen = self.task_id_gen()
         while True:
-            if not next_request:
-                if not input_run_out:
+            if (sleep_time:=time.time() - tracker.error_last_hit_time) < self.sleep_after_hit_error:
+                await asyncio.sleep(sleep_time)
+            if not next_task:
+                if not iterator_run_out:
                     try:
-                        next_ = next(input)
-                        next_request = self.implement(next_, tracker=tracker, sema=sema, redo_queue=redo_queue)
+                        next_element = next(iterator)
+                        redo_times = redo_times_d[next_element]
+                        task_id = next(task_id_gen)
+                        task_id_d[next_element] = task_id
+
+                        next_task = self.implement(next_element, tracker=tracker, sema=sema, redo_queue=redo_queue, redo_times=redo_times, task_id=task_id_d[next_element])
                         tracker.task_start_num += 1
                         tracker.task_in_progress_num += 1
+
                     except StopIteration:
-                        input_run_out = True
+                        iterator_run_out = True
+
                 elif not redo_queue.empty():
-                    next_ = redo_queue.get_nowait()
-                    redo_times = redo_times_d[next_] + 1
-                    next_request = self.implement(next_, tracker=tracker, sema=sema, redo_queue=redo_queue, redo_times=redo_times)
+                    next_element = redo_queue.get_nowait()
+                    redo_times = redo_times_d[next_element] + 1
+
+                    next_task = self.implement(next_element, tracker=tracker, sema=sema, redo_queue=redo_queue, redo_times=redo_times, task_id=task_id_d[next_element])
                     tracker.task_start_num += 1
             
             bucket.update()
 
-            if next_request:
-                consumption = self.request_consumption(next_)
+            if next_task:
+                consumption = self.task_consumption(next_element)
                 if bucket.has_capacity(consumption):
                     
-                    asyncio.create_task(next_request)
+                    asyncio.create_task(next_task)
                     bucket.consume(consumption=consumption)
-                    next_request = None
+                    next_task = None
 
             if tracker.task_in_progress_num == 0:
                 break
@@ -119,31 +134,39 @@ class AsyncControler(ABC):
                 for item in tracker.task_failed_ls:
                     file.write(f"{str(item)}\n")
 
+        self.call_back(tracker)
     
     @abstractmethod
-    def request_consumption(self, request):
+    def call_back(self, tracker):
+        pass
+
+    def task_id_gen(self):
+        id_ = 0
+        while True:
+            yield id_
+            id_ += 1
+
+    @abstractmethod
+    def task_consumption(self, task):
         pass
     
-    async def implement(self, request, tracker: Tracker, sema: asyncio.Semaphore, redo_queue: asyncio.Queue, redo_times: int = None):
+    @abstractmethod
+    async def implement(self, request, tracker: Tracker, sema: asyncio.Semaphore, redo_queue: asyncio.Queue, redo_times: int, task_id: int):
         async with sema:
             try:
-                result = await self.carrier(request)
-                self._save(result)
-                tracker.task_in_progress_num -= 1
+                self.logger.info(f"{task_id}: start")
+                #### the main task you prepare to do ####
 
+
+                tracker.task_in_progress_num -= 1
+                self.logger.info(f"{task_id}: done")
+
+            # error handling logic
             except Exception as e:
-                self.logger.warning(f"{e}")
+                self.logger.warning(f"{task_id} failed: {e}")
                 tracker.task_failed += 1
                 if redo_times < self.max_redo_times:
                     redo_queue.put_nowait(request)
                 else:
                     tracker.task_failed_ls.append(request)
-
-    @abstractmethod
-    async def carrier(self, request, *args, **kwargs):
-        """The task's core action, for example, requests.get, visit remote sql database etc."""
-        pass
-
-    @abstractmethod
-    def _save(self, result):
-        pass
+                    self.logger.warning(f"{task_id} faild after {redo_times} attempts. Failed task saved to {self.error_savefile_path}")
