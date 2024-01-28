@@ -10,14 +10,14 @@ import streamlit as st
 EXTRACT_LOCATION = "data_articles"
 
 # streamlit config
-st.set_page_config(page_title="sisyphus", page_icon="⛏️")
+st.set_page_config(page_title="sisyphus", page_icon="⛏️", layout="wide")
 
 c1, c2 = st.columns([0.32, 2])
 
 with c1:
     st.image(
         "streamlit/images/sisyphus_myth.jpg",
-        width=85,
+        width=100,
     )
 with c2:
     st.caption("")
@@ -114,56 +114,60 @@ with MainTab:
         test_size = st.slider('test size', 1, maximum)
 
     with st.form("work_flow"):
-        st.markdown("""#### Locate""")
-        st.markdown("> Wise man says, you should know what you want before taking action.")
-        st.markdown("First step, we should construct a semantic similiar sentnce with the target.")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""#### 😶‍🌫️Locate""")
+            st.markdown("> Wise man says, you should know what you want before taking action.")
+            st.markdown("First step, we should construct a semantic similiar sentnce with the target.")
 
-        # query
-        query = st.text_area(
-            'Query',
-            placeholder='Try to give a descriptional sentence',
-            value=st.session_state["query"],
-            help="the words should no less than 50 and no more than 200",
-            key='1'
-        )
-        st.session_state["query"] = query
-        st.write("")
-        
-        # classify
-        st.markdown("#### Classify")
-        st.markdown("> Well, we should be more prudent")
-        st.markdown("In the previous step, we roughly get the sentences which might contains the target information."
-                    " now, we are evaluating the validaty of these sentences")
-        classify = st.text_area(
-            'Classify prompt',
-            placeholder='Give some criterions to validate these sentences',
-            value=st.session_state["classify"],
-            help='The stricter the rules are, the more precise (~=less) the result you may obtain.',
-            key='2'
-        )
-        st.session_state["classify"] = classify
-        st.write("")
+            # query
+            query = st.text_area(
+                'Query',
+                placeholder='Try to give a descriptional sentence',
+                value=st.session_state["query"],
+                help="the words should no less than 50 and no more than 200",
+                key='1'
+            )
+            st.session_state["query"] = query
+            st.write("")
+            
+            # classify
+            st.markdown("#### 🤓Classify")
+            st.markdown("> Well, we should be more prudent")
+            st.markdown("In the previous step, we roughly get the sentences which might contains the target information."
+                        " now, we are evaluating the validaty of these sentences")
+            classify = st.text_area(
+                'Classify prompt',
+                placeholder='Give some criterions to validate these sentences',
+                value=st.session_state["classify"],
+                help='The stricter the rules are, the more precise (~=less) the result you may obtain.',
+                key='2'
+            )
+            st.session_state["classify"] = classify
+            st.write("")
+        with col2:
+            # summarise
+            st.markdown("#### 🤞Summarise")
+            st.markdown("> Be cautious, demon is hiding in the details")
+            st.markdown("In the last step, we should focus on the extraction and give the json, provided as the basic format of output.")
+            summarise = st.text_area(
+                'Summarise prompt',
+                placeholder='Elaborate the contents should be included in the results.',
+                value=st.session_state["summarise"],
+                help='just inlcuding everything you wnat, like what type of property, the unit, the value or experimental parameters',
+                key='3'
+            )
+            st.session_state["summarise"] = summarise
 
-        # summarise
-        st.markdown("#### Summarise")
-        st.markdown("> Be cautious, demon is hiding in the details")
-        st.markdown("In the last step, we should focus on the extraction and give the json, provided as the basic format of output.")
-        summarise = st.text_area(
-            'Summarise prompt',
-            placeholder='Elaborate the contents should be included in the results.',
-            value=st.session_state["summarise"],
-            help='just inlcuding everything you wnat, like what type of property, the unit, the value or experimental parameters',
-            key='3'
-        )
-        st.session_state["summarise"] = summarise
-
-        output_json = st.text_area(
-            'output json shema',
-            placeholder='{"compounds":["name": "<name>", "band_gap": {"value": "<value>", "unit": "<unit>"}]}',
-            value=st.session_state["output_json"],
-            help='if you are not familiar with json, check this introduction at https://www.w3schools.com/js/js_json_intro.asp'
-        )
-        st.session_state["output_json"] = output_json
+            st.write("")
+            # st.write("")
+            output_json = st.text_area(
+                'output json shema',
+                placeholder='{"compounds":["name": "<name>", "band_gap": {"value": "<value>", "unit": "<unit>"}]}',
+                value=st.session_state["output_json"],
+                help='if you are not familiar with json, check this introduction at https://www.w3schools.com/js/js_json_intro.asp'
+            )
+            st.session_state["output_json"] = output_json
         
         
         submitted = st.form_submit_button("Submit/Save draft")
