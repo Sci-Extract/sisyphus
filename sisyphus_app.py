@@ -4,13 +4,18 @@ The app was inspired by project created by CharlyWargnier https://github.com/str
 import json
 
 import streamlit as st
+import pandas as pd
 
+from sisyphus.utils.utilities import log
+
+
+logger = log("test_log.txt")
 
 # constants
 EXTRACT_LOCATION = "data_articles"
 
 # streamlit config
-st.set_page_config(page_title="sisyphus", page_icon="⛏️", layout="wide")
+st.set_page_config(page_title="sisyphus", page_icon="⛏️")
 
 c1, c2 = st.columns([0.32, 2])
 
@@ -45,6 +50,16 @@ App created by [Soike](https://github.com/sukiluvcode) using [Streamlit](https:/
 
 """
 )
+
+# functions
+def construct_prompt(dataframe):
+    """
+    schema of the prompt:
+    the result json should be consistent with following structure, the outmost key is "compounds",
+    the value of compounds are a list of compound, for each compound, the keys are {attributes_sep_by_space}
+    , and the 
+    """
+    pass
 
 # Tabs
 MainTab, InfoTab = st.tabs(["Main", "Info"])
@@ -95,8 +110,6 @@ with InfoTab:
                 """)
 
 with MainTab:
-    st.write("")
-    st.write("The general work flow of sisyphus goes through locate, classify, summarise steps.")
     st.write("Follow instructinos below to extract out data you want 😎")
     st.write("")
 
@@ -114,61 +127,32 @@ with MainTab:
         test_size = st.slider('test size', 1, maximum)
 
     with st.form("work_flow"):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("""#### 😶‍🌫️Locate""")
-            st.markdown("> Wise man says, you should know what you want before taking action.")
-            st.markdown("First step, we should construct a semantic similiar sentnce with the target.")
+        st.markdown("""#### 😶‍🌫️Locate""")
+        st.markdown("Construct a semantic similiar sentnce with the target.")
 
-            # query
-            query = st.text_area(
-                'Query',
-                placeholder='Try to give a descriptional sentence',
-                value=st.session_state["query"],
-                help="the words should no less than 50 and no more than 200",
-                key='1'
-            )
-            st.session_state["query"] = query
-            st.write("")
-            
-            # classify
-            st.markdown("#### 🤓Classify")
-            st.markdown("> Well, we should be more prudent")
-            st.markdown("In the previous step, we roughly get the sentences which might contains the target information."
-                        " now, we are evaluating the validaty of these sentences")
-            classify = st.text_area(
-                'Classify prompt',
-                placeholder='Give some criterions to validate these sentences',
-                value=st.session_state["classify"],
-                help='The stricter the rules are, the more precise (~=less) the result you may obtain.',
-                key='2'
-            )
-            st.session_state["classify"] = classify
-            st.write("")
-        with col2:
-            # summarise
-            st.markdown("#### 🤞Summarise")
-            st.markdown("> Be cautious, demon is hiding in the details")
-            st.markdown("In the last step, we should focus on the extraction and give the json, provided as the basic format of output.")
-            summarise = st.text_area(
-                'Summarise prompt',
-                placeholder='Elaborate the contents should be included in the results.',
-                value=st.session_state["summarise"],
-                help='just inlcuding everything you wnat, like what type of property, the unit, the value or experimental parameters',
-                key='3'
-            )
-            st.session_state["summarise"] = summarise
-
-            st.write("")
-            # st.write("")
-            output_json = st.text_area(
-                'output json shema',
-                placeholder='{"compounds":["name": "<name>", "band_gap": {"value": "<value>", "unit": "<unit>"}]}',
-                value=st.session_state["output_json"],
-                help='if you are not familiar with json, check this introduction at https://www.w3schools.com/js/js_json_intro.asp'
-            )
-            st.session_state["output_json"] = output_json
+        # query
+        query = st.text_area(
+            'Query',
+            placeholder='Try to give a descriptional sentence',
+            value=st.session_state["query"],
+            help="the words should no less than 50 and no more than 200",
+            key='1'
+        )
+        st.session_state["query"] = query
+        st.write("")
         
+        # classify
+        st.markdown("#### 🤓Classify")
+        st.markdown("Define criteria to evaluate the validaty of these sentences")
+        classify = st.text_area(
+            'Classify prompt',
+            placeholder='Give some criterions to validate these sentences',
+            value=st.session_state["classify"],
+            help='The stricter the rules are, the more precise (~=less) the result you may obtain.',
+            key='2'
+        )
+        st.session_state["classify"] = classify
+        st.write("")
         
         submitted = st.form_submit_button("Submit/Save draft")
         
@@ -186,37 +170,35 @@ with MainTab:
             if not classify:
                 st.markdown(":eyes: **it seems that you haven't insert a classify prompt.**")
                 error = True
-            if not (summarise and output_json):
-                st.markdown(":eyes: **it seems that you haven't insert the summarise prompt or json schema.**")
                 error = True
-            if output_json:
-                try:
-                    json.loads(output_json)
-                except json.JSONDecodeError as e:
-                    error = True
-                    st.markdown(":eyes: **Bad json format, re-check please!**")
-                    st.markdown(f"json decode error: {e}")
             if error:
                 st.stop()
         
         
         if submitted:
-            st.session_state['finish'] = False
-            query, prompt_cls, prompt_sum = (query, classify, summarise + '\nThe JSON format should adhere to the following structure:\n' + output_json)
-            query, prompt_cls, prompt_sum = query, classify, summarise
-            # execute code
             import asyncio
             import time
             from dotenv import find_dotenv, load_dotenv
-            from sisyphus.processor.llm_extraction import Extraction
-            from pydantic_model_nlo import Model
 
+            from sisyphus.processor.llm_extraction import Extraction
+            from sisyphus.utils.utilities import get_format_instructions
+            
+            st.session_state['finish'] = False
+            query, prompt_cls= query, classify
+            if "pydantic_model" not in st.session_state:
+                st.warning("no pydantic model found, please define it in data model.")
+                st.stop()
+            model = st.session_state.pydantic_model
+            prompt_sum = get_format_instructions(model)
+            logger.info(prompt_sum)
+            st.stop()
+
+            # execute code
             _ = load_dotenv(find_dotenv())
             system_message = "You are reading a piece of text from chemistry articles about nonlinear optical (nlo) materials and you are required to response based on the context provided by the user."
             d = dict(query=query, prompt_cls=prompt_cls, prompt_sum=prompt_sum, system_message=system_message)
             start = time.perf_counter()
-            extraction = Extraction(from_=EXTRACT_LOCATION, save_filepath="test_results_debug_app.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)
-            model = Model if enable_pydantic else None
+            extraction = Extraction(from_=EXTRACT_LOCATION, save_filepath="Extraction_data.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)
             asyncio.run(extraction.extract(sample_size=test_size, pydantic_model=model))
             end = time.perf_counter()
             st.markdown(f"cost {end - start} s")
@@ -224,14 +206,14 @@ with MainTab:
             st.success("✅ Done!")
             st.session_state["finish"] = True
 
-if st.session_state["finish"]:
-    from script.result_extract import show_csv
-    df = show_csv("not decide")
-    st.dataframe(df)
-    csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Download data as CSV",
-        data=csv,
-        file_name="llm_extract.csv",
-        mime='text/csv'
-    )
+# if st.session_state["finish"]:
+#     from script.result_extract import show_csv
+#     df = show_csv("not decide")
+#     st.dataframe(df)
+#     csv = df.to_csv(index=False).encode('utf-8')
+#     st.download_button(
+#         label="Download data as CSV",
+#         data=csv,
+#         file_name="llm_extract.csv",
+#         mime='text/csv'
+#     )

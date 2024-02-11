@@ -172,3 +172,33 @@ def read_wos_excel(file):
     df = pd.read_excel(file)
     doi_ls = df["DOI"].dropna().tolist()
     return doi_ls
+
+
+JSON_FORMAT_INSTRUCTIONS = """Extract information from text below. The output should be formatted as a JSON instance that conforms to the JSON schema below.
+
+As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Here is the output schema:
+```
+{schema}
+```
+text: 
+"""
+
+def get_format_instructions(pydantic_object) -> str:
+    if pydantic_object is None:
+        return "Return a JSON object."
+    else:
+        schema = pydantic_object.model_json_schema()
+
+        # Remove extraneous fields.
+        reduced_schema = schema
+        if "title" in reduced_schema:
+            del reduced_schema["title"]
+        if "type" in reduced_schema:
+            del reduced_schema["type"]
+        # Ensure json in context is well-formed with double quotes.
+        schema_str = json.dumps(reduced_schema)
+        return JSON_FORMAT_INSTRUCTIONS.format(schema=schema_str)
+    

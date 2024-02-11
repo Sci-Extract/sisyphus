@@ -31,7 +31,7 @@ fetch_savepath = "abstracts.jsonl"
 # sidebar
 st.sidebar.write("")
 st.sidebar.markdown(
-    """🙌 App created by [Soike](https://github.com/sukiluvcode) using [Streamlit](https://streamlit.io/)."""
+    """🙌 App is built on top of [langchain](https://github.com/langchain-ai/langchain)"""
 )
 
 st.title("Fetch & Insight")
@@ -63,7 +63,8 @@ def construct_parser(*, subjarea, pubyear, doctype, raw_keywords):
 with fetch_tab:
     st.markdown(
         """Please provide the topics you want to get insight from. *Special thanks to the scopus search API*.  
-        *tips*: if you are familiar with scopus search language, feel free to construct it on your own 🤞🤞"""
+        *tips*: if you are familiar with scopus search language, feel free to construct it on your own 🤞🤞  
+        *note*: retrieving 10 articles by default."""
     )
     options = st.radio(
         "Preference",
@@ -128,8 +129,9 @@ with fetch_tab:
         with open(fetch_savepath, encoding='utf-8') as file:
             for line in file:
                 title_abstract.append(json.loads(line))
-        df = pd.DataFrame(data=title_abstract)
-        st.dataframe(df)
+        st.json(title_abstract)
+        # df = pd.DataFrame(data=title_abstract)
+        # st.dataframe(df)
 
 with insight_tab:
     st.markdown(
