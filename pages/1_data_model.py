@@ -23,7 +23,7 @@ PrimalFieldWrapper = namedtuple("PrimalFieldWrapper", ['name', 'type', 'descript
 class DynamicPydantic:
     def __init__(self, base_model: BaseModel):
         self.base_model = base_model
-        self.field_of = "Unit"
+        self.field_of = "Compound"
     
     def add_field(self, primal_field_wrapper: PrimalFieldWrapper, dict_wrappers: List[DictWrapper] = None):
         if primal_field_wrapper.type == "object":
@@ -71,13 +71,18 @@ class DynamicPydantic:
         field_of = df_sorted[-1]["field_of"].iloc[0] # the outermost field name
         return annoatation_dict[field_of]
 
+annotation_dict = {}
 def compose_node_annotation(node):
-    pass
+    field_defs = {}
+    for child_node in node:
+        field_defs.update({child_node.name: child_node.type_})
+    annotation_dict.update()
+
 def compose_recursively(node):
-    if node.all_referenced:
-        return compose_node_annotation(node)
-    for child in node.childs:
-        compose_recursively(child)
+    for child_node in node:
+        if child_node.is_nested:
+            compose_recursively(child_node)
+    compose_node_annotation(node)
 
 def factorial(n):
     if n == 1:
@@ -125,18 +130,24 @@ def update_depth(registry, node):
     return depth
 
 # Recursive function to create edges between nodes
-def add_edges(node, graph, edges):
+def add_edges(node, graph, edges, name_list):
     for child in node.child_node:
-        graph.node(child.name)
-        edges.append((node.name, child.name))
-        add_edges(child, graph, edges)
+        if (name:=child.name) not in name_list:
+            name_list.append(name)
+        else:
+            name = node.name + '_' + child.name
+        
+        graph.node(name)
+        edges.append((node.name, name))
+        add_edges(child, graph, edges, name_list)
 
 # Function to display the tree using graphviz
 def display_tree(root):
     graph = Digraph(comment="Tree Structure", format='png')
     graph.node(root.name)
     edges = []
-    add_edges(root, graph, edges)
+    name_list = []
+    add_edges(root, graph, edges, name_list)
     graph.edges(edges)
 
     # Render the graph using graphviz
@@ -159,6 +170,8 @@ if "node_name" not in st.session_state:
     st.session_state.select = ""
 if "root_among_sessions" not in st.session_state:
     st.session_state.root_among_sessions = {}
+if "fields" not in st.session_state:
+    st.session_state.fields = []
 
 # basic config
 st.set_page_config(page_title="Data Model", page_icon="📦")
@@ -182,6 +195,7 @@ def trigger_function():
             st.warning("Note that you are just creating a property without nested fields", icon="⚠️")
 
         st.session_state.node[name] = node
+        st.session_state.fields.append(node)
         st.session_state.registry[name] = 0
         collect_info(node=node, mode="root")
         # once user define a not nested model, some action to take...
@@ -230,8 +244,7 @@ with st.form("form", clear_on_submit=True):
     select_node = st.selectbox(
         "Select parent field",
         options=options,
-        key="select",
-        index=None)
+        key="select")
     c1, c2 = st.columns(2)
     c3, c4 = st.columns(2)
     with c1:
@@ -247,7 +260,7 @@ with st.form("form", clear_on_submit=True):
     with c3:
         description = st.text_input("Description of the field", key="description")
     with c4:
-        is_array = st.selectbox("Field is array", options=[True, False], index=None, key="is_array")
+        is_array = st.selectbox("Field is array", options=[False, True], key="is_array")
     
 
     button = st.form_submit_button("create", on_click=trigger_function)
@@ -269,7 +282,7 @@ def clear_sesssion_callback():
     st.session_state.node_name = ""
     st.session_state.select = ""
     
-st.markdown("__Not click below until you have finished__")
+st.markdown("Click below once you have defined a property")
 done_button = st.button("Done", on_click=clear_sesssion_callback)
 
 
@@ -279,20 +292,6 @@ if st.session_state.node:
     display_tree(root=st.session_state.node[st.session_state.node_names[0]])
 st.markdown("---")
 
-def finish_call_back():
-    unit_model = st.session_state.pydantic_model
-    model = create_model(
-        "Units",
-        __doc__="list of extracted units",
-        units=(List[unit_model], None)
-    )
-    st.session_state.pydantic_model = model # update
-    with open("final_gen_model.json", 'w', encoding='utf-8') as file:
-        file.write(json.dumps(model.model_json_schema(), indent=2))
-
-Finish = st.button("Finish", on_click=finish_call_back)
-st.markdown('---')
-
 def hard_code_pydantic():
     json_schema_file = "gen_schema.json"
     pydantic_code = "gen_pydantic.py"
@@ -300,11 +299,25 @@ def hard_code_pydantic():
     with open(json_schema_file, 'w', encoding='utf-8') as file:
         file.write(json.dumps(st.session_state.pydantic_model.model_json_schema(), indent=2))
     subprocess.run(command, shell=True, check=True)
-    st.write("Generate successed")
+    st.write("Succeed generate pydantic model")
 
+def finish_call_back():
+    unit_model = st.session_state.pydantic_model
+    model = create_model(
+        "Compounds",
+        __doc__="list of extracted units",
+        compounds=(List[unit_model], None)
+    )
+    st.session_state.pydantic_model = model # update
+    compound = Nested('compound', None)
+    for child in st.session_state.fields:
+        compound.add_child(child)
+    st.markdown("_The final data structure was alike_...")
+    display_tree(root=compound)
+    st.markdown("")
+    hard_code_pydantic()
 
-pydantic_hard_code = st.button("Gen hard code", on_click=hard_code_pydantic)
-st.warning("Attention: Press the button only if you want to check the generated pydantic model, not necessary!")
+Finish = st.button("Finish", on_click=finish_call_back)
 
 # init_wrapper = input_schema(0)
 # root = PydanticNode(name="root", parent_node=None)

@@ -10,8 +10,8 @@ import tiktoken
 
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
-sci_notation = ["ca.", "calc.", "no.", "e.g.", "i.e."]
-sci_notation_pattern = r'(ca\.)|(calc\.)|(no\.)|(e\.g\.)|(i\.e\.)'
+sci_notation = ["ca.", "calc.", "cal.", "no.", "e.g.", "i.e."]
+sci_notation_pattern = r'(ca\.)|(calc\.)|(cal\.)|(no\.)|(e\.g\.)|(i\.e\.)'
 
 def detect_sci_dot(after_dot: str, before_dot: str):
     if re.match(r"\w", after_dot):

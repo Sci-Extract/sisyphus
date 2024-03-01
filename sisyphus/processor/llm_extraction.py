@@ -93,7 +93,7 @@ class Extraction:
                     os.path.join("data", "embedding_results.jsonl"),
                     standard_vector=query_vector,
                     save_file=None
-                ),
+                ), # Note that in this step will eat a lot of memory.
                 top_n=10,
                 save_file=os.path.join("data", "text_selected.csv")
             )

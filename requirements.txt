@@ -16,3 +16,4 @@ pydantic
 xlrd
 docarray
 datamodel-code-generator
+chromadb

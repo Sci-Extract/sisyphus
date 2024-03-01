@@ -1,7 +1,7 @@
 """
 The app was inspired by project created by CharlyWargnier https://github.com/streamlit/example-app-zero-shot-text-classifier/tree/main
 """
-import json
+import os
 
 import streamlit as st
 import pandas as pd
@@ -9,7 +9,7 @@ import pandas as pd
 from sisyphus.utils.utilities import log
 
 
-logger = log("test_log.txt")
+logger = log("UI_log.txt")
 
 # constants
 EXTRACT_LOCATION = "data_articles"
@@ -35,13 +35,13 @@ st.sidebar.write("")
 
 # We create a text input field for users to enter their API key.
 
-API_KEY = st.sidebar.text_input(
-    "Enter your OpenAI API key",
-    help="Get it from https://platform.openai.com/api-keys",
-    type="password",
-)
+# API_KEY = st.sidebar.text_input(
+#     "Enter your OpenAI API key",
+#     help="Get it from https://platform.openai.com/api-keys",
+#     type="password",
+# )
 
-st.sidebar.markdown("---")
+# st.sidebar.markdown("---")
 
 st.sidebar.write(
     """
@@ -110,12 +110,8 @@ with InfoTab:
                 """)
 
 with MainTab:
-    st.write("Follow instructinos below to extract out data you want 😎")
+    st.write("Please first test data model on a small test set then apply it to all")
     st.write("")
-
-    # options
-    enable_pydantic = st.checkbox('Enable pydantic', key='pydantic', value= st.session_state["enable_pydantic"], help='enable for more fine control over result')
-    st.session_state["enable_pydantic"] = enable_pydantic
 
     test_mode = st.checkbox('Test mode',key='test_mode', value=st.session_state["enable_test"], help='switch on to enable test mode.')
     st.session_state["enable_test"] = test_mode
@@ -160,9 +156,9 @@ with MainTab:
         
         # validate user's api key
         if submitted:
-            if not API_KEY.startswith('sk-'):
-                st.markdown(":eyes: **it seems that your API key is invalid**")
-                error = True
+            # if not API_KEY.startswith('sk-'):
+            #     st.markdown(":eyes: **it seems that your API key is invalid**")
+            #     error = True
             # validate user's input
             if not query:
                 st.markdown(":eyes: **it seems that you haven't insert a query.**")
@@ -185,20 +181,22 @@ with MainTab:
             
             st.session_state['finish'] = False
             query, prompt_cls= query, classify
-            if "pydantic_model" not in st.session_state:
-                st.warning("no pydantic model found, please define it in data model.")
+
+            if not os.path.exists("gen_pydantic"):
+                st.warning("There is no pydantic model found, Please use 'data model' to create a data model")
                 st.stop()
-            model = st.session_state.pydantic_model
+            from gen_pydantic import Compounds
+            model = Compounds
             prompt_sum = get_format_instructions(model)
-            logger.info(prompt_sum)
-            st.stop()
+            # logger.info(prompt_sum)
+            # st.stop()
 
             # execute code
             _ = load_dotenv(find_dotenv())
             system_message = "You are reading a piece of text from chemistry articles about nonlinear optical (nlo) materials and you are required to response based on the context provided by the user."
             d = dict(query=query, prompt_cls=prompt_cls, prompt_sum=prompt_sum, system_message=system_message)
             start = time.perf_counter()
-            extraction = Extraction(from_=EXTRACT_LOCATION, save_filepath="Extraction_data.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)
+            extraction = Extraction(from_=EXTRACT_LOCATION, save_filepath="UI_extract.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)
             asyncio.run(extraction.extract(sample_size=test_size, pydantic_model=model))
             end = time.perf_counter()
             st.markdown(f"cost {end - start} s")
