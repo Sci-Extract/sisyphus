@@ -95,3 +95,22 @@ def completion_json_formatter(system_message: str, user_message: str, article_na
     "metadata": {"file_name": article_name, "task_id": task_id}
 }
     return json_format
+
+def completion_json_formatter_with_doc(doc:str, system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-1106", temperature: float = 0.0, response_format={"type": "json_object"}):
+    json_format = {
+    "messages": [
+        {
+            "role": "system",
+            "content": system_message
+        },
+        {
+            "role": "user",
+            "content": user_message
+        }
+    ],
+    "model": model,
+    "temperature": temperature,
+    "response_format": response_format,
+    "metadata": {"file_name": article_name, "task_id": task_id, "doc": doc}
+}
+    return json_format

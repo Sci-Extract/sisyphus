@@ -1,13 +1,14 @@
 import os
 from typing import Tuple
 
+import chromadb
 import httpx
 from numpy import array
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from .parallel_processor import EmbeddingRequest, CompletionRequest
-from ..manipulator import create_embedding_jsonl, create_completion_jsonl
+from ..manipulator import create_embedding_jsonl, create_completion_jsonl, get_running_names, get_duplicated_names, add_embeddings, fetch_and_construct, get_candidates_construct
 from ..manipulator.df_constructor import build_similarity, select_top_n, get_candidates
 from ..utils.utilities import MoveOriginalFolder
 
@@ -55,6 +56,10 @@ class Extraction:
         timeout = httpx.Timeout(10.0, connect=30.0, pool=30.0, read=30.0)
         limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
 
+        # connect to vector database
+        chromadb_client = chromadb.PersistentClient()
+        collection = chromadb_client.get_or_create_collection("chromadb")
+
         async with AsyncOpenAI(
             http_client=httpx.AsyncClient(verify=False, timeout=timeout, limits=limits),
             max_retries=0,
@@ -74,37 +79,23 @@ class Extraction:
                 max_attempts=self.max_attempts,
                 logging_level=self.logging_level
             )
+            
+            running_names = get_running_names(directory=self.from_)
+            await self.update_chromadb(
+                running_names=running_names,
+                embedding_messenger=embedding_messenger,
+                collection=collection,
+                sample_size=sample_size
+            )
 
-            embedding_reqeust_file = create_embedding_jsonl(source=self.from_, chunk_size=200, sample_size=sample_size)
-            with open(embedding_reqeust_file, encoding='utf-8') as file:
-                g = iter(file)
-                await embedding_messenger.embedding_helper(
-                    requests_generator=g,
-                    save_filepath=os.path.join("data", "embedding_results.jsonl")
-                )
-                
-            query_embedding = await client.embeddings.create(
-            input=self.query,
-            model="text-embedding-ada-002",
-            )
-            query_vector = array(query_embedding.data[0].embedding)
-            df_selected = select_top_n(
-                df=build_similarity(
-                    os.path.join("data", "embedding_results.jsonl"),
-                    standard_vector=query_vector,
-                    save_file=None
-                ), # Note that in this step will eat a lot of memory.
-                top_n=10,
-                save_file=os.path.join("data", "text_selected.csv")
-            )
-            create_completion_jsonl(
-                df=df_selected,
-                file_path=os.path.join("data", "completion_cls.jsonl"),
+            cls_jsonl = fetch_and_construct(
+                chroma_collection=collection,
+                search_query=self.query,
+                running_names=running_names,
                 system_message=self.system_message,
-                prompt=self.prompt_cls,
-                required_format='json'
+                prompt=self.prompt_cls
             )
-            with open(os.path.join("data", "completion_cls.jsonl"), encoding='utf-8') as file:
+            with open(cls_jsonl, encoding='utf-8') as file:
                 g = iter(file)
                 g, probe_size, stop_flag = self.choose_probe_size(g)
                 next_start_capacity = await completion_messenger.completion_helper(
@@ -113,16 +104,9 @@ class Extraction:
                     probe_size=probe_size,
                     stop_flag=stop_flag
                 )
-                
-            df_to_extract = get_candidates(os.path.join("data", "completion_cls_results.jsonl"), os.path.join("data", "embedding.jsonl"))
-            create_completion_jsonl(
-                df=df_to_extract,
-                file_path=os.path.join("data", "completion_sum.jsonl"),
-                system_message=self.system_message,
-                prompt=self.prompt_sum,
-                required_format='json'
-            )
-            with open(os.path.join("data", "completion_sum.jsonl"), encoding='utf-8') as file:
+            
+            sum_jsonl = get_candidates_construct(os.path.join("data", "completion_cls_results.jsonl"), system_message=self.system_message, prompt=self.prompt_sum)
+            with open(sum_jsonl, encoding='utf-8') as file:
                 g = iter(file)
                 g, probe_size, stop_flag = self.choose_probe_size(g)
                 await completion_messenger.completion_helper(
@@ -133,6 +117,24 @@ class Extraction:
                     start_capacity=next_start_capacity,
                     stop_flag=stop_flag
                 )
+
+    async def update_chromadb(self, running_names, embedding_messenger, collection, sample_size):
+        """embedding unseen docs then update chroma database"""
+        duplicated_names = get_duplicated_names(
+            running_names=running_names,
+            chroma_collection=collection
+        )
+        embedding_reqeust_file, has_content = create_embedding_jsonl(source=self.from_, duplicated_articles=duplicated_names, chunk_size=200, sample_size=sample_size)
+        if has_content:
+            with open(embedding_reqeust_file, encoding='utf-8') as file:
+                g = iter(file)
+                await embedding_messenger.embedding_helper(
+                    requests_generator=g,
+                    save_filepath=os.path.join("data", "embedding_results.jsonl")
+                )
+
+            # update vector db
+            add_embeddings(chroma_collection=collection, result_file=os.path.join("data", "embedding_results.jsonl"))
     
     async def extract_fatal(self, request_json_file, save_filepath: str, pydantic_model: BaseModel = None):
         """Use this method when last request exit without finishing. Need to pass the file name contains requests"""
