@@ -22,7 +22,7 @@ def log(log_file_name="log.txt", logging_level=10):
             pass
 
     logger = logging.getLogger(__name__)
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(log_file, encoding='utf8')
     stream_handler = logging.StreamHandler()
 
     formatter = logging.Formatter("%(asctime)s (%(filename)s:%(lineno)d) [%(levelname)s]: %(message)s")
@@ -157,7 +157,8 @@ class MoveOriginalFolder(object):
                 current_datetime = datetime.now()
                 current_hour = current_datetime.hour
                 current_minute = current_datetime.minute
-                move_to = os.path.join(self.temp_path, f"{self.folder_path}_{current_hour}_{current_minute}")
+                current_date = current_datetime.date()
+                move_to = os.path.join(self.temp_path, f"{self.folder_path}_{current_hour}_{current_minute}_{current_date}")
                 shutil.move(self.folder_path, move_to)
                 os.mkdir(self.folder_path) # recreate one
                 

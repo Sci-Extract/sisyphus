@@ -84,9 +84,9 @@ def create_embedding_jsonl(source: str, duplicated_articles: list[str], chunk_si
         publisher_dir = os.path.join(source, publisher)
         for article in os.listdir(publisher_dir):
             if sample_size:
-                count += 1
                 if count == sample_size:
                     return file_path, check_content(file_path=file_path)
+                count += 1
             if article in duplicated_articles: # skip duplicated articles
                 continue
             article_path = os.path.join(publisher_dir, article)
@@ -126,12 +126,17 @@ def create_completion_jsonl(df, file_path: str, system_message: str, prompt: str
     write_jsonl(file_path, jobs, write_mode='a')
 
 # Get the name of articles, then get the duplicate ones
-def get_running_names(directory="data_articles"):
+def get_running_names(directory="data_articles", sample_size=None):
     names = []
+    count = 0
     for publisher in os.listdir(directory):
         publisher_dir = os.path.join(directory, publisher)
-        if content:=os.listdir(publisher_dir):
-            names.extend(content)
+        for article in os.listdir(publisher_dir):
+            names.append(article)
+            if sample_size:
+                count += 1
+                if count == sample_size:
+                    return names
     return names
 
 def get_duplicated_names(running_names, chroma_collection: Collection):

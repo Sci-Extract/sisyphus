@@ -80,7 +80,7 @@ class Extraction:
                 logging_level=self.logging_level
             )
             
-            running_names = get_running_names(directory=self.from_)
+            running_names = get_running_names(directory=self.from_, sample_size=sample_size)
             await self.update_chromadb(
                 running_names=running_names,
                 embedding_messenger=embedding_messenger,
