@@ -6,6 +6,7 @@ tqdm
 playwright
 beautifulsoup4
 langchain
+langchain_openai
 openai
 tiktoken
 numpy
@@ -17,3 +18,5 @@ xlrd
 docarray
 datamodel-code-generator
 chromadb
+streamlit
+graphviz
