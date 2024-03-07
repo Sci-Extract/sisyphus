@@ -30,7 +30,7 @@ class Lidt(BaseModel):
 
 
 class Shg(BaseModel):
-    value: Union[float, List[float], None] = Field(None, description='value of shg', title='Value')
+    value: Union[float, List[float], None] = Field(None, description='value of shg, must be numerical value, else none', title='Value')
     unit: Optional[str] = Field(None, description='unit of shg', title='Unit')
 
 class ShgValue(BaseModel):

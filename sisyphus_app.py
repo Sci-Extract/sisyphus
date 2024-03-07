@@ -182,7 +182,7 @@ with MainTab:
             st.session_state['finish'] = False
             query, prompt_cls= query, classify
 
-            if not os.path.exists("gen_pydantic"):
+            if not os.path.exists("gen_pydantic.py"):
                 st.warning("There is no pydantic model found, Please use 'data model' to create a data model")
                 st.stop()
             from gen_pydantic import Compounds
