@@ -115,6 +115,7 @@ with MainTab:
 
     test_mode = st.checkbox('Test mode',key='test_mode', value=st.session_state["enable_test"], help='switch on to enable test mode.')
     st.session_state["enable_test"] = test_mode
+    test_size = None
     if test_mode:
         import os
         maximum = 0
@@ -193,7 +194,7 @@ with MainTab:
 
             # execute code
             _ = load_dotenv(find_dotenv())
-            system_message = "You are reading a piece of text from chemistry articles about nonlinear optical (nlo) materials and you are required to response based on the context provided by the user."
+            system_message = "You are reading a piece of text from chemistry articles and you are required to response based on the context provided by the user."
             d = dict(query=query, prompt_cls=prompt_cls, prompt_sum=prompt_sum, system_message=system_message)
             start = time.perf_counter()
             extraction = Extraction(from_=EXTRACT_LOCATION, save_filepath="UI_extract.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)

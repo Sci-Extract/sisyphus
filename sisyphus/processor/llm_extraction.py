@@ -124,7 +124,7 @@ class Extraction:
             running_names=running_names,
             chroma_collection=collection
         )
-        embedding_reqeust_file, has_content = create_embedding_jsonl(source=self.from_, duplicated_articles=duplicated_names, chunk_size=200, sample_size=sample_size)
+        embedding_reqeust_file, has_content = create_embedding_jsonl(source=self.from_, duplicated_articles=duplicated_names, chunk_size=80, sample_size=sample_size)
         if has_content:
             with open(embedding_reqeust_file, encoding='utf-8') as file:
                 g = iter(file)

@@ -10,7 +10,7 @@ from sisyphus.utils.utilities import get_format_instructions
 _ = load_dotenv(find_dotenv())
 
 from_ = "data_articles"
-system_message = "You are reading a piece of text from chemistry articles about nonlinear optical (nlo) materials and you are required to response based on the context provided by the user."
+system_message = "You are reading a piece of text from chemistry articles and you are required to response based on the context provided by the user."
 prompt_cls = \
 """Given a text quoted by triple backticks, judge whether the text contains the desired information. Return a JSON object with the following criteria:
 
@@ -54,13 +54,13 @@ Sequentially examine each criterion. If any criterion is not met, return False f
 from gen_pydantic import Compounds
 prompt_sum = get_format_instructions(Compounds)
 
-query = "Description of the properties of NLO materials, include the name of nlo material (e.g. KBBF, Na4B8O9F10), second harmonic generation SHG (e.g. 0.8 pm/V, 3 × KDP), band gaps Eg (e.g. 6.2 eV), birefringence, phase match, absorption edge, laser induced damage thersholds (LIDT). reports values unit such as (eV, pm/V, MW/cm2, nm), and the SHG value is sometimes given in multiples of KDP or AgGaS2."
+# query = "Description of the properties of NLO materials, include the name of nlo material (e.g. KBBF, Na4B8O9F10), second harmonic generation SHG (e.g. 0.8 pm/V, 3 × KDP), band gaps Eg (e.g. 6.2 eV), birefringence, phase match, absorption edge, laser induced damage thersholds (LIDT). reports values unit such as (eV, pm/V, MW/cm2, nm), and the SHG value is sometimes given in multiples of KDP or AgGaS2."
 
 d = dict(query=query, prompt_cls=prompt_cls, prompt_sum=prompt_sum, system_message=system_message)
 
 
 start = time.perf_counter()
 extraction = Extraction(from_=from_, save_filepath="CI_extract.jsonl", query_and_prompts=d, embedding_limit=(5000, 1000000), completion_limit=(5000, 80000), max_attempts=5, logging_level=10)
-asyncio.run(extraction.extract(sample_size=10, pydantic_model=Compounds))
+asyncio.run(extraction.extract(sample_size=50, pydantic_model=Compounds))
 end = time.perf_counter()
 print(f"cost {end - start} s")

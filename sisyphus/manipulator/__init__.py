@@ -196,7 +196,7 @@ def fetch_and_construct(chroma_collection: Collection, search_query: str, runnin
     for name in running_names:
         results = chroma_collection.query(
         query_embeddings=query_vector,
-        n_results=5,
+        n_results=10,
         where={"file_name": name}
         )
         docs = results["documents"][0]

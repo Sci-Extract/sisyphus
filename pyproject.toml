@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "sisyphus"
+version = "0.1.0"
+description = "Extracting formated information from scientific articles"
+authors = ["soike lab <sukiluvcode@icloud.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
