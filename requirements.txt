@@ -20,3 +20,4 @@ datamodel-code-generator
 chromadb
 streamlit
 graphviz
+scikit-learn

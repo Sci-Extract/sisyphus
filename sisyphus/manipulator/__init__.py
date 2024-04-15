@@ -155,7 +155,7 @@ def add_embeddings(chroma_collection: Collection, result_file="data\\embedding_r
     with open(result_file, encoding='utf8') as file:
         for line in file:
             embedding_element = json.loads(line)
-            embedding_element[2].pop("task_id")
+            # embedding_element[2].pop("task_id")
             metadata = embedding_element[2]
             embedding = embedding_element[1]["embedding"]
             document = embedding_element[0]["input"]
@@ -181,7 +181,7 @@ def fetch_and_construct(chroma_collection: Collection, search_query: str, runnin
     id_generator = task_id_generator_function()
     save_filepath = os.path.join("data", "completion_cls.jsonl")
 
-    def construct(docs: list[str], article_name: str, save_filepath: str, system_message: str, prompt:str, model="gpt-3.5-turbo-1106"):
+    def construct(docs: list[str], article_name: str, save_filepath: str, system_message: str, prompt:str, model="gpt-3.5-turbo-0125"):
         jobs = []
         for doc in docs:
             user_message = prompt + '```' + doc + '```'

@@ -124,7 +124,7 @@ class Extraction:
             running_names=running_names,
             chroma_collection=collection
         )
-        embedding_reqeust_file, has_content = create_embedding_jsonl(source=self.from_, duplicated_articles=duplicated_names, chunk_size=80, sample_size=sample_size)
+        embedding_reqeust_file, has_content = create_embedding_jsonl(source=self.from_, duplicated_articles=duplicated_names, chunk_size=100, sample_size=sample_size)
         if has_content:
             with open(embedding_reqeust_file, encoding='utf-8') as file:
                 g = iter(file)
@@ -180,3 +180,54 @@ class Extraction:
         if length <= probe_size:
             stop_flag = True
         return g, probe_size, stop_flag
+    
+    @MoveOriginalFolder(folder_path="data")
+    async def classify(self, save_folder="data", pydantic_model: BaseModel = None, sample_size: int = None):
+        # httpx configs
+        timeout = httpx.Timeout(10.0, connect=30.0, pool=30.0, read=30.0)
+        limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
+
+        # connect to vector database
+        chromadb_client = chromadb.PersistentClient()
+        collection = chromadb_client.get_or_create_collection("chromadb")
+
+        async with AsyncOpenAI(
+            http_client=httpx.AsyncClient(verify=False, timeout=timeout, limits=limits),
+            max_retries=0,
+        ) as client:
+            # instantiate messengers (fetch information back)
+            embedding_messenger = EmbeddingRequest(
+                client=client,
+                max_requests_per_minute=self.max_requests_per_minute_eb,
+                max_tokens_per_minute=self.max_tokens_per_minute_eb,
+                max_attempts=self.max_attempts,
+                logging_level=self.logging_level
+            )
+            completion_messenger = CompletionRequest(
+                client=client,
+                max_requests_per_minute=self.max_requests_per_minute_cp,
+                max_tokens_per_minute=self.max_tokens_per_minute_cp,
+                max_attempts=self.max_attempts,
+                logging_level=self.logging_level
+            )
+            
+            running_names = get_running_names(directory=self.from_, sample_size=sample_size)
+            await self.update_chromadb(
+                running_names=running_names,
+                embedding_messenger=embedding_messenger,
+                collection=collection,
+                sample_size=sample_size
+            )
+            from sisyphus.manipulator.jsonl_constructor import create_completion_from_embedding
+            cls_file = os.path.join("data", "classify.jsonl")
+            cls_file_res = os.path.join("data", "classify_res.jsonl")
+            create_completion_from_embedding(os.path.join("data", "embedding.jsonl"), cls_file, self.system_message, self.prompt_cls)
+            with open(cls_file, encoding='utf-8') as file:
+                g = iter(file)
+                g, probe_size, stop_flag = self.choose_probe_size(g)
+                next_start_capacity = await completion_messenger.completion_helper(
+                    requests_generator=g,
+                    save_filepath=cls_file_res,
+                    probe_size=probe_size,
+                    stop_flag=stop_flag
+                )

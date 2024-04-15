@@ -25,10 +25,10 @@ def parse_file(file) -> list[str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--retrieval_dois", help=".txt/.xlsx file contains dois you want to retrieve")
+    parser.add_argument("doi_file", help=".txt/.xlsx file contains dois you want to retrieve")
     args = parser.parse_args()
 
-    file: str = args.retrieval_dois
+    file: str = args.doi_file
     file_extension = os.path.splitext(file)[1]
     if file_extension == '.txt':
         doi_ls = parse_file(file)

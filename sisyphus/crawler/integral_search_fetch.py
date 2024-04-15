@@ -102,7 +102,7 @@ class AbstractRetriever(AsyncControler):
                     tracker.error_last_hit_time = time.time()
                     self.logger.debug(f"error_last_hit_time: {tracker.error_last_hit_time}")
                     tracker.rate_limit_error_hit += 1
-                self.logger.warning(f"{e}")
+                self.logger.warning(f"{task_id}: {e}")
                 tracker.task_failed += 1
                 if redo_times < self.max_redo_times:
                     redo_queue.put_nowait(wrapper)
@@ -112,7 +112,7 @@ class AbstractRetriever(AsyncControler):
     def call_back(self, tracker: MyTracker):
         if (hit_times:=tracker.rate_limit_error_hit) > 0:
             self.logger.warning(f"rate limit error hit {hit_times}, please consider running at low speed")
-        if error_task:=tracker.task_failed > 0:
+        if (error_task:=tracker.task_failed) > 0:
             self.logger.warning(f"{error_task} / {tracker.task_start_num} faild")
 
     def _save(self, result):
@@ -126,10 +126,10 @@ async def fetch(query):
         with open(savefile_path, 'w', encoding='utf-8') as file:
             file.write("")
     async with httpx.AsyncClient() as client:
-        bucket = Bucket(maximum_capacity=9, recovery_rate=9, init_capacity=0) # according to the throttle
+        bucket = Bucket(maximum_capacity=8, recovery_rate=8, init_capacity=0) # according to the throttle, 9/s, but actually is slightly smaller
         tracker = MyTracker()
         retriever = AbstractRetriever(client=client, error_savefile_path='errors\\abstract_retrieval.txt', savefile_path=savefile_path)
-        title_url_wrapper = search_articles(query=query, number=10)
+        title_url_wrapper = search_articles(query=query, number=8)
         g = iter(title_url_wrapper)
         await retriever.control_flow(iterator=g, bucket=bucket, tracker=tracker, most_concurrent_task_num=10)
 

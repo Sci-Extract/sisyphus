@@ -52,7 +52,7 @@ def get_target_dir_txt(dir_path: str) -> str:
         return content
 
 def embedding_json_formatter(text: list[str], identifier: str, file_dir: str, file_name: str, task_id_generator: Generator | None, write_mode):
-    model = "text-embedding-ada-002"
+    model = "text-embedding-3-large"
     requests = text
     if bool(task_id_generator):
         jobs = [{"model": model, "input": request, "metadata": {"file_name": identifier, "task_id": next(task_id_generator)}} for request in requests]
@@ -73,11 +73,25 @@ def converter_embedding(text: str, file_name:str, jsonl_file_name: str, task_id_
     Chunking text and then convert to jsonl with given metadata, noticing that default chunk_size was set to 300.
     """
     generator = create_chunks(text, chunk_size)
-    text_ls = [tokenizer.decode(g) for g in generator]
+    text_ls = [dec.strip() for g in generator if "https://api.elsevier.com/" not in (dec:=tokenizer.decode(g))]
     embedding_json_formatter(text_ls, file_name, jsonl_file_dir, jsonl_file_name, task_id_generator, write_mode)
-    
 
-def completion_json_formatter(system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-1106", temperature: float = 0.0, response_format={"type": "json_object"}):
+def create_completion_from_embedding(embedding_file: str, out_file: str, system_message: str, prompt: str):
+    with open(embedding_file, 'r', encoding='utf-8') as f_out:
+        jobs = []
+        for line in f_out:
+            content = json.loads(line)
+            metadata = content["metadata"]
+            doc = content["input"]
+            user_message = prompt + '```' + doc + '```'
+            jobs.append(completion_json_formatter(system_message, user_message, metadata["file_name"], metadata["task_id"]))
+    with open(out_file, 'w', encoding='utf-8') as fp:
+        for job in jobs:
+            fp.write(json.dumps(job))
+            fp.write("\n")
+
+
+def completion_json_formatter(system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-0125", temperature: float = 0.0, response_format={"type": "json_object"}):
     json_format = {
     "messages": [
         {
@@ -96,7 +110,7 @@ def completion_json_formatter(system_message: str, user_message: str, article_na
 }
     return json_format
 
-def completion_json_formatter_with_doc(doc:str, system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-1106", temperature: float = 0.0, response_format={"type": "json_object"}):
+def completion_json_formatter_with_doc(doc:str, system_message: str, user_message: str, article_name, task_id, model="gpt-3.5-turbo-0125", temperature: float = 0.0, response_format={"type": "json_object"}):
     json_format = {
     "messages": [
         {

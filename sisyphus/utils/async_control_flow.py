@@ -90,9 +90,9 @@ class AsyncControler(ABC):
         task_id_gen = self.task_id_gen()
         while True:
             if (elapsed:=time.time() - tracker.error_last_hit_time) < self.sleep_after_hit_error:
-                sleep_time = self.sleep_after_hit_error - elapsed
-                self.logger.info(f"Error hit, execution pause for {sleep_time}s")
-                await asyncio.sleep(sleep_time)
+                # sleep_time = self.sleep_after_hit_error - elapsed
+                self.logger.info(f"Error hit, execution pause for {self.sleep_after_hit_error}s")
+                await asyncio.sleep(self.sleep_after_hit_error)
             if not next_task:
                 if not iterator_run_out:
                     try:
