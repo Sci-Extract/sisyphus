@@ -9,6 +9,9 @@
 @Desc    :   patch chat model
 '''
 
+import os
+import logging
+import logging.config
 from typing import Any, Coroutine, List, Optional
 
 from langchain_openai import ChatOpenAI
@@ -18,13 +21,19 @@ from langchain_core.outputs import ChatResult
 from langchain_core.outputs.chat_result import ChatResult
 from langchain_core.language_models.chat_models import agenerate_from_stream
 
-from sisyphus.langpatch.chat_throttle import throttler, waiter
+from sisyphus.patch.throttle import chat_waiter
+
+logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
+logger = logging.getLogger('debugLogger')
 
 
 class ChatOpenAIThrottle(ChatOpenAI):
     """
     Patch langchain chatopenai, use anywhere else inside this project as substitution of `ChatOpenAI`.
     """
+    max_retries: int = 0
+    """set default retry to zero, making sure that every request was managed by waiter"""
+
     async def _agenerate(
         self,
         messages: List[BaseMessage],
@@ -32,6 +41,5 @@ class ChatOpenAIThrottle(ChatOpenAI):
         run_manager: Optional[AsyncCallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        async with waiter(throttler=throttler, consumed_tokens=self.get_num_tokens_from_messages(messages)):
-            await super()._agenerate(messages, stop, run_manager, **kwargs)
-
+        async with chat_waiter(consumed_tokens=self.get_num_tokens_from_messages(messages)):
+            return await super()._agenerate(messages, stop, run_manager, **kwargs)

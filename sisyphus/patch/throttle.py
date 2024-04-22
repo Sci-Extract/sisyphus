@@ -10,27 +10,31 @@
 '''
 
 import asyncio
-import dataclasses
-import functools
 import json
+import os
 import time
 import threading
+import logging
+import logging.config
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from contextlib import asynccontextmanager
 
-import httpx
-from langchain_community.callbacks import get_openai_callback
 
-
-CONFIG_PATH = Path("throttle_config.json") 
-def load_config():
-    config = json.loads(CONFIG_PATH.read_text(encoding='utf-8'))
+def load_config(path):
+    config = json.loads(path.read_text(encoding='utf-8'))
     return config
 
-CONFIG = load_config()
+sep = os.sep
+CONFIG_PATH = Path(os.sep.join(["config", "throttle_config.json"]))
+CONFIG = load_config(CONFIG_PATH)
 
-@dataclasses
+logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
+logger = logging.getLogger('debugLogger')
+
+# region chat
+@dataclass
 class ChatThrottler:
     """
     Implementation of throttler
@@ -73,8 +77,8 @@ class ChatThrottler:
             self.consume(consumed_tokens)
             self.instill()
 
-    def consume(self, tokens: int):
-        self.left_tokens -= tokens
+    def consume(self, tokens: int, completion_tokens=50): # set default completion for 50
+        self.left_tokens -= (tokens + completion_tokens)
 
     def setter(self, left_tokens):
         """
@@ -85,23 +89,33 @@ class ChatThrottler:
                 self.left_tokens = left_tokens
                 self.last_check = time.time()
 
-throttler = ChatThrottler(CONFIG["max_tokens"], CONFIG["time_frame"])
+
+chat_throttler = ChatThrottler(CONFIG["chat"]["max_tokens"], CONFIG["chat"]["time_frame"])
 
 @asynccontextmanager
-async def waiter(throttler: ChatThrottler, consumed_tokens: int):
-    yield await throttler.wait_capacity(consumed_tokens)
+async def chat_waiter(consumed_tokens: int):
+    await chat_throttler.wait_capacity(consumed_tokens)
+    yield
     # some clean steps...
 
-async def httpx_response_hooker(throtter: ChatThrottler, response: httpx.Response):
-    assert "x-ratelimit-limit-requests" in response.headers # for test
-    left_tokens = response.headers.get("x-ratelimit-remaining-tokens", None)
-    await asyncio.to_thread(throtter.setter, left_tokens)
-    
-timeout = httpx.Timeout(10.0, connect=30.0, pool=30.0, read=30.0)
-limits = httpx.Limits(max_keepalive_connections=None, max_connections=None)
-httpx_client = httpx.AsyncClient(
-    timeout=timeout,
-    limits=limits,
-    verify=False,
-    event_hooks={"response": [functools.partial(httpx_response_hooker, throttler)]}
-)
+# endregion
+
+# region embed
+class EmbedThrottler(ChatThrottler):
+    """
+    Implementation specific to embedding
+    - no need to use setter due to the accurate token counting.
+    """
+    def consume(self, tokens: int, completion_tokens=0):
+        return super().consume(tokens, completion_tokens)
+
+embed_throttler = EmbedThrottler(CONFIG["embed"]["max_tokens"], CONFIG["embed"]["time_frame"])
+
+@asynccontextmanager
+async def embed_waiter(consumed_tokens: int):
+    logger.debug(consumed_tokens)
+    await embed_throttler.wait_capacity(consumed_tokens)
+    yield
+    # some clean steps...
+
+# endregion

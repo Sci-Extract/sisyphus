@@ -1,0 +1,10 @@
+{
+    "chat":{
+        "max_tokens": 80000,
+        "time_frame": "m"
+    },
+    "embed":{
+        "max_tokens": 1000000,
+        "time_frame": "m"
+    }
+}
