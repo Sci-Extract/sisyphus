@@ -10,8 +10,9 @@
 Store article into sql.
 '''
 
+import os
 from collections import namedtuple
-from typing import AsyncIterator
+from typing import AsyncIterator, Iterator
 
 import nltk
 import aiofiles
@@ -29,7 +30,7 @@ class ArticleLoader(BaseLoader):
     
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.file_name = file_path.split('/')[-1]
+        self.file_name = file_path.split(os.sep)[-1]
 
     async def alazy_load(self) -> AsyncIterator[Document]:
         async with aiofiles.open(self.file_path, encoding='utf8') as file:
@@ -42,12 +43,26 @@ class ArticleLoader(BaseLoader):
             yield Document(page_content=chunk, metadata=MetaData(self.file_name, "abstract", title)._asdict())
         for section in self.get_sections(soup=soup, title=title):
             yield section
-    
+
+    def lazy_load(self) -> Iterator[Document]:
+        with open(self.file_path, encoding='utf8') as file:
+            doc = file.read()
+        soup = bs(doc, 'html.parser')
+        title = soup.find("title").text.strip('\n ')
+        abstract = soup.css.select("div#abstract > p")[0]
+        abstract_chunks = self.chunk_text(abstract.text.strip('\n '))
+        for chunk in abstract_chunks:
+            yield Document(page_content=chunk, metadata=MetaData(self.file_name, "abstract", title)._asdict())
+        for section in self.get_sections(soup=soup, title=title):
+            yield section
+
+
     def get_sections(self, soup: bs, title: str):
         """
-        Get sections except abstract.
+        Get rest sections.
+        TODO: better use nested section name, e.g. Experimental/<sub_section> 
         """
-        section = None
+        section = "abstract" # a few papers have abstract which more than one para
         for child in soup.find(id="sections"):
             if child.name == "h2":
                 section = child.text.strip('\n ')
@@ -63,7 +78,7 @@ class ArticleLoader(BaseLoader):
         """
         Due to the input text is a paragraph, to preserve the semantic meanings per chunk.
         Chunking the text more than 400 tokens, meanwhile, prevent generating small chunks less than 200 tokens.
-        The token range per chunk is 200 - 600. 
+        The range of tokens per chunk is 200 - 600. 
         """
         if len(encoding.encode(text)) <= 400:
             return [text]
@@ -89,4 +104,3 @@ class ArticleLoader(BaseLoader):
                 chunked_texts.append(' '.join(sentences[next_start_i:]))
                 break
         return chunked_texts
-        
