@@ -19,6 +19,7 @@ from typing import Dict, List, TypedDict
 
 import tqdm
 import chromadb
+import pandas as pd
 from langchain_community.vectorstores import chroma
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -41,8 +42,8 @@ from sisyphus.patch import (
 
 embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 # db = chroma.Chroma("test", embedding_function=embedding, client=client)
-model = ChatOpenAIThrottle(temperature=0, model='gpt-4-turbo-2024-04-09', http_async_client=achat_httpx_client)
-# model = ChatOpenAIThrottle(temperature=0)
+# model = ChatOpenAIThrottle(temperature=0, model='gpt-4-turbo-2024-04-09', http_async_client=achat_httpx_client)
+model = ChatOpenAIThrottle(temperature=0)
 
 class ExtractUptake(BaseModel):
     """Extract uptake/adsorption information from text"""
@@ -207,8 +208,13 @@ def main():
     query = "single-component adsorption isotherms, uptake value are 3 mmol g-1 at 298 K 1 bar"
     examples = tool_example_to_messages({"input": input, "tool_calls": tool_calls})
     res = asyncio.run(supervisor(db, query, examples, [ExtractUptake], 10))
-    for r in res:
-        print(r)
+    data_dic = []
+    for models in res:
+        for model in models:
+            model: BaseModel
+            data_dic.append(dict(model))
+    df = pd.DataFrame(data_dic)
+    df.to_csv('mof_50.csv', index=False)
 
 if __name__ == '__main__':
     main()

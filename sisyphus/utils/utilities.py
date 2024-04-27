@@ -9,7 +9,6 @@ import json
 from functools import wraps
 
 import pandas as pd
-from termcolor import cprint
 
 
 def log(log_file_name="log.txt", logging_level=10):
