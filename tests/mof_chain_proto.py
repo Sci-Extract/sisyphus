@@ -43,7 +43,7 @@ from sisyphus.patch import (
 embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 # db = chroma.Chroma("test", embedding_function=embedding, client=client)
 # model = ChatOpenAIThrottle(temperature=0, model='gpt-4-turbo-2024-04-09', http_async_client=achat_httpx_client)
-model = ChatOpenAIThrottle(temperature=0)
+model = ChatOpenAIThrottle(temperature=0, async_client=achat_httpx_client)
 
 class ExtractUptake(BaseModel):
     """Extract uptake/adsorption information from text"""

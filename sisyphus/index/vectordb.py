@@ -30,7 +30,6 @@ logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
 
 embedding = OpenAIEmbeddingThrottle()
-client = chromadb.HttpClient()
 
 async def aembed_doc(file_path, record_manager, vector_store):
     loader = ArticleLoader(file_path)
@@ -54,7 +53,7 @@ def embed_doc(file_path, record_manager, vector_store):
     )
     return info
 
-async def asupervisor(file_folder, collection_name, batch_size: int = 10):
+async def asupervisor(client, file_folder, collection_name, batch_size: int = 10):
     """
     asupervisor : manage the index process.
 
@@ -83,7 +82,7 @@ async def asupervisor(file_folder, collection_name, batch_size: int = 10):
             info = await coro
             logger.debug(info)
 
-def supervisor(file_folder, collection_name):
+def supervisor(client, file_folder, collection_name):
     """
     supervisor : manage the index process.
 
@@ -111,10 +110,12 @@ def acreate_vectordb(file_folder, collection_name, batch_size=10):
     """
     create vector database. Ensuring database consistency, means that one can run this process multiple times
     """
-    asyncio.run(asupervisor(file_folder,collection_name, batch_size))
+    client = chromadb.HttpClient()
+    asyncio.run(asupervisor(client, file_folder,collection_name, batch_size))
 
 def create_vectordb(file_folder, collection_name):
     """
     sync version
     """
-    supervisor(file_folder, collection_name)
+    client = chromadb.HttpClient()
+    supervisor(client, file_folder, collection_name)

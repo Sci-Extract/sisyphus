@@ -11,6 +11,7 @@ Store article into sql.
 '''
 
 import os
+import glob
 from collections import namedtuple
 from typing import AsyncIterator, Iterator
 
@@ -20,11 +21,18 @@ import tiktoken
 from bs4 import BeautifulSoup as bs
 from langchain_core.documents import Document
 from langchain_core.document_loaders import BaseLoader
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    Session
+)
 
 encoding = tiktoken.get_encoding('cl100k_base')
 MetaData = namedtuple("MetaData", "source section title")
 
+# region loader
 class ArticleLoader(BaseLoader):
     """convert article.html to langchain `Document` object"""
     
@@ -104,3 +112,56 @@ class ArticleLoader(BaseLoader):
                 chunked_texts.append(' '.join(sentences[next_start_i:]))
                 break
         return chunked_texts
+# endregion
+
+# region build sql
+class Base(DeclarativeBase):
+    pass
+
+class Doc(Base):
+    __tablename__ = 'document'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    page_content: Mapped[str] = mapped_column()
+    source: Mapped[str] = mapped_column()
+    section: Mapped[str] = mapped_column()
+    title: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f'Doc(page_content={self.page_content[:20]}, source={self.source!r}, section={self.section!r}, title={self.title!r}'
+
+def create_article_sqlite(file_folder, sql_name='article.sqlite', batch_size=10):
+    """create article sqlite database"""
+    engine_path = os.path.join('db', sql_name)
+    engine = create_engine('sqlite:///' + engine_path)
+    session = Session(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    def convert_to_orm_doc(doc: Document):
+        return Doc(
+            page_content = doc.page_content,
+            source = doc.metadata['source'],
+            section = doc.metadata['section'],
+            title = doc.metadata['title']
+        )
+    files = glob.glob(os.path.join(file_folder, '*.html'))
+
+    session.begin()
+    for file_path in files:
+        loader = ArticleLoader(file_path)
+        try:
+            for doc in loader.lazy_load():
+                orm_doc = convert_to_orm_doc(doc)
+                session.add(orm_doc)
+                
+                if len(session.new) % batch_size == 0:
+                    session.commit()
+                    session.begin()  # Start a new transaction
+                
+            session.commit()
+        except:
+            # Rollback the transaction if an error occurs
+            session.rollback()
+            raise
+        finally:
+            # Close the session
+            session.close()
