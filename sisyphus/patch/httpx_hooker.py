@@ -19,7 +19,7 @@ from sisyphus.patch.throttle import ChatThrottler, chat_throttler
 
 async def httpx_response_hooker(throtter: ChatThrottler, response: httpx.Response):
     assert "x-ratelimit-limit-requests" in response.headers # for test
-    left_tokens = response.headers.get("x-ratelimit-remaining-tokens", None)
+    left_tokens = int(response.headers.get("x-ratelimit-remaining-tokens", None))
     await asyncio.to_thread(throtter.setter, left_tokens)
     
 timeout = httpx.Timeout(10.0, connect=60.0, pool=30.0, read=30.0)
