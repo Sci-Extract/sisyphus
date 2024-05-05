@@ -32,7 +32,7 @@ from .archive import ArticleLoader
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
 
-embedding = OpenAIEmbeddingThrottle(async_client=aembed_httpx_client)
+embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 
 
 async def aembed_doc(file_path, record_manager, vector_store):

@@ -464,10 +464,10 @@ async def aindex(
                 f"Vectorstore {vector_store} does not have required method {method}"
             )
 
-    if type(vector_store).adelete == VectorStore.adelete:
-        # Checking if the vectorstore has overridden the default delete method
-        # implementation which just raises a NotImplementedError
-        raise ValueError("Vectorstore has not implemented the delete method")
+    # if type(vector_store).adelete == VectorStore.adelete:
+    #     # Checking if the vectorstore has overridden the default delete method
+    #     # implementation which just raises a NotImplementedError
+    #     raise ValueError("Vectorstore has not implemented the delete method")
 
     async_doc_iterator: AsyncIterator[Document]
     if isinstance(docs_source, BaseLoader):

@@ -129,6 +129,16 @@ class Doc(Base):
     def __repr__(self):
         return f'Doc(page_content={self.page_content[:20]}, source={self.source!r}, section={self.section!r}, title={self.title!r}'
 
+
+def convert_to_orm_doc(doc: Document):
+    return Doc(
+        page_content = doc.page_content,
+        source = doc.metadata['source'],
+        section = doc.metadata['section'],
+        title = doc.metadata['title']
+    )
+
+
 def create_article_sqlite(file_folder, sql_name='article.sqlite', batch_size=10):
     """create article sqlite database"""
     engine_path = os.path.join('db', sql_name)
@@ -136,13 +146,6 @@ def create_article_sqlite(file_folder, sql_name='article.sqlite', batch_size=10)
     session = Session(bind=engine)
     Base.metadata.create_all(bind=engine)
 
-    def convert_to_orm_doc(doc: Document):
-        return Doc(
-            page_content = doc.page_content,
-            source = doc.metadata['source'],
-            section = doc.metadata['section'],
-            title = doc.metadata['title']
-        )
     files = glob.glob(os.path.join(file_folder, '*.html'))
 
     session.begin()
