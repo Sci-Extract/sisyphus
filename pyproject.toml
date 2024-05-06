@@ -26,6 +26,7 @@ aiofiles = "^23.2.1"
 nltk = "^3.8.1"
 aiosqlite = "^0.20.0"
 blue = "^0.9.1"
+sqlmodel = "^0.0.18"
 
 
 [tool.poetry.group.dev.dependencies]
