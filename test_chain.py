@@ -1,12 +1,15 @@
 import argparse
 import asyncio
+import os
 import re
 from typing import Optional
 
 import chromadb
 from langchain_core.documents import Document
 from langchain.pydantic_v1 import BaseModel, Field
+from sqlmodel import SQLModel, Relationship, create_engine
 
+from sisyphus.chain.database import DocBase, update_resultbase
 from sisyphus.chain import (
     Chain,
     Filter,
@@ -26,7 +29,7 @@ from example_helper import tool_example_to_messages
 
 
 def create_chain(
-    save_as, model, examples, vector_db, query, filter_func, pydantic_model
+    engine, doc_orm, result_orm, model, examples, vector_db, query, filter_func, pydantic_model
 ):
     """create extract chain"""
     filter = Filter(db=vector_db, query=query, filter_func=filter_func)
@@ -34,9 +37,16 @@ def create_chain(
         model, pydantic_models=[pydantic_model], examples=examples
     )
     validator = Validator()
-    writer = SqlWriter(db_name=save_as, pydantic_model=pydantic_model)
+    writer = SqlWriter(engine, doc_orm, result_orm)
     chain = Chain(filter, extractor, validator, writer)
     return chain
+
+def create_db_schema(save_as, default_dir='db'):
+    sql_path = os.path.join(default_dir, save_as)
+    engine = create_engine('sqlite:///' + sql_path)
+    SQLModel.metadata.create_all(engine)
+    return engine
+
 
 
 #### Configurable section #####
@@ -87,7 +97,19 @@ if __name__ == '__main__':
         client=client,
     )
 
-    # NOTE: I recommand you to provide examples to get result match to provided.
+    class Doc(DocBase, table=True):
+        __tablename__ = 'document'
+        section: str
+        results: Optional[list['Result']] =  Relationship(back_populates='doc')
+
+    ResultBase = update_resultbase(ExtractUptake)
+
+    class Result(ResultBase, table=True):
+        doc: Doc = Relationship(back_populates='results')
+    
+    engine = create_db_schema(args.save_as)
+
+       # NOTE: I recommand you to provide examples to get result match to provided.
     tool_examples = [
         (
             'Example: The single-component isotherms revealed that [Cd2(dpip)2(DMF)(H2O)]·DMF·H2O adsorbs '
@@ -130,7 +152,9 @@ if __name__ == '__main__':
         {'input': input, 'tool_calls': tool_calls}
     )
     chain = create_chain(
-        args.save_as,
+        engine,
+        Doc,
+        Result,
         model,
         examples,
         db,

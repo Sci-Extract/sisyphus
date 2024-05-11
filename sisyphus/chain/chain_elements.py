@@ -6,7 +6,7 @@
 @Version :   1.0
 @Contact :   luvusoike@icloud.com
 @License :   MIT Lisence
-@Desc    :   Defnition of Parser, Filter, Extractor, Validator, SqlWriter
+@Desc    :   Defnition of Filter, Extractor, Validator, SqlWriter
 """
 
 import asyncio
@@ -31,18 +31,10 @@ from langchain_core.prompts import (
     MessagesPlaceholder,
 )
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
-from sqlalchemy import create_engine
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    mapped_column,
-    Mapped,
-    relationship,
-    Session,
-)
-from sqlalchemy import ForeignKey
+from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
-
+from sisyphus.chain.database import DocBase, ResultBase
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
@@ -67,7 +59,9 @@ class Filter(BaseElement):
         self.filter_func = filter_func
 
     def locate(self, file_name) -> list[Document]:
-        """select list of `Document` object in an article based on creterions, e.g., semantic similarity or use all"""
+        """select list of `Document` object in an article based on creterions, e.g., semantic similarity or use all.
+        We assumed that articles are already been parsed and stored in database.
+        """
         self.check_database()
         if self.query:
             docs = self.db.similarity_search(
@@ -88,7 +82,7 @@ class Filter(BaseElement):
     def filter(self, doc: Document) -> bool:
         """filter on document, return boolean"""
         if not self.filter_func:
-            return True # when func not provided
+            return True   # when func not provided
         paras = list(inspect.signature(self.filter_func).parameters.keys())
         if len(paras) != 1:
             raise ValueError('filter function only takes one argument!')
@@ -187,6 +181,8 @@ class Extractor(BaseElement):
 
 
 DocInfo = namedtuple('DocInfo', 'doc info')
+
+
 class Validator(BaseElement):
     """Applied to article level"""
 
@@ -204,91 +200,51 @@ class Validator(BaseElement):
 class SqlWriter(BaseElement):
     """Store pydantic model to sqlite, applied on `Document` level"""
 
-    def __init__(
-        self, db_name: str, pydantic_model: BaseModel
-    ):
-        self.pydantic_model = pydantic_model
-        self.db_name = db_name
-        self.engine = None
-
-    class Base(DeclarativeBase):
-        pass
-
-    class Doc(Base):
-        __tablename__ = 'document'
-        id: Mapped[int] = mapped_column(primary_key=True)
-        page_content: Mapped[str] = mapped_column()
-        source: Mapped[str] = mapped_column()
-        section: Mapped[str] = mapped_column()
-        title: Mapped[str] = mapped_column()
-        results: Mapped[list['Result']] = relationship(back_populates='document')
-
-    class Result(Base):
-        __tablename__ = 'result'
-        id: Mapped[int] = mapped_column(primary_key=True)
-        doc_id: Mapped[int] = mapped_column(ForeignKey('document.id'))
-        document: Mapped['Doc'] = relationship(back_populates='results')
-        # TODO: refactor needed !
-        mof_name: Mapped[str] = mapped_column()
-        gas_type: Mapped[str] = mapped_column()
-        uptake: Mapped[str] = mapped_column()
-        temperature: Mapped[Optional[str]] = mapped_column()
-        pressure: Mapped[Optional[str]] = mapped_column()
-
-    def _create(self):
-        # TODO: find better way to convet pydantic to sqlalchemy orm object
-        db_path = os.path.join('db', self.db_name)
-        engine = create_engine('sqlite:///' + db_path)
-        self.Base.metadata.create_all(engine)
-        return engine
-
-    def bootstrap(self):
-        self.engine = self._create()
-    
-    def _convert_to_doc_orm(self, doc: Document):
-        return self.Doc(
-            page_content = doc.page_content,
-            source = doc.metadata['source'],
-            section = doc.metadata['section'],
-            title = doc.metadata['title']
-        )
+    def __init__(self, engine, doc_orm: DocBase, result_orm: ResultBase):
+        self.engine = engine
+        self.doc_orm = doc_orm
+        self.result_orm = result_orm
 
     def save(self, results: list[BaseModel], document: Document):
         with Session(bind=self.engine) as session, session.begin():
-            doc_orm = self._convert_to_doc_orm(document)
+            doc_sqlmodel = self._convert_to_doc_sqlmodel(document)
             for result in results:
                 params = dict(result)
-                result_orm = self.Result(**params)
-                doc_orm.results.append(result_orm)
-            session.add(doc_orm)
+                result_sqlmodel = self.result_orm(**params)
+                doc_sqlmodel.results.append(result_sqlmodel)
+            session.add(doc_sqlmodel)
 
-    def asave(self, results: list[BaseModel], document: Document):
-        """uncertain about thread safe"""
-        # TODO: implement async version of save
+    def asave(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def _convert_to_doc_sqlmodel(self, doc: Document):
+        return self.doc_orm(
+            page_content=doc.page_content,
+            source=doc.metadata['source'],
+            section=doc.metadata['section'],
+            title=doc.metadata['title'],
+        )
+
 
 class Chain(BaseElement):
     """Chain through all the elements"""
+
     def __init__(
-            self,
-            filter: Filter,
-            extractor: Extractor,
-            validator: Validator,
-            writer: SqlWriter
+        self,
+        filter: Filter,
+        extractor: Extractor,
+        validator: Validator,
+        writer: SqlWriter,
     ):
         self.filter = filter
         self.extractor = extractor
         self.validator = validator
         self.writer = writer
-        self.writer.bootstrap()
 
     def compose(self, file_name):
         """Extract aritlce based on extraction base elements"""
         docs = self.filter.locate(file_name)
-        filter_docs = [
-            doc for doc in docs
-            if self.filter.filter(doc)
-        ]
+        filter_docs = [doc for doc in docs if self.filter.filter(doc)]
         doc_info: list[DocInfo]
         doc_info = []
         for doc in filter_docs:
@@ -297,16 +253,14 @@ class Chain(BaseElement):
                 doc_info.append(DocInfo(doc, results))
         validate_doc_info = self.validator.validate(doc_info)
         for doc, info in validate_doc_info:
-            self.writer.save(
-                results=info,
-                document=doc
-            )
-    
+            self.writer.save(results=info, document=doc)
+
     async def acompose(self, file_name):
         """Async version"""
         docs = await self.filter.alocate(file_name)
         doc_info: list[DocInfo]
         doc_info = []
+
         async def extract_on_docuemnt(doc):
             sentinel = await self.filter.afilter(doc)
             if not sentinel:
@@ -314,27 +268,23 @@ class Chain(BaseElement):
             results = await self.extractor.aextract(doc)
             if results:
                 doc_info.append(DocInfo(doc, results))
-        coros = [
-            extract_on_docuemnt(doc) for doc in docs
-        ]
+
+        coros = [extract_on_docuemnt(doc) for doc in docs]
         await asyncio.gather(*coros)
         validate_doc_info = await self.validator.avalidate(doc_info)
         # presently using sync save
         for doc, info in validate_doc_info:
-            self.writer.save(
-                results=info,
-                document=doc
-            )
+            self.writer.save(results=info, document=doc)
 
 
 async def asupervisor(chain: Chain, directory: str, batch_size: int):
     """Asynchronously run `Chain` object"""
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
-    file_names = [name.split(os.sep)[-1] for name in file_name_full]    
-    
+    file_names = [name.split(os.sep)[-1] for name in file_name_full]
+
     for index in range(0, len(file_names), batch_size):
         coros = []
-        for file_name in file_names[index: index + batch_size]:
+        for file_name in file_names[index : index + batch_size]:
             coros.append(chain.acompose(file_name))
         for coro in tqdm.tqdm(asyncio.as_completed(coros), total=len(coros)):
-            await coro 
+            await coro
