@@ -30,10 +30,14 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
 )
-from tenacity import retry, retry_if_exception_type, stop_after_attempt
+from tenacity import retry, retry_if_exception_type, wait_exponential
 from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
+from sisyphus.patch.throttle import (
+    chat_throttler,
+    ChatThrottler
+)
 from sisyphus.chain.database import DocBase, ResultBase
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
@@ -118,6 +122,9 @@ DEFAULT_PROMPT_TEMPLATE = ChatPromptTemplate.from_messages(
 
 class Extractor(BaseElement):
     """Applied to `Document` object, use openai tool call"""
+    
+    _chat_throttler: ChatThrottler = chat_throttler
+    """used for cool down process while hit 429 error"""
 
     def __init__(
         self,
@@ -149,8 +156,9 @@ class Extractor(BaseElement):
 
     @retry(
         retry=retry_if_exception_type(RateLimitError),
-        stop=stop_after_attempt(2),
-    )    # TODO: add a callback function to notice stop the request for awhile
+        wait=wait_exponential(min=2, max=10),
+        after=_chat_throttler.retry_callback
+    )
     def extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """extract info from doc"""
         chain = self.build_chain()
@@ -165,7 +173,8 @@ class Extractor(BaseElement):
 
     @retry(
         retry=retry_if_exception_type(RateLimitError),
-        stop=stop_after_attempt(2),
+        wait=wait_exponential(min=2, max=10),
+        after=_chat_throttler.retry_callback
     )
     async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """async version for extracting info from doc"""

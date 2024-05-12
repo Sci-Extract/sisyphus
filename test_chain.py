@@ -162,4 +162,5 @@ if __name__ == '__main__':
         regex_filter,
         ExtractUptake,
     )
-    asyncio.run(asupervisor(chain, args.directory, args.batch_size))
+    batch_size = int(args.batch_size)
+    asyncio.run(asupervisor(chain, args.directory, batch_size))

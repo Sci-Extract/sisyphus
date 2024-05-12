@@ -13,6 +13,7 @@ log/*
 temp/*
 
 *.ipynb
+**/.DS_Store
 data/*
 .env
 log.txt

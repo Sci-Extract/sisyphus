@@ -21,7 +21,11 @@ from langchain_core.outputs import ChatResult
 from langchain_core.outputs.chat_result import ChatResult
 from langchain_core.language_models.chat_models import agenerate_from_stream
 
-from sisyphus.patch.throttle import chat_waiter
+from sisyphus.patch.throttle import (
+    chat_throttler,
+    chat_waiter,
+    ChatThrottler
+)
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
@@ -33,6 +37,7 @@ class ChatOpenAIThrottle(ChatOpenAI):
     """
     max_retries: int = 0
     """set default retry to zero, making sure that every request was managed by waiter"""
+    _chat_throttler: ChatThrottler = chat_throttler
 
     async def _agenerate(
         self,

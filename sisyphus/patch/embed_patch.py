@@ -17,7 +17,11 @@ from typing import List
 import tiktoken
 from langchain_openai import OpenAIEmbeddings
 
-from sisyphus.patch.throttle import embed_waiter
+from sisyphus.patch.throttle import (
+    embed_throttler,
+    embed_waiter,
+    EmbedThrottler
+)
 
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
@@ -30,10 +34,10 @@ class OpenAIEmbeddingThrottle(OpenAIEmbeddings):
     Patch langchain embedding, use anywhere else inside this project as substitution of `OpenAIEmbedding`.
     """
     max_retries: int = 0
+    _embed_throttler: EmbedThrottler = embed_throttler
 
     async def _aget_len_safe_embeddings(self, texts: List[str], *, engine: str, chunk_size: int | None = None) -> List[List[float]]:
         async with embed_waiter(consumed_tokens=self.get_num_tokens(texts)):
-            logger.debug('Inside limiter')
             return await super()._aget_len_safe_embeddings(texts, engine=engine, chunk_size=chunk_size)
 
     def get_num_tokens(self, texts: List[str]):

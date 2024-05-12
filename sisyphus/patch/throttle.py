@@ -45,7 +45,11 @@ class ChatThrottler:
     time_frame: Literal["s", "m"]
     last_check: float = None
     a_lock: asyncio.Lock = asyncio.Lock()
-    t_lock: threading.Lock = threading.Lock()  
+    t_lock: threading.Lock = threading.Lock()
+
+    cool_down_sentinel: bool = False
+    cool_down_time: int = 10
+    cool_down_start: float = None
     
     def __post_init__(self):
         self.left_tokens: float
@@ -72,6 +76,8 @@ class ChatThrottler:
             self.last_check = time.time()
         async with self.a_lock:
             while (consumed_tokens - self.left_tokens) > 0:
+                if self.cool_down_sentinel:
+                    await self.cool_down()
                 await asyncio.sleep(time_sleep)
                 self.instill()
             self.consume(consumed_tokens)
@@ -88,6 +94,22 @@ class ChatThrottler:
             if left_tokens is not None:
                 self.left_tokens = left_tokens
                 self.last_check = time.time()
+    
+    def retry_callback(self, retry_state):
+        """callback for tenacity retry when hit 429 rate error"""
+        self.cool_down_sentinel = True
+        self.cool_down_start = time.time()
+        
+        logger.debug('%s', retry_state.outcome.exception())
+
+    async def cool_down(self):
+        """cool down for `cool_down_time` since last hit error"""
+        while True:
+            since_cool_down = time.time() - self.cool_down_start
+            if since_cool_down >= self.cool_down_time:
+                self.cool_down_sentinel = False
+                break
+            await asyncio.sleep(0.1)
 
 
 chat_throttler = ChatThrottler(CONFIG["chat"]["max_tokens"], CONFIG["chat"]["time_frame"])
