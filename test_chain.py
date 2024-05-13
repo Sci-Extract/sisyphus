@@ -28,8 +28,17 @@ from sisyphus.patch import (
 from example_helper import tool_example_to_messages
 
 
+# helper functions
 def create_chain(
-    engine, doc_orm, result_orm, model, examples, vector_db, query, filter_func, pydantic_model
+    engine,
+    doc_orm,
+    result_orm,
+    model,
+    examples,
+    vector_db,
+    query,
+    filter_func,
+    pydantic_model,
 ):
     """create extract chain"""
     filter = Filter(db=vector_db, query=query, filter_func=filter_func)
@@ -41,12 +50,49 @@ def create_chain(
     chain = Chain(filter, extractor, validator, writer)
     return chain
 
+
 def create_db_schema(save_as, default_dir='db'):
     sql_path = os.path.join(default_dir, save_as)
     engine = create_engine('sqlite:///' + sql_path)
     SQLModel.metadata.create_all(engine)
     return engine
 
+
+def create_all(
+    save_as,
+    chat_model,
+    examples,
+    vector_db,
+    query,
+    filter_func,
+    pydantic_model,
+):
+    """create both sqlite table and extraction chain"""
+
+    class Doc(DocBase, table=True):
+        __tablename__ = 'document'
+        section: str
+        results: Optional[list['Result']] = Relationship(back_populates='doc')
+
+    ResultBase = update_resultbase(pydantic_model)
+
+    class Result(ResultBase, table=True):
+        doc: Doc = Relationship(back_populates='results')
+
+    engine = create_db_schema(save_as)
+
+    chain = create_chain(
+        engine,
+        Doc,
+        Result,
+        chat_model,
+        examples,
+        vector_db,
+        query,
+        filter_func,
+        pydantic_model,
+    )
+    return chain
 
 
 #### Configurable section #####
@@ -58,33 +104,92 @@ def regex_filter(doc: Document) -> bool:
 
 # example of pydantic model
 class ExtractUptake(BaseModel):
-    """Extract uptake/adsorption information from text"""
+    """Extract uptake/adsorption properties from text"""
 
-    mof_name: str = Field(..., description='the entity of gas uptaking')
+    mof_name: str = Field(..., description='the entity of gas uptaking, ')
     gas_type: str = Field(..., description='the gas used in adsorption/uptake')
-    uptake: str = Field(
+    uptake: float = Field(
         ...,
-        description='the quantity and correspond unit of the adsorption/uptake, e.g., 3 mmol/g',
+        description='the quantity of the adsorption/uptake, e.g., 3',
     )
-    temperature: Optional[str] = Field(
-        ..., description='at which temperature, e.g., 298 K'
+    uptake_unit: str = Field(
+        ..., description='the unit of uptake, e.g., mmol/g'
     )
-    pressure: Optional[str] = Field(
-        ..., description='at which pressure, e.g., 1 bar'
+    temperature: Optional[float] = Field(
+        None, description='process at which temperature'
+    )
+    temperature_unit: Optional[str] = Field(
+        None, description='unit of temperature, e.g. "K"'
+    )
+    pressure: Optional[float] = Field(
+        None, description='process at which pressure'
+    )
+    pressure_unit: Optional[str] = Field(
+        None, description='unit of pressure, e.g., "KPa"'
     )
 
 
+# NOTE: I recommand you to provide examples to get result match to provided.
+tool_examples = [
+    (
+        'Example: The single-component isotherms revealed that [Cd2(dpip)2(DMF)(H2O)]·DMF·H2O adsorbs '
+        '124.4/182.8 cm3 g−1 of C2H2, 76.8/120.0 cm3 g−1 of C2H4 '
+        'at 298 and 273 K under 100 kPa, respectively.',
+        [
+            ExtractUptake(
+                mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
+                gas_type='C2H2',
+                uptake=124.4,
+                uptake_unit='cm3/g',
+                temperature=298,
+                temperature_unit='K',
+                pressure=100,
+                pressure_unit='Kpa',
+            ),
+            ExtractUptake(
+                mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
+                gas_type='C2H2',
+                uptake=182.8,
+                uptake_unit='cm3/g',
+                temperature=273,
+                temperature_unit='K',
+                pressure=100,
+                pressure_unit='Kpa',
+            ),
+            ExtractUptake(
+                mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
+                gas_type='C2H4',
+                uptake=76.8,
+                uptake_unit='cm3/g',
+                temperature=298,
+                temperature_unit='K',
+                pressure=100,
+                pressure_unit='Kpa',
+            ),
+            ExtractUptake(
+                mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
+                gas_type='C2H4',
+                uptake=120.0,
+                uptake_unit='cm3/g',
+                temperature=273,
+                temperature_unit='K',
+                pressure=100,
+                pressure_unit='Kpa',
+            ),
+        ],
+    )
+]
 #### End #####
 
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
-        description='Main interface of sisyphus v2'
+        description='Main interface of sisyphus v2 /beta'
     )
+    arg_parser.add_argument('-d', '--directory', required=True)
+    arg_parser.add_argument('--save_as', default='result.db', required=False)
     arg_parser.add_argument('-c', '--collection_name', required=True)
     arg_parser.add_argument('-q', '--query', required=False)
-    arg_parser.add_argument('--save_as', default='result.db', required=False)
-    arg_parser.add_argument('-d', '--directory', required=True)
     arg_parser.add_argument('-b', '--batch_size', default=10)
     args = arg_parser.parse_args()
 
@@ -97,70 +202,19 @@ if __name__ == '__main__':
         client=client,
     )
 
-    class Doc(DocBase, table=True):
-        __tablename__ = 'document'
-        section: str
-        results: Optional[list['Result']] =  Relationship(back_populates='doc')
-
-    ResultBase = update_resultbase(ExtractUptake)
-
-    class Result(ResultBase, table=True):
-        doc: Doc = Relationship(back_populates='results')
-    
-    engine = create_db_schema(args.save_as)
-
-       # NOTE: I recommand you to provide examples to get result match to provided.
-    tool_examples = [
-        (
-            'Example: The single-component isotherms revealed that [Cd2(dpip)2(DMF)(H2O)]·DMF·H2O adsorbs '
-            '124.4/182.8 cm3 g−1 of C2H2, 76.8/120.0 cm3 g−1 of C2H4 '
-            'at 298 and 273 K under 100 kPa, respectively.',
-            [
-                ExtractUptake(
-                    mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
-                    gas_type='C2H2',
-                    uptake='124.4 cm3/g',
-                    temperature='298 K',
-                    pressure='100 kPa',
-                ),
-                ExtractUptake(
-                    mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
-                    gas_type='C2H2',
-                    uptake='182.8 cm3/g',
-                    temperature='273 K',
-                    pressure='100 kPa',
-                ),
-                ExtractUptake(
-                    mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
-                    gas_type='C2H4',
-                    uptake='76.8 cm3/g',
-                    temperature='298 K',
-                    pressure='100 kPa',
-                ),
-                ExtractUptake(
-                    mof_name='[Cd2(dpip)2(DMF)(H2O)]·DMF·H2O',
-                    gas_type='C2H4',
-                    uptake='120.0 cm3/g',
-                    temperature='273 K',
-                    pressure='100 kPa',
-                ),
-            ],
-        )
-    ]
-    input, tool_calls = tool_examples[0]
+    input_, tool_calls = tool_examples[0]
     examples = tool_example_to_messages(
-        {'input': input, 'tool_calls': tool_calls}
+        {'input': input_, 'tool_calls': tool_calls}
     )
-    chain = create_chain(
-        engine,
-        Doc,
-        Result,
-        model,
-        examples,
-        db,
-        args.query,
-        regex_filter,
-        ExtractUptake,
+
+    chain = create_all(
+        save_as=args.save_as,
+        chat_model=model,
+        examples=examples,
+        vector_db=db,
+        query=args.query,
+        filter_func=regex_filter,
+        pydantic_model=ExtractUptake,
     )
     batch_size = int(args.batch_size)
     asyncio.run(asupervisor(chain, args.directory, batch_size))

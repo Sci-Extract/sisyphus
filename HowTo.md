@@ -13,5 +13,7 @@ python test_chain.py -d <directory which contains parsed html> -c <name of the d
 ```
 > NOTE: -b is optional, increase it to speed up process and query is modifiable
 
-# 更改说明：
-_test\_chain.py_ 文件中，可以自定义的是filter以及pydantic model，在定义完成你自己的pydantic model后，请及时修改 _update\_resultbase_ 以及 _create\_chain_ 中的实参
+# New uptade at 5/13
+在 Indexing 之后，只需要在 test_chain.py 脚本文件下，定义 pydantic model 以及 filter function (nullable)，再添加上几个 examples 用以辅助大语言模型进行学习。最后修改 `create_all` 函数中的对应参数即可。
+> pydantic 定义指导：对于挖掘过程中不确定是否存在的值，建议在 pydantic 定义中添加上默认值 None (or any default value make sense), '...'表示不给默认值。注意不要定义嵌套模型，也就是 pydantic field 指向另一个 pydantic 模型，
+或者是定义field 为列表类型比如，list[float], 如果确实有需求，请联系作者。

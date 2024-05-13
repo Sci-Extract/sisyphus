@@ -32,12 +32,13 @@ class ResultBase(SQLModel):
 def update_resultbase(result_model: BaseModel) -> SQLModel:
     """update result sqlmodel with user defined pydantic model"""
     def get_default(value):
-        if value.required:
+        if not value.required:
             return value.default
         return ...
 
     field_defs = {
-        key: (value.type_, get_default(value))
+        key: (value.annotation, get_default(value))
         for key, value in result_model.__fields__.items()
     }
+
     return create_model('ResultBase', __base__=ResultBase, **field_defs)
