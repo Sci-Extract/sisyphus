@@ -16,7 +16,7 @@ import logging
 import inspect
 import logging.config
 from pydoc import doc
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 from collections import namedtuple
 
 from openai import RateLimitError
@@ -34,11 +34,8 @@ from tenacity import retry, retry_if_exception_type, wait_exponential
 from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
-from sisyphus.patch.throttle import (
-    chat_throttler,
-    ChatThrottler
-)
-from sisyphus.chain.database import DocBase, ResultBase
+from sisyphus.patch.throttle import chat_throttler, ChatThrottler
+from sisyphus.chain.database import DocBase, ResultBase, DocDB, ResultDB
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
@@ -54,10 +51,22 @@ class Filter(BaseElement):
 
     def __init__(
         self,
-        db: chroma.Chroma,
+        db: Union[chroma.Chroma, DocDB],
         query: Optional[str] = None,
         filter_func: Optional[Callable] = None,
     ):   # TODO: db parameter support plain database using sqlite
+        """
+        create filter
+
+        Parameters
+        ----------
+        db : Union[chroma.Chroma, DocDB]
+            use chroma to activate query parameter, use DocDB for plain filter
+        query : Optional[str], optional
+            used for semantic search, by default None
+        filter_func : Optional[Callable], optional
+            other customize function, by default None
+        """
         self.db = db
         self.query = query
         self.filter_func = filter_func
@@ -72,11 +81,17 @@ class Filter(BaseElement):
                 query=self.query, filter={'source': file_name}
             )
         else:
-            docs = self.db._collection.get(where=file_name)
-            # convert raw docs to `Document`
-            raise NotImplementedError(
-                'not implement direct filter on doc right now!'
-            )
+            if isinstance(self.db, chroma.Chroma):
+                results = self.db._collection.get(
+                    where=dict(source=file_name),
+                    include=['documents', 'metadatas'],
+                )
+                docs = self._convert_chroma_result_to_document(results)
+            elif isinstance(self.db, DocDB):
+                self.db: DocDB
+                results = self.db.get(source=file_name)
+            else:
+                raise NotImplementedError('use chroma or DocDB!')
         return docs
 
     async def alocate(self, file_name) -> list[Document]:
@@ -97,6 +112,14 @@ class Filter(BaseElement):
 
     async def afilter(self, doc: Document) -> bool:
         return await asyncio.to_thread(self.filter, doc)
+
+    def _convert_chroma_result_to_document(self, results: dict[str, list]):
+        return [
+            Document(page_content=document, metedata=metadata)
+            for document, metadata in zip(
+                results['documnets'], results['metadatas']
+            )
+        ]
 
     def check_database(self) -> bool:
         """raise if query is given but without using chroma as database"""
@@ -122,7 +145,7 @@ DEFAULT_PROMPT_TEMPLATE = ChatPromptTemplate.from_messages(
 
 class Extractor(BaseElement):
     """Applied to `Document` object, use openai tool call"""
-    
+
     _chat_throttler: ChatThrottler = chat_throttler
     """used for cool down process while hit 429 error"""
 
@@ -157,7 +180,7 @@ class Extractor(BaseElement):
     @retry(
         retry=retry_if_exception_type(RateLimitError),
         wait=wait_exponential(min=2, max=10),
-        after=_chat_throttler.retry_callback
+        after=_chat_throttler.retry_callback,
     )
     def extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """extract info from doc"""
@@ -174,7 +197,7 @@ class Extractor(BaseElement):
     @retry(
         retry=retry_if_exception_type(RateLimitError),
         wait=wait_exponential(min=2, max=10),
-        after=_chat_throttler.retry_callback
+        after=_chat_throttler.retry_callback,
     )
     async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """async version for extracting info from doc"""
@@ -234,6 +257,22 @@ class SqlWriter(BaseElement):
             title=doc.metadata['title'],
         )
 
+class Writer(BaseElement):
+    """Write to sql base, applied to `Document` level"""
+
+    def __init__(self, result_db: ResultDB):
+        self.result_db = result_db
+
+    def save(self, results: list[BaseModel], document: Document):
+        """save document and correspond results"""
+        self.result_db.save_result(
+            text=document.page_content,
+            metadata=document.metadata,
+            results=results
+        )
+
+    def asave(self):
+        raise NotImplementedError
 
 class Chain(BaseElement):
     """Chain through all the elements"""
@@ -243,7 +282,7 @@ class Chain(BaseElement):
         filter: Filter,
         extractor: Extractor,
         validator: Validator,
-        writer: SqlWriter,
+        writer: Writer,
     ):
         self.filter = filter
         self.extractor = extractor

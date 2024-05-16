@@ -9,15 +9,17 @@ from langchain_core.documents import Document
 from langchain.pydantic_v1 import BaseModel, Field
 from sqlmodel import SQLModel, Relationship, create_engine
 
-from sisyphus.chain.database import DocBase, update_resultbase
+from sisyphus.chain.database import  extend_fields, ResultDB
 from sisyphus.chain import (
     Chain,
     Filter,
     Extractor,
     Validator,
     SqlWriter,
+    Writer,
     asupervisor,
 )
+from sisyphus.chain.chain_elements import DocDB
 from sisyphus.patch import (
     ChatOpenAIThrottle,
     OpenAIEmbeddingThrottle,
@@ -27,26 +29,28 @@ from sisyphus.patch import (
 )
 from example_helper import tool_example_to_messages
 
+# constants
+DEFAULT_DIR = 'db'
 
 # helper functions
 def create_chain(
     engine,
-    doc_orm,
-    result_orm,
     model,
     examples,
-    vector_db,
+    doc_db,
     query,
     filter_func,
     pydantic_model,
 ):
     """create extract chain"""
-    filter = Filter(db=vector_db, query=query, filter_func=filter_func)
+    filter = Filter(db=doc_db, query=query, filter_func=filter_func)
     extractor = Extractor(
         model, pydantic_models=[pydantic_model], examples=examples
     )
     validator = Validator()
-    writer = SqlWriter(engine, doc_orm, result_orm)
+    result_db = ResultDB(engine, pydantic_model)
+    result_db.create_db()
+    writer = Writer(result_db)
     chain = Chain(filter, extractor, validator, writer)
     return chain
 
@@ -56,44 +60,6 @@ def create_db_schema(save_as, default_dir='db'):
     engine = create_engine('sqlite:///' + sql_path)
     SQLModel.metadata.create_all(engine)
     return engine
-
-
-def create_all(
-    save_as,
-    chat_model,
-    examples,
-    vector_db,
-    query,
-    filter_func,
-    pydantic_model,
-):
-    """create both sqlite table and extraction chain"""
-
-    class Doc(DocBase, table=True):
-        __tablename__ = 'document'
-        section: str
-        results: Optional[list['Result']] = Relationship(back_populates='doc')
-
-    ResultBase = update_resultbase(pydantic_model)
-
-    class Result(ResultBase, table=True):
-        doc: Doc = Relationship(back_populates='results')
-
-    engine = create_db_schema(save_as)
-
-    chain = create_chain(
-        engine,
-        Doc,
-        Result,
-        chat_model,
-        examples,
-        vector_db,
-        query,
-        filter_func,
-        pydantic_model,
-    )
-    return chain
-
 
 #### Configurable section #####
 # example of filter, remember that customizable functions must conform with this schema
@@ -201,20 +167,27 @@ if __name__ == '__main__':
         embedding_function=embedding,
         client=client,
     )
+    # or db without vectors
+    # db = DocDB(engine='your db engine url, please use sqlite')
 
     input_, tool_calls = tool_examples[0]
     examples = tool_example_to_messages(
         {'input': input_, 'tool_calls': tool_calls}
     )
 
-    chain = create_all(
-        save_as=args.save_as,
-        chat_model=model,
+    sql_path = os.path.join(DEFAULT_DIR, args.save_as)
+    engine = create_engine('sqlite:///' + sql_path)
+
+    chain = create_chain(
+        engine=engine,
+        model=model,
         examples=examples,
-        vector_db=db,
+        doc_db=db,
         query=args.query,
         filter_func=regex_filter,
         pydantic_model=ExtractUptake,
     )
+
     batch_size = int(args.batch_size)
     asyncio.run(asupervisor(chain, args.directory, batch_size))
+    print('hits 429 times:', model._chat_throttler.openai_api_429_hits) # To test retry logic

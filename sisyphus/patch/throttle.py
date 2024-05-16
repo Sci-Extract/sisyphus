@@ -50,6 +50,7 @@ class ChatThrottler:
     cool_down_sentinel: bool = False
     cool_down_time: int = 10
     cool_down_start: float = None
+    openai_api_429_hits: int = 0
     
     def __post_init__(self):
         self.left_tokens: float
@@ -99,6 +100,7 @@ class ChatThrottler:
         """callback for tenacity retry when hit 429 rate error"""
         self.cool_down_sentinel = True
         self.cool_down_start = time.time()
+        self.openai_api_429_hits += 1
         
         logger.debug('%s', retry_state.outcome.exception())
 

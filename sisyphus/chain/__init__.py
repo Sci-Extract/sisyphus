@@ -3,6 +3,6 @@ from .chain_elements import (
     Filter,
     Extractor,
     Validator,
-    SqlWriter,
+    Writer,
     asupervisor
 )

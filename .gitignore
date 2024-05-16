@@ -9,6 +9,7 @@ nlo_extract_data/
 wos_doi/
 chroma/
 log/*
+articles/
 
 temp/*
 
