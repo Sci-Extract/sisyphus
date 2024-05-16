@@ -1,4 +1,6 @@
 import argparse
+import warnings
+import time
 import asyncio
 import os
 import re
@@ -15,7 +17,6 @@ from sisyphus.chain import (
     Filter,
     Extractor,
     Validator,
-    SqlWriter,
     Writer,
     asupervisor,
 )
@@ -168,8 +169,18 @@ if __name__ == '__main__':
         client=client,
     )
     # or db without vectors
-    # db = DocDB(engine='your db engine url, please use sqlite')
-
+    # change the name to your own database
+    # db = DocDB(engine='sqlite:///db\\plain.db')
+    if isinstance(db, DocDB):
+        warnings.warn(
+            '>>> finding that you are running program using plain sql base, this may result into too many calls to openai. <<<'
+        )
+        user_input = input('continue, y/n: \n')
+        if user_input == 'y':
+            pass
+        else:
+            raise SystemExit
+        
     input_, tool_calls = tool_examples[0]
     examples = tool_example_to_messages(
         {'input': input_, 'tool_calls': tool_calls}

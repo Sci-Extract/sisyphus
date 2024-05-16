@@ -20,15 +20,18 @@ import chromadb
 from langchain.indexes import index, SQLRecordManager
 from langchain_community.vectorstores import chroma
 
+from sqlmodel import create_engine
+from sisyphus.chain.database import DocDB
 from sisyphus.patch import (
     OpenAIEmbeddingThrottle,
     AsyncChroma,
     aembed_httpx_client,
 )
-from .indexes import aindex
-from .archive import ArticleLoader
+from .langchain_index import aindex
+from .loader import ArticleLoader, Loader
 
 
+DEFAULT_DB_DIR = 'db'
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
 
@@ -136,3 +139,30 @@ def create_vectordb(file_folder, collection_name):
     """
     client = chromadb.HttpClient()
     supervisor(client, file_folder, collection_name)
+
+
+def save_doc(file_path, database: DocDB):
+    # TODO: I should match use case to instantiate loader according to different publishers
+    loader = ArticleLoader(file_path)
+    documents = list(loader.lazy_load())
+    texts = [document.page_content for document in documents]
+    metadatas = [document.metadata for document in documents]
+    database.save_texts(texts, metadatas)
+
+
+def create_plaindb(file_folder, db_name):
+    """
+    create_plaindb: create database without the vector embeddings.
+
+    Args:
+        file_folder (str): the folder where to store articles
+        db_name (str): the name of the database
+    """
+    sql_path = os.path.join(DEFAULT_DB_DIR, db_name)
+    engine = create_engine('sqlite:///' + sql_path)
+    db = DocDB(engine)
+    db.create_db()
+
+    file_paths = glob.glob(os.path.join(file_folder, '*.html'))
+    for file_path in file_paths:
+        save_doc(file_path, db)
