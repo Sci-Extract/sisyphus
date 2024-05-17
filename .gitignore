@@ -12,6 +12,7 @@ log/*
 articles/
 
 temp/*
+db/*
 
 *.ipynb
 **/.DS_Store

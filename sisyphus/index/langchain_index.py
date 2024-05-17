@@ -24,12 +24,17 @@ from typing import (
     cast,
 )
 
-from langchain_community.document_loaders.base import BaseLoader
+from langchain_core.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
+from langchain_core.indexing.base import RecordManager
 from langchain_core.pydantic_v1 import root_validator
 from langchain_core.vectorstores import VectorStore
 
-from langchain.indexes.base import NAMESPACE_UUID, RecordManager
+# Magic UUID to use as a namespace for hashing.
+# Used to try and generate a unique UUID for each document
+# from hashing the document content and metadata.
+NAMESPACE_UUID = uuid.UUID(int=1984)
+
 
 T = TypeVar("T")
 
@@ -227,7 +232,8 @@ def index(
                            Clean up is done continuously during indexing helping
                            to minimize the probability of users seeing duplicated
                            content.
-            - Full: Delete all documents that haven to been returned by the loader.
+            - Full: Delete all documents that have not been returned by the loader
+                    during this run of indexing.
                     Clean up runs after all documents have been indexed.
                     This means that users may see duplicated content during indexing.
             - None: Do not delete any documents.

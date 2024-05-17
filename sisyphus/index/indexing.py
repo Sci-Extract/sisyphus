@@ -38,8 +38,14 @@ logger = logging.getLogger('debugLogger')
 embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 
 
-async def aembed_doc(file_path, record_manager, vector_store):
-    loader = ArticleLoader(file_path)
+def choose_loader(file_path, full_text: bool) -> Loader:
+    # TODO: based on file name
+    if full_text: # return full text loader
+        pass
+    return ArticleLoader(file_path)
+
+async def aembed_doc(file_path, record_manager, vector_store, full_text: bool = False):
+    loader = choose_loader(file_path, full_text)
     info = await aindex(
         docs_source=loader,
         record_manager=record_manager,
@@ -50,8 +56,8 @@ async def aembed_doc(file_path, record_manager, vector_store):
     return info
 
 
-def embed_doc(file_path, record_manager, vector_store):
-    loader = ArticleLoader(file_path)
+def embed_doc(file_path, record_manager, vector_store, full_text: bool = False):
+    loader = choose_loader(file_path, full_text)
     info = index(
         docs_source=loader,
         record_manager=record_manager,
@@ -141,9 +147,9 @@ def create_vectordb(file_folder, collection_name):
     supervisor(client, file_folder, collection_name)
 
 
-def save_doc(file_path, database: DocDB):
+def save_doc(file_path, database: DocDB, full_text: bool = False):
     # TODO: I should match use case to instantiate loader according to different publishers
-    loader = ArticleLoader(file_path)
+    loader = choose_loader(file_path, full_text)
     documents = list(loader.lazy_load())
     texts = [document.page_content for document in documents]
     metadatas = [document.metadata for document in documents]
