@@ -3,6 +3,7 @@ import warnings
 import time
 import asyncio
 import os
+import logging
 import re
 from typing import Optional
 
@@ -28,7 +29,11 @@ from sisyphus.patch import (
     aembed_httpx_client,
     AsyncChroma,
 )
+from sisyphus.chain.chain_elements import run_chains
 from example_helper import tool_example_to_messages
+
+
+logging.basicConfig(level=logging.WARNING)
 
 # constants
 DEFAULT_DIR = 'db'
@@ -200,5 +205,6 @@ if __name__ == '__main__':
     )
 
     batch_size = int(args.batch_size)
-    asyncio.run(asupervisor(chain, args.directory, batch_size))
+    # asyncio.run(asupervisor(chain, args.directory, batch_size))
+    asyncio.run(run_chains(chain, args.directory, batch_size))
     print('hits 429 times:', model._chat_throttler.openai_api_429_hits) # To test retry logic

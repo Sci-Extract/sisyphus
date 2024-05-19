@@ -36,6 +36,7 @@ from sqlmodel import Session
 from sisyphus.patch import ChatOpenAIThrottle
 from sisyphus.patch.throttle import chat_throttler, ChatThrottler
 from sisyphus.chain.database import DocBase, ResultBase, DocDB, ResultDB
+from sisyphus.utils.run_bulk import bulk_runner
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
@@ -323,6 +324,8 @@ class Chain(BaseElement):
         # presently using sync save
         for doc, info in validate_doc_info:
             self.writer.save(results=info, document=doc)
+        
+        logger.info('file: %s extract process finished')
 
 
 async def asupervisor(chain: Chain, directory: str, batch_size: int):
@@ -336,3 +339,14 @@ async def asupervisor(chain: Chain, directory: str, batch_size: int):
             coros.append(chain.acompose(file_name))
         for coro in tqdm.tqdm(asyncio.as_completed(coros), total=len(coros)):
             await coro
+
+async def run_chains(chain: Chain, directory: str, batch_size: int):
+    file_name_full = glob.glob(os.path.join(directory, '*.html'))
+    file_names = [name.split(os.sep)[-1] for name in file_name_full]
+
+    await bulk_runner(
+        task_producer=file_names,
+        repeat_times=None,
+        batch_size=batch_size,
+        runnable=chain.acompose
+    )

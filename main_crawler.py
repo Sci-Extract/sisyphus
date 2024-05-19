@@ -38,4 +38,8 @@ if __name__ == "__main__":
         print("file format not supported")
 
     doi_ls = list(set(doi_ls))
+    
+    # prohibit aaas artilces due to the restriction rule
+    doi_ls = [doi for doi in doi_ls if not doi.startswith('10.1126')]
     asyncio.run(manager(doi_ls, els_api_key=els_api_key))
+    print('We decide to ban aaas for now, maybe fix later')
