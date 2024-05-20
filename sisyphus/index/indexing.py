@@ -12,6 +12,7 @@
 import asyncio
 import os
 import glob
+import functools
 import logging
 import logging.config
 
@@ -22,6 +23,7 @@ from langchain_community.vectorstores import chroma
 
 from sqlmodel import create_engine
 from sisyphus.chain.database import DocDB
+from sisyphus.utils.run_bulk import bulk_runner
 from sisyphus.patch import (
     OpenAIEmbeddingThrottle,
     AsyncChroma,
@@ -82,7 +84,7 @@ async def asupervisor(
         the parallel processing batch size
     """
     namespace = f'chroma/{collection_name}'
-    sql_path = os.path.join('db', 'record_manager.sql')
+    sql_path = os.path.join('db', 'record_manager.sqlite')
     record_manager = SQLRecordManager(
         namespace, db_url='sqlite+aiosqlite:///' + sql_path, async_mode=True
     )
@@ -91,17 +93,14 @@ async def asupervisor(
         collection_name, client=client, embedding_function=embedding
     )
     file_paths = glob.glob(os.path.join(file_folder, '*.html'))
-    for i in range(0, len(file_paths), batch_size):
-        batch = file_paths[i : i + batch_size]
-        coros = [
-            aembed_doc(file_path, record_manager, db) for file_path in batch
-        ]
-        iter_ = asyncio.as_completed(coros)
-        if logger.level > 10:   # not debug level
-            iter_ = tqdm(iter_, total=len(batch))
-        for coro in iter_:
-            info = await coro
-            logger.debug(info)
+
+    embed_runner = functools.partial(aembed_doc, record_manager=record_manager, vector_store=db)
+    await bulk_runner(
+        task_producer=file_paths,
+        repeat_times=None,
+        batch_size=batch_size,
+        runnable=embed_runner
+    )
 
 
 def supervisor(client, file_folder, collection_name):

@@ -7,7 +7,6 @@
 @Contact :   luvusoike@icloud.com
 @License :   MIT Lisence
 @Desc    :   load, parse article from html to `Document` object.
-Store article into sql.
 """
 
 import os
@@ -38,7 +37,11 @@ class Loader(BaseLoader):
         self.metadata: BaseModel = None # subclass must define their own metadata
 
 class ArticleLoader(Loader):
-    """convert article.html to langchain `Document` object"""
+    # TODO: load table
+    """convert article.html to langchain `Document` object
+    
+    presently not considering table
+    """
 
     def __init__(self, file_path: str):
         super().__init__(file_path)
