@@ -35,11 +35,13 @@ from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
 from sisyphus.patch.throttle import chat_throttler, ChatThrottler
-from sisyphus.chain.database import DocBase, ResultBase, DocDB, ResultDB
+from sisyphus.chain.database import DocBase, ResultBase, DocDB, ResultDB, ExtractManager, add_manager_callback
 from sisyphus.utils.run_bulk import bulk_runner
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
+RECORD_LOCATION = 'record'
+RECORD_NAME = 'extract_record.sqlite'
 
 
 class BaseElement(object):
@@ -136,7 +138,7 @@ DEFAULT_PROMPT_TEMPLATE = ChatPromptTemplate.from_messages(
     [
         (
             'system',
-            'You are a helpful assistant to extract information from text, if you are do not know the vlaue of an asked field, return null for the value. Call the function multiple times if needed',
+            'You are a helpful assistant to extract information from text, if you are do not know the value of an asked field, return null for the value. Call the function multiple times if needed',
         ),
         MessagesPlaceholder(variable_name='examples'),
         ('human', '{text}'),
@@ -325,7 +327,7 @@ class Chain(BaseElement):
         for doc, info in validate_doc_info:
             self.writer.save(results=info, document=doc)
         
-        logger.info('file: %s extract process finished')
+        logger.info('file: %s extract process finished', file_name)
 
 
 async def asupervisor(chain: Chain, directory: str, batch_size: int):
@@ -340,13 +342,25 @@ async def asupervisor(chain: Chain, directory: str, batch_size: int):
         for coro in tqdm.tqdm(asyncio.as_completed(coros), total=len(coros)):
             await coro
 
-async def run_chains(chain: Chain, directory: str, batch_size: int):
+
+async def run_chains(chain: Chain, directory: str, batch_size: int, namespace: str):
+    """namespace, use the name of your extraction entity"""
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
     file_names = [name.split(os.sep)[-1] for name in file_name_full]
+
+    # skip extracted ones
+    manager = ExtractManager(namespace, db_url='sqlite:///' + os.path.join(RECORD_LOCATION, RECORD_NAME))
+    manager.create_schema()
+    exists = manager.exists(file_names)
+    file_names = [file_name for file_name, exist in zip(file_names, exists) if not exist]
+    if not file_names:
+        raise ValueError('no file needed to be extracted')
+    # register manager callback
+    runnable = add_manager_callback(chain.acompose, manager)
 
     await bulk_runner(
         task_producer=file_names,
         repeat_times=None,
         batch_size=batch_size,
-        runnable=chain.acompose
+        runnable=runnable
     )

@@ -185,11 +185,12 @@ if __name__ == '__main__':
             pass
         else:
             raise SystemExit
-        
-    input_, tool_calls = tool_examples[0]
-    examples = tool_example_to_messages(
-        {'input': input_, 'tool_calls': tool_calls}
-    )
+    
+    examples = []
+    for input_, tool_calls in tool_examples:
+        examples.extend(tool_example_to_messages(
+            {'input': input_, 'tool_calls': tool_calls}
+        ))
 
     sql_path = os.path.join(DEFAULT_DIR, args.save_as)
     engine = create_engine('sqlite:///' + sql_path)
@@ -206,5 +207,5 @@ if __name__ == '__main__':
 
     batch_size = int(args.batch_size)
     # asyncio.run(asupervisor(chain, args.directory, batch_size))
-    asyncio.run(run_chains(chain, args.directory, batch_size))
+    asyncio.run(run_chains(chain, args.directory, batch_size, namespace='mof/uptake'))
     print('hits 429 times:', model._chat_throttler.openai_api_429_hits) # To test retry logic

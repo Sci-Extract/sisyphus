@@ -84,7 +84,7 @@ async def asupervisor(
         the parallel processing batch size
     """
     namespace = f'chroma/{collection_name}'
-    sql_path = os.path.join('db', 'record_manager.sqlite')
+    sql_path = os.path.join('record', 'index_record.sqlite')
     record_manager = SQLRecordManager(
         namespace, db_url='sqlite+aiosqlite:///' + sql_path, async_mode=True
     )
@@ -113,7 +113,7 @@ def supervisor(client, file_folder, collection_name):
         the folder contains html files parsed by chempp
     """
     namespace = f'chroma/{collection_name}'
-    sql_path = os.path.join('db', 'record_manager.sql')
+    sql_path = os.path.join('record', 'record_manager.sqlite')
     record_manager = SQLRecordManager(
         namespace, db_url='sqlite:///' + sql_path
     )

@@ -10,13 +10,15 @@
 Note that parameter sql_model refers to model without setting table=True, while sql_table is the opposite.
 """
 
+import asyncio
 import json
 from abc import ABC, abstractmethod
-from typing import Optional
+from functools import wraps
+from typing import Optional, Sequence, Callable
 
 from langchain.pydantic_v1 import BaseModel, create_model
 from langchain_core.documents import Document
-from sqlmodel import SQLModel, Field, Session, select, JSON, Relationship, text
+from sqlmodel import SQLModel, Field, Session, select, JSON, Relationship, text, create_engine, col
 from sqlalchemy.orm import registry
 
 
@@ -192,4 +194,53 @@ class ResultDB(DB):
                 result_sqlmodel = self.Result(**params)
                 document.results.append(result_sqlmodel)
             session.add(document)
-            
+
+
+NewBase = get_new_sql_base()
+
+class ExtractRecord(NewBase, table=True):
+    __tablename__ = 'extract_record'
+    id: Optional[int] = Field(None, primary_key=True)
+    key: str = Field(..., index=True)
+    namespace: str
+    # namespace is to isolated different extracted process
+
+
+class ExtractManager:
+    """the primary goal was to skip those articles which have been extracted. Design inspiration is originated from langchain index method.
+    sync version support presently.
+    - key, the name of the file
+    """
+
+    def __init__(self, namespace, db_url):
+        self.namespace = namespace
+        self.db_url = db_url
+        self.engine = create_engine(db_url)
+        
+    def create_schema(self):
+        NewBase.metadata.create_all(bind=self.engine)
+    
+    def exists(self, keys: Sequence[str]) -> list[bool]:
+        """return booleans to indicates extracted or not"""
+        with Session(bind=self.engine) as session, session.begin():
+            records = session.exec(select(ExtractRecord).where(col(ExtractRecord.key).in_(keys)).where(ExtractRecord.namespace == self.namespace)).all()
+            found_keys = set(r.key for r in records)
+        return  [key in found_keys for key in keys]
+    
+    def update(self, key):
+        record = ExtractRecord(key=key, namespace=self.namespace)
+        with Session(bind=self.engine) as session, session.begin():
+            session.add(record)
+    
+    async def aupdate(self, key):
+        await asyncio.to_thread(self.update, key)
+
+
+def add_manager_callback(func: Callable, manager: ExtractManager):
+    """wrap a callable to use extract manager, must be a coroutine func!"""
+    @wraps(func)
+    async def wrapper(key):
+        r = await func(key)
+        await manager.aupdate(key)
+        return r
+    return wrapper
