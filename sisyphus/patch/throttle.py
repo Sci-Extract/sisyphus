@@ -63,10 +63,14 @@ class ChatThrottler:
             self.token_instill_rate = self.max_tokens
          
     def instill(self):
-        current = time.time()
-        elapsed = current - self.last_check
-        self.left_tokens = min(self.max_tokens, self.left_tokens + elapsed * self.token_instill_rate)
-        self.last_check = current
+        with self.t_lock:
+            current = time.time()
+            elapsed = current - self.last_check
+            self.left_tokens = min(self.max_tokens, self.left_tokens + elapsed * self.token_instill_rate)
+            self.last_check = current
+    
+    async def ainstill(self):
+        await asyncio.to_thread(self.instill)
 
     async def wait_capacity(self, consumed_tokens: int, time_sleep=0.1):
         """
@@ -76,20 +80,26 @@ class ChatThrottler:
         if not self.last_check:
             self.last_check = time.time()
         async with self.a_lock:
-            while (consumed_tokens - self.left_tokens) > 0:
-                if self.cool_down_sentinel:
-                    await self.cool_down()
+            if self.cool_down_sentinel:
+                await self.cool_down()
+            # wait loop
+            enter_loop = False
+            while self.left_tokens - consumed_tokens < 0:
                 await asyncio.sleep(time_sleep)
-                self.instill()
+                await self.ainstill()
+                enter_loop = True
+            if not enter_loop:
+                await self.ainstill()
+    
             self.consume(consumed_tokens)
-            self.instill()
 
-    def consume(self, tokens: int, completion_tokens=50): # set default completion for 50
-        self.left_tokens -= (tokens + completion_tokens)
-
+    def consume(self, tokens: int, completion_tokens=100): # set default completion for 50
+        with self.t_lock:
+            self.left_tokens -= (tokens + completion_tokens)
+    
     def setter(self, left_tokens):
         """
-        setter will delegate to thread
+        setter will delegate to a thread, used as a hooker to attach to httpx.
         """
         with self.t_lock:
             if left_tokens is not None:
