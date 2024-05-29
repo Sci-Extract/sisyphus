@@ -15,14 +15,12 @@ import glob
 import logging
 import inspect
 import logging.config
-from pydoc import doc
-from typing import Optional, Callable, Union
-from collections import namedtuple
+from typing import Optional, Callable, Union, NamedTuple
 
 from openai import RateLimitError
 import tqdm
 from langchain_community.vectorstores import chroma
-from langchain_core.pydantic_v1 import BaseModel, ValidationError
+from langchain_core.pydantic_v1 import BaseModel, ValidationError, create_model
 from langchain_core.documents import Document
 from langchain.output_parsers import PydanticToolsParser
 from langchain_core.messages import BaseMessage
@@ -30,7 +28,7 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
 )
-from tenacity import retry, retry_if_exception_type, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
 from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
@@ -57,7 +55,7 @@ class Filter(BaseElement):
         db: Union[chroma.Chroma, DocDB],
         query: Optional[str] = None,
         filter_func: Optional[Callable] = None,
-    ):   # TODO: db parameter support plain database using sqlite
+    ):
         """
         create filter
 
@@ -151,6 +149,8 @@ class Extractor(BaseElement):
 
     _chat_throttler: ChatThrottler = chat_throttler
     """used for cool down process while hit 429 error"""
+    retry_times: int = 2
+    """default retry times"""
 
     def __init__(
         self,
@@ -185,16 +185,23 @@ class Extractor(BaseElement):
         wait=wait_exponential(min=2, max=10),
         after=_chat_throttler.retry_callback,
     )
-    def extract(self, doc: Document) -> Optional[list[BaseModel]]:
+    def _extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """extract info from doc"""
         chain = self.build_chain()
         result = None
-        try:
-            result = chain.invoke(
-                {'examples': self.examples, 'text': doc.page_content}
-            )
-        except ValidationError as e:
-            logger.debug(e)
+        result = chain.invoke(
+            {'examples': self.examples, 'text': doc.page_content}
+        )
+        return result
+
+    @retry(
+        retry=retry_if_exception_type(ValidationError),
+        wait=wait_exponential(min=2, max=10),
+        stop=stop_after_attempt(retry_times),
+    )
+    def extract(self, doc: Document) -> Optional[list[BaseModel]]:
+        """retry extract if pydantic validation error, default to `retry_times`"""
+        result = self._extract(doc)
         return result
 
     @retry(
@@ -202,63 +209,51 @@ class Extractor(BaseElement):
         wait=wait_exponential(min=2, max=10),
         after=_chat_throttler.retry_callback,
     )
-    async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
+    async def _aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """async version for extracting info from doc"""
         chain = self.build_chain()
         result = None
-        try:
-            result = await chain.ainvoke(
-                {'examples': self.examples, 'text': doc.page_content}
-            )
-        except ValidationError as e:
-            logger.debug(e)
+        result = await chain.ainvoke(
+            {'examples': self.examples, 'text': doc.page_content}
+        )
+        return result
+    
+    @retry(
+        retry=retry_if_exception_type(ValidationError),
+        wait=wait_exponential(min=2, max=10),
+        stop=stop_after_attempt(retry_times),
+    )
+    async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
+        """retry extract if pydantic validation error, default to `retry_times`"""
+        result = await self._aextract(doc)
         return result
 
 
-DocInfo = namedtuple('DocInfo', 'doc info')
 
+class DocInfo(NamedTuple):
+    doc: Document
+    info: list[BaseModel]
+
+T = Callable[[DocInfo], DocInfo]
 
 class Validator(BaseElement):
     """Applied to article level"""
+    # TODO: use chemdataextrator to resolve chemical name abbreviations, but I only need the abbreviation detection algorithm.
 
     def __init__(self):
-        pass
+        self._gadget: list[T] = []
 
+    def add_gadget(self, gadget: T):
+        """add validate function, note that function receives list of `DocInfo` object"""
+        self._gadget.append(gadget)
+    
     def validate(self, to_validate: list[DocInfo]):
-        # TODO resolve demonstrative pronouns
+        
         return to_validate
 
     async def avalidate(self, to_validate: list[DocInfo]):
         return await asyncio.to_thread(self.validate, to_validate)
 
-
-class SqlWriter(BaseElement):
-    """Store pydantic model to sqlite, applied on `Document` level"""
-
-    def __init__(self, engine, doc_orm: DocBase, result_orm: ResultBase):
-        self.engine = engine
-        self.doc_orm = doc_orm
-        self.result_orm = result_orm
-
-    def save(self, results: list[BaseModel], document: Document):
-        with Session(bind=self.engine) as session, session.begin():
-            doc_sqlmodel = self._convert_to_doc_sqlmodel(document)
-            for result in results:
-                params = dict(result)
-                result_sqlmodel = self.result_orm(**params)
-                doc_sqlmodel.results.append(result_sqlmodel)
-            session.add(doc_sqlmodel)
-
-    def asave(self, *args, **kwargs):
-        raise NotImplementedError()
-
-    def _convert_to_doc_sqlmodel(self, doc: Document):
-        return self.doc_orm(
-            page_content=doc.page_content,
-            source=doc.metadata['source'],
-            section=doc.metadata['section'],
-            title=doc.metadata['title'],
-        )
 
 class Writer(BaseElement):
     """Write to sql base, applied to `Document` level"""
