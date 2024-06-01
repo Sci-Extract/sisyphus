@@ -17,24 +17,24 @@ import inspect
 import logging.config
 from typing import Optional, Callable, Union, NamedTuple
 
-from openai import RateLimitError
 import tqdm
+from openai import RateLimitError
 from langchain_community.vectorstores import chroma
-from langchain_core.pydantic_v1 import BaseModel, ValidationError, create_model
-from langchain_core.documents import Document
 from langchain.output_parsers import PydanticToolsParser
+from langchain_core.pydantic_v1 import BaseModel, ValidationError
+from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
 )
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
-from sqlmodel import Session
 
 from sisyphus.patch import ChatOpenAIThrottle
 from sisyphus.patch.throttle import chat_throttler, ChatThrottler
-from sisyphus.chain.database import DocBase, ResultBase, DocDB, ResultDB, ExtractManager, add_manager_callback
+from sisyphus.chain.database import DocDB, ResultDB, ExtractManager, add_manager_callback
 from sisyphus.utils.run_bulk import bulk_runner
+
 
 logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
 logger = logging.getLogger('debugLogger')
@@ -164,6 +164,7 @@ class Extractor(BaseElement):
         self.prompt = DEFAULT_PROMPT_TEMPLATE
         self.pydantic_models = pydantic_models
         self.parser = PydanticToolsParser(tools=self.pydantic_models)
+        self.chain = self.build_chain()
 
     def build_chain(self):
         chain = (
@@ -187,17 +188,18 @@ class Extractor(BaseElement):
     )
     def _extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """extract info from doc"""
-        chain = self.build_chain()
-        result = None
-        result = chain.invoke(
+        result = self.chain.invoke(
             {'examples': self.examples, 'text': doc.page_content}
         )
+        if not result:
+            result = None
         return result
 
     @retry(
         retry=retry_if_exception_type(ValidationError),
         wait=wait_exponential(min=2, max=10),
         stop=stop_after_attempt(retry_times),
+        retry_error_callback=lambda r: None
     )
     def extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """retry extract if pydantic validation error, default to `retry_times`"""
@@ -211,17 +213,18 @@ class Extractor(BaseElement):
     )
     async def _aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """async version for extracting info from doc"""
-        chain = self.build_chain()
-        result = None
-        result = await chain.ainvoke(
+        result = await self.chain.ainvoke(
             {'examples': self.examples, 'text': doc.page_content}
         )
+        if not result:
+            result = None
         return result
     
     @retry(
         retry=retry_if_exception_type(ValidationError),
         wait=wait_exponential(min=2, max=10),
         stop=stop_after_attempt(retry_times),
+        retry_error_callback=lambda r: None
     )
     async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """retry extract if pydantic validation error, default to `retry_times`"""
@@ -229,32 +232,51 @@ class Extractor(BaseElement):
         return result
 
 
-
 class DocInfo(NamedTuple):
     doc: Document
     info: list[BaseModel]
 
-T = Callable[[DocInfo], DocInfo]
+T = Callable[[DocInfo], Optional[DocInfo]]
 
 class Validator(BaseElement):
-    """Applied to article level"""
+    """Applied to article level, refer to sisyphus/chain/validators for more information"""
     # TODO: use chemdataextrator to resolve chemical name abbreviations, but I only need the abbreviation detection algorithm.
 
     def __init__(self):
         self._gadget: list[T] = []
 
     def add_gadget(self, gadget: T):
-        """add validate function, note that function receives list of `DocInfo` object"""
+        """add validate function to validator, note that function receives `DocInfo` object"""
         self._gadget.append(gadget)
     
-    def validate(self, to_validate: list[DocInfo]):
-        
-        return to_validate
+    def validate(self, to_validates: list[DocInfo]):
+        before_processed = to_validates
+        after_processed = []
+        for gadget in self._gadget:
+            for to_validate in before_processed:
+                after_processed.append(gadget(to_validate))
+            before_processed = list(filter(None, after_processed))
+            after_processed = []
+        if not before_processed:
+            return
+        return before_processed
 
-    async def avalidate(self, to_validate: list[DocInfo]):
-        return await asyncio.to_thread(self.validate, to_validate)
-
-
+    async def avalidate(self, to_validates: list[DocInfo]):
+        for gadget in self._gadget:
+            if not inspect.iscoroutinefunction(gadget):
+                to_validates = await asyncio.gather(*[asyncio.to_thread(gadget, to_validate) for to_validate in to_validates])
+            else:
+                # validates_copy = to_validates
+                to_validates = await asyncio.gather(*[gadget(to_validate) for to_validate in to_validates])
+                # for origin, derived in zip(validates_copy, to_validates):
+                #     if derived is None:
+                #         print(origin)
+            to_validates = list(filter(None, to_validates)) # remove None element
+        if not to_validates:
+            return
+        return to_validates
+    
+    
 class Writer(BaseElement):
     """Write to sql base, applied to `Document` level"""
 
@@ -298,6 +320,8 @@ class Chain(BaseElement):
             if results:
                 doc_info.append(DocInfo(doc, results))
         validate_doc_info = self.validator.validate(doc_info)
+        if not validate_doc_info:
+            return
         for doc, info in validate_doc_info:
             self.writer.save(results=info, document=doc)
 
@@ -318,6 +342,8 @@ class Chain(BaseElement):
         coros = [extract_on_docuemnt(doc) for doc in docs]
         await asyncio.gather(*coros)
         validate_doc_info = await self.validator.avalidate(doc_info)
+        if not validate_doc_info:
+            return
         # presently using sync save
         for doc, info in validate_doc_info:
             self.writer.save(results=info, document=doc)
