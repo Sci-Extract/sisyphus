@@ -26,3 +26,40 @@ python test_chain.py -d <directory which contains parsed html> -c <name of the d
 
 修改
 - 文章元数据改为json格式，以便适应可拓展性
+
+# New update at 6/2
+_fix some bugs, throttler implementation, elsevier parsing error_
+新增（按时间）
+- 添加web-ui逻辑，`document`
+- 调整进度条显示逻辑，现在更直观了，可以直接看到总共任务
+- integrate cpp parser 
+- add extract manager, used when unstable connection
+- add validator (now has two default, coercion validator and re-check validator, check it in sisyphus/chain/validators)
+- refactor code structure, make it more oop.
+
+关于新版本`Chain`对象使用介绍(详细代码参考 test_oop_implementation.py):   
+```
+# 使用utils模块帮手函数获得文章数据库（向量或者不含向量），结果数据库，聊天模型的对象 
+...
+chat_model = get_chat_model('gpt-3.5-turbo'/'gpt-4o')
+db = get_remote_chromadb(<collection_name>)
+result_db = get_create_resultdb(<db_name>, <pydantic_model>)
+...
+# 初始化Filter, Extractor, Validator, Writer类
+filter = Filter(<db>, <query>/None, <filter_function>)
+extractor = Extractor(chat_model, <pydantic_object>, <examples>)
+validator = Validator()
+validor.add_gadget(<your_function_or_default_function>) # 可以添加多个validator函数,详情见 sisyphus/chain/validators
+writer = Writer(result_db)
+
+# 使用 '+' 创建`Chain`对象, 顺序很重要！
+chain = filter + extractor + validator + writer
+
+# 运行chain
+chain.compose(<file_name>)
+# or 运行多条chains
+run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>)
+```
+切换显示进度条或者显示debug信息(当你想调试`Chain`对象时)：  
+- config/logging.conf文件中下logger_root.level 为DEBUG时不显示进度条，切换为INFO显示进度条。
+- logger_debugLogger.level 为DEBUG时显示debug信息，INFO不显示debug信息。

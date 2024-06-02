@@ -33,4 +33,5 @@ pydantic_validate_retry_wraps = retry(
     retry=retry_if_exception_type(ValidationError),
     wait=wait_exponential(2, 10),
     stop=stop_after_attempt(TOTAL_TIMES),
+    retry_error_callback=lambda r: None,
 )

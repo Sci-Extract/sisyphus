@@ -4,5 +4,5 @@ from .chain_elements import (
     Extractor,
     Validator,
     Writer,
-    asupervisor
+    run_chains_with_extraction_history
 )
