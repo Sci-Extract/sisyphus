@@ -9,10 +9,10 @@ python test_aindex.py -d <directory which contains parsed html> -c <name of the 
 
 ## Extracting
 ```
-python test_chain.py -d <directory which contains parsed html> -c <name of the database> -q "single-component adsorption isotherms, uptake value are 3 mmol g-1 at 298 K 1 bar" [-b <batch size, default 10>]
+# adujusting code to adapt your working scenario in test_oop_implementation.p
 ```
-> NOTE: -b is optional, increase it to speed up process and query is modifiable
 
+# Release
 # New update at 5/13
 在 Indexing 之后，只需要在 test_chain.py 脚本文件下，定义 pydantic model 以及 filter function (nullable)，再添加上几个 examples 用以辅助大语言模型进行学习。最后修改 `create_all` 函数中的对应参数即可。
 > pydantic 定义指导：对于挖掘过程中不确定是否存在的值，建议在 pydantic 定义中添加上默认值 None (or any default value make sense), '...'表示不给默认值。注意不要定义嵌套模型，也就是 pydantic field 指向另一个 pydantic 模型，
@@ -28,7 +28,7 @@ python test_chain.py -d <directory which contains parsed html> -c <name of the d
 - 文章元数据改为json格式，以便适应可拓展性
 
 # New update at 6/2
-_fix some bugs, throttler implementation, elsevier parsing error_
+modification: _fix some bugs, throttler implementation, elsevier parsing error_  
 新增（按时间）
 - 添加web-ui逻辑，`document`
 - 调整进度条显示逻辑，现在更直观了，可以直接看到总共任务
@@ -45,7 +45,7 @@ chat_model = get_chat_model('gpt-3.5-turbo'/'gpt-4o')
 db = get_remote_chromadb(<collection_name>)
 result_db = get_create_resultdb(<db_name>, <pydantic_model>)
 ...
-# 初始化Filter, Extractor, Validator, Writer类
+# 实例化Filter, Extractor, Validator, Writer类
 filter = Filter(<db>, <query>/None, <filter_function>)
 extractor = Extractor(chat_model, <pydantic_object>, <examples>)
 validator = Validator()
@@ -56,9 +56,11 @@ writer = Writer(result_db)
 chain = filter + extractor + validator + writer
 
 # 运行chain
-chain.compose(<file_name>)
+asyncio.run(chain.acompose(<file_name>))
 # or 运行多条chains
-run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>)
+asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>))
+# or 同时运行多条不同的chains (You may need to decrease the batch_size since it was running parallelly)
+asyncio.run(asyncio.gather(*[run_chains_with_extraction_history(chain, ...) for chain in [chains]]))
 ```
 切换显示进度条或者显示debug信息(当你想调试`Chain`对象时)：  
 - config/logging.conf文件中下logger_root.level 为DEBUG时不显示进度条，切换为INFO显示进度条。

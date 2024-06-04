@@ -28,11 +28,21 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
 )
-from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_exponential,
+    stop_after_attempt,
+)
 
 from sisyphus.patch import ChatOpenAIThrottle
 from sisyphus.patch.throttle import chat_throttler, ChatThrottler
-from sisyphus.chain.database import DocDB, ResultDB, ExtractManager, add_manager_callback
+from sisyphus.chain.database import (
+    DocDB,
+    ResultDB,
+    ExtractManager,
+    add_manager_callback,
+)
 from sisyphus.utils.run_bulk import bulk_runner
 
 
@@ -47,10 +57,14 @@ class DocInfo(NamedTuple):
     info: list[BaseModel]
 
 
+def coercion_to_lambda(func):
+    return ChainElementLambda(func)
+
+
 class BaseElement(object):
     def __repr__(self):
         return self.__class__.__name__
-    
+
     def invoke(self):
         pass
 
@@ -58,6 +72,8 @@ class BaseElement(object):
         pass
 
     def __add__(self, other):
+        if isinstance(other, Callable):
+            other = coercion_to_lambda(other)
         return Chain(self, other)
 
 
@@ -127,17 +143,17 @@ class Filter(BaseElement):
 
     async def afilter(self, doc: Document) -> bool:
         return await asyncio.to_thread(self.filter_, doc)
-    
-    
+
     async def ainvoke(self, input_) -> Optional[list[Document]]:
         docs = await self.alocate(input_)
-        filter_results = await asyncio.gather(*[self.afilter(doc) for doc in docs])
+        filter_results = await asyncio.gather(
+            *[self.afilter(doc) for doc in docs]
+        )
         filter_docs = []
         for filter_boolean, doc in zip(filter_results, docs):
             if filter_boolean:
                 filter_docs.append(doc)
         return filter_docs if filter_docs else None
-                
 
     def _convert_chroma_result_to_document(self, results: dict[str, list]):
         return [
@@ -221,7 +237,7 @@ class Extractor(BaseElement):
         retry=retry_if_exception_type(ValidationError),
         wait=wait_exponential(min=2, max=10),
         stop=stop_after_attempt(retry_times),
-        retry_error_callback=lambda r: None
+        retry_error_callback=lambda r: None,
     )
     def extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """retry extract if pydantic validation error, default to `retry_times`"""
@@ -239,18 +255,18 @@ class Extractor(BaseElement):
             {'examples': self.examples, 'text': doc.page_content}
         )
         return result if result else None
-    
+
     @retry(
         retry=retry_if_exception_type(ValidationError),
         wait=wait_exponential(min=2, max=10),
         stop=stop_after_attempt(retry_times),
-        retry_error_callback=lambda r: None
+        retry_error_callback=lambda r: None,
     )
     async def aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """retry extract if pydantic validation error, default to `retry_times`"""
         result = await self._aextract(doc)
         return result
-    
+
     async def ainvoke(self, docs: list[Document]) -> Optional[list[DocInfo]]:
         results = await asyncio.gather(*[self.aextract(doc) for doc in docs])
         docinfos = []
@@ -262,8 +278,10 @@ class Extractor(BaseElement):
 
 T = Callable[[DocInfo], Optional[DocInfo]]
 
+
 class Validator(BaseElement):
     """Applied to article level, refer to sisyphus/chain/validators for more information"""
+
     # TODO: use chemdataextrator to resolve chemical name abbreviations, but I only need the abbreviation detection algorithm.
 
     def __init__(self):
@@ -272,7 +290,7 @@ class Validator(BaseElement):
     def add_gadget(self, gadget: T):
         """add validate function to validator, note that function receives `DocInfo` object"""
         self._gadget.append(gadget)
-    
+
     def validate(self, to_validates: list[DocInfo]):
         before_processed = to_validates
         after_processed = []
@@ -286,20 +304,31 @@ class Validator(BaseElement):
     async def avalidate(self, to_validates: list[DocInfo]):
         for gadget in self._gadget:
             if not inspect.iscoroutinefunction(gadget):
-                to_validates = await asyncio.gather(*[asyncio.to_thread(gadget, to_validate) for to_validate in to_validates])
+                to_validates = await asyncio.gather(
+                    *[
+                        asyncio.to_thread(gadget, to_validate)
+                        for to_validate in to_validates
+                    ]
+                )
             else:
                 # validates_copy = to_validates
-                to_validates = await asyncio.gather(*[gadget(to_validate) for to_validate in to_validates])
+                to_validates = await asyncio.gather(
+                    *[gadget(to_validate) for to_validate in to_validates]
+                )
                 # for origin, derived in zip(validates_copy, to_validates):
                 #     if derived is None:
                 #         print(origin)
-            to_validates = list(filter(None, to_validates)) # remove None element
+            to_validates = list(
+                filter(None, to_validates)
+            )   # remove None element
         return to_validates if to_validates else None
-    
-    async def ainvoke(self, to_validates: list[DocInfo]) -> Optional[list[DocInfo]]:
+
+    async def ainvoke(
+        self, to_validates: list[DocInfo]
+    ) -> Optional[list[DocInfo]]:
         return await self.avalidate(to_validates)
-    
-    
+
+
 class Writer(BaseElement):
     """Write to sql base, applied to `Document` level"""
 
@@ -311,16 +340,32 @@ class Writer(BaseElement):
         self.result_db.save_result(
             text=document.page_content,
             metadata=document.metadata,
-            results=results
+            results=results,
         )
 
     async def asave(self, results, document):
         await asyncio.to_thread(self.save, results, document)
-    
+
     async def ainvoke(self, doc_with_info: list[DocInfo]) -> None:
         await asyncio.gather(
-            *[self.asave(docinfo.info, docinfo.doc) for docinfo in doc_with_info]
+            *[
+                self.asave(docinfo.info, docinfo.doc)
+                for docinfo in doc_with_info
+            ]
         )
+
+
+class ChainElementLambda(BaseElement):
+    """useful when you want to intercept the output of one of the basic chain elements. e.g.,
+    - print to the terminal instead of saving to sql base"""
+
+    def __init__(self, func: Callable[[Any], Optional[Any]]):
+        self.func = func
+
+    async def ainvoke(self, input_: Any) -> Optional[Any]:
+        if not inspect.iscoroutinefunction(self.func):
+            return await asyncio.to_thread(self.func, input_)
+        return await self.func(input_)
 
 
 class Chain:
@@ -330,20 +375,23 @@ class Chain:
     def __add__(self, other):
         if isinstance(other, BaseElement):
             return Chain(*self.components, other)
+        if isinstance(other, Callable):
+            other = coercion_to_lambda(other)
+            return Chain(*self.components, other)
         return Chain(*self.components, *other.components)
-    
+
     async def acompose(self, input_):
         origin_input = input_
         for index, component in enumerate(self.components):
             input_ = await component.ainvoke(input_)
             if input_ is None and index < len(self.components) - 1:
-                logger.debug("file: %s no result find", origin_input)
+                logger.debug('file: %s no result find', origin_input)
                 return
         return input_
 
 
 async def asupervisor(chain: Chain, directory: str, batch_size: int):
-    """Deperacated!"""
+    """Deprecated!"""
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
     file_names = [name.split(os.sep)[-1] for name in file_name_full]
 
@@ -355,17 +403,24 @@ async def asupervisor(chain: Chain, directory: str, batch_size: int):
             await coro
 
 
-async def run_chains_with_extraction_history(chain: Chain, directory: str, batch_size: int, namespace: str):
-    """run multiple chains asynchronously with extraction history. 
+async def run_chains_with_extraction_history(
+    chain: Chain, directory: str, batch_size: int, namespace: str
+):
+    """run multiple chains asynchronously with extraction history.
     - provide different namespace for different extraction tasks, better use the name of your extraction object, e.g., nlo/band_gap"""
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
     file_names = [name.split(os.sep)[-1] for name in file_name_full]
 
     # skip extracted ones
-    manager = ExtractManager(namespace, db_url='sqlite:///' + os.path.join(RECORD_LOCATION, RECORD_NAME))
+    manager = ExtractManager(
+        namespace,
+        db_url='sqlite:///' + os.path.join(RECORD_LOCATION, RECORD_NAME),
+    )
     manager.create_schema()
     exists = manager.exists(file_names)
-    file_names = [file_name for file_name, exist in zip(file_names, exists) if not exist]
+    file_names = [
+        file_name for file_name, exist in zip(file_names, exists) if not exist
+    ]
     logger.debug('total processed files: %d', len(file_names))
     if not file_names:
         raise ValueError('no file needed to be extracted')
@@ -376,5 +431,5 @@ async def run_chains_with_extraction_history(chain: Chain, directory: str, batch
         task_producer=file_names,
         repeat_times=None,
         batch_size=batch_size,
-        runnable=runnable
+        runnable=runnable,
     )
