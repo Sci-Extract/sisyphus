@@ -131,66 +131,57 @@ class ArticleLoader(Loader):
         return chunked_texts
 
 
-class AcsFullTextLoader(BaseLoader):
-    """Full text loader for ACS, used for validation process (resolving abbreviation definitions) or as extracted object"""
+class FullTextLoader(Loader):
+    """Full text loader, used for validation process (resolving abbreviation definitions) or as extracted object"""
+    include_table = False
+    max_token = 5000
+
+    def __init__(self, file_path: str):
+        super().__init__(file_path)
+        self.file_name = file_path.split(os.sep)[-1]
+        self.metadata = create_model('MetaData', source=(str, ...), title=(str, ...))
+    
+    def lazy_load(self) -> Iterator[Document]:
+        """when I write this, I know I should write load function instead, but I want to keep the interface consistentency"""
+        with open(self.file_path, encoding='utf8') as file:
+            doc = file.read()
+        soup = bs(doc, 'html.parser')
+        if not self.include_table:
+            tags = soup.find_all('table')
+            if tags:
+                for tag in tags:
+                    tag.decompose()
+        title = soup.find('title').text.strip('\n ')
+        text = soup.get_text(separator='\n', strip=True)
+        chunks = self.ensure_safe_len(text)
+        for chunk in chunks:
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, title=title)))
+
+    async def alazy_load(self) -> AsyncIterator[Document]:
+        async with aiofiles.open(self.file_path, encoding='utf8') as file:
+            doc = await file.read()
+        soup = bs(doc, 'html.parser')
+        if not self.include_table:
+            tags = soup.find_all('table')
+            if tags:
+                for tag in tags:
+                    tag.decompose()
+        title = soup.find('title').text.strip('\n ')
+        text = soup.get_text(separator='\n', strip=True)
+        chunks = self.ensure_safe_len(text)
+        for chunk in chunks:
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, title=title)))
+    
+    def ensure_safe_len(self, text):
+        # TODO consolidate this to avoid of possibly context losing
+        text_encoding = encoding.encode(text)
+        start = 0
+        chunk = encoding.decode(text_encoding[start: start + self.max_token])
+        if chunk:
+            yield chunk
+            start += self.max_token
+        else:
+            return
 
 
 # endregion
-
-# region build sql
-class Base(DeclarativeBase):
-    pass
-
-
-class Doc(Base):
-    __tablename__ = 'document'
-    id: Mapped[int] = mapped_column(primary_key=True)
-    page_content: Mapped[str] = mapped_column()
-    source: Mapped[str] = mapped_column()
-    section: Mapped[str] = mapped_column()
-    title: Mapped[str] = mapped_column()
-
-    def __repr__(self):
-        return f'Doc(page_content={self.page_content[:20]}, source={self.source!r}, section={self.section!r}, title={self.title!r}'
-
-
-def convert_to_orm_doc(doc: Document):
-    return Doc(
-        page_content=doc.page_content,
-        source=doc.metadata['source'],
-        section=doc.metadata['section'],
-        title=doc.metadata['title'],
-    )
-
-
-def create_article_sqlite(
-    file_folder, sql_name='article.sqlite', batch_size=10
-):
-    """create article sqlite database"""
-    engine_path = os.path.join('db', sql_name)
-    engine = create_engine('sqlite:///' + engine_path)
-    session = Session(bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    files = glob.glob(os.path.join(file_folder, '*.html'))
-
-    session.begin()
-    for file_path in files:
-        loader = ArticleLoader(file_path)
-        try:
-            for doc in loader.lazy_load():
-                orm_doc = convert_to_orm_doc(doc)
-                session.add(orm_doc)
-
-                if len(session.new) % batch_size == 0:
-                    session.commit()
-                    session.begin()  # Start a new transaction
-
-            session.commit()
-        except:
-            # Rollback the transaction if an error occurs
-            session.rollback()
-            raise
-        finally:
-            # Close the session
-            session.close()

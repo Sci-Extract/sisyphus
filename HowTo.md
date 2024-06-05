@@ -4,12 +4,13 @@
 ## Indexing
 ```
 # before this remember to start chromadb docker container
-python test_aindex.py -d <directory which contains parsed html> -c <name of the database>
+python indexing.py -d <directory which contains parsed html> -c <name of the database>
+# or you can choose to index without embedding, checkout plain_indexing.py
 ```
 
 ## Extracting
 ```
-# adujusting code to adapt your working scenario in test_oop_implementation.p
+# adujusting code to adapt your working scenario in test_oop_implementation.py
 ```
 
 # Release
@@ -65,3 +66,6 @@ asyncio.run(asyncio.gather(*[run_chains_with_extraction_history(chain, ...) for 
 切换显示进度条或者显示debug信息(当你想调试`Chain`对象时)：  
 - config/logging.conf文件中下logger_root.level 为DEBUG时不显示进度条，切换为INFO显示进度条。
 - logger_debugLogger.level 为DEBUG时显示debug信息，INFO不显示debug信息。
+
+## patch at 6/5
+add full text loader, support full text indexing.

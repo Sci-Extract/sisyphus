@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-# -*- coding:utf-8 -*-
 """
 @File    :   test_aindex.py
 @Time    :   2024/05/05 18:30:34

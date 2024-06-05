@@ -30,7 +30,7 @@ from sisyphus.patch import (
     aembed_httpx_client,
 )
 from .langchain_index import aindex
-from .loader import ArticleLoader, Loader
+from .loader import ArticleLoader, Loader, FullTextLoader
 
 
 DEFAULT_DB_DIR = 'db'
@@ -43,7 +43,7 @@ embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 def choose_loader(file_path, full_text: bool) -> Loader:
     # TODO: based on file name
     if full_text: # return full text loader
-        pass
+        return FullTextLoader(file_path)
     return ArticleLoader(file_path)
 
 async def aembed_doc(file_path, record_manager, vector_store, full_text: bool = False):
@@ -155,7 +155,7 @@ def save_doc(file_path, database: DocDB, full_text: bool = False):
     database.save_texts(texts, metadatas)
 
 
-def create_plaindb(file_folder, db_name):
+def create_plaindb(file_folder, db_name, full_text: bool = False):
     """
     create_plaindb: create database without the vector embeddings.
 
@@ -170,4 +170,4 @@ def create_plaindb(file_folder, db_name):
 
     file_paths = glob.glob(os.path.join(file_folder, '*.html'))
     for file_path in file_paths:
-        save_doc(file_path, db)
+        save_doc(file_path, db, full_text)
