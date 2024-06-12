@@ -15,7 +15,6 @@ import os
 import time
 import threading
 import logging
-import logging.config
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -30,8 +29,7 @@ sep = os.sep
 CONFIG_PATH = Path(os.sep.join(["config", "throttle_config.json"]))
 CONFIG = load_config(CONFIG_PATH)
 
-logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
-logger = logging.getLogger('debugLogger')
+logger = logging.getLogger(__name__)
 
 # region chat
 @dataclass

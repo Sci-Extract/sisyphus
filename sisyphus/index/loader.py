@@ -53,7 +53,11 @@ class ArticleLoader(Loader):
             doc = await file.read()
         soup = bs(doc, 'html.parser')
         title = soup.find('title').text.strip('\n ')
-        abstract = soup.css.select('div#abstract > p')[0]
+        try:
+            abstract = soup.css.select('div#abstract > p')[0]
+        except IndexError:
+            print(self.file_name)
+            return
         abstract_chunks = self.chunk_text(abstract.text.strip('\n '))
         for chunk in abstract_chunks:
             yield Document(
@@ -68,7 +72,11 @@ class ArticleLoader(Loader):
             doc = file.read()
         soup = bs(doc, 'html.parser')
         title = soup.find('title').text.strip('\n ')
-        abstract = soup.css.select('div#abstract > p')[0]
+        try:
+            abstract = soup.css.select('div#abstract > p')[0]
+        except IndexError:
+            print(self.file_name)
+            return
         abstract_chunks = self.chunk_text(abstract.text.strip('\n '))
         for chunk in abstract_chunks:
             yield Document(

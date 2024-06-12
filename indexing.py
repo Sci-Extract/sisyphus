@@ -28,8 +28,14 @@ def main():
         help='the name of the collection gonna create',
         required=True
     )
+    parser.add_argument(
+        '--local',
+        help='set local to 1 to enable local storage of chroma database',
+        default=0
+    )
     args = parser.parse_args()
-    acreate_vectordb(file_folder=args.directory, collection_name=args.collection)
+    local = bool(int(args.local))
+    acreate_vectordb(file_folder=args.directory, collection_name=args.collection, local=local)
 
 if __name__ == '__main__':
     main()

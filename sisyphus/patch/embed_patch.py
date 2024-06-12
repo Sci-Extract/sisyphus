@@ -11,7 +11,6 @@
 
 import os
 import logging
-import logging.config
 from typing import List
 
 import tiktoken
@@ -24,8 +23,7 @@ from sisyphus.patch.throttle import (
 )
 
 
-logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
-logger = logging.getLogger('debugLogger')
+logger = logging.getLogger(__name__)
 
 encoding = tiktoken.get_encoding('cl100k_base')
 

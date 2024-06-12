@@ -11,7 +11,6 @@
 
 import os
 import logging
-import logging.config
 from typing import Any, Coroutine, List, Optional
 
 from langchain_openai import ChatOpenAI
@@ -27,8 +26,7 @@ from sisyphus.patch.throttle import (
     ChatThrottler
 )
 
-logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
-logger = logging.getLogger('debugLogger')
+logger = logging.getLogger(__name__)
 
 
 class ChatOpenAIThrottle(ChatOpenAI):

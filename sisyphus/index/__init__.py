@@ -1,1 +1,1 @@
-from .indexing import acreate_vectordb, create_vectordb, create_plaindb
+from .indexing import acreate_vectordb, create_vectordb, create_plaindb, create_vectordb_in_memory

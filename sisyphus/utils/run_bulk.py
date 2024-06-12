@@ -54,13 +54,13 @@ async def bulk_runner(
     """
     if task_producer:
         future_iter = future_gen(task_producer, batch_size, runnable)
-        if logger.level > 10:   # not debug
+        if logger.level > 20:   # higher than INFO
             future_iter = tqdm.tqdm(future_iter, total=len(task_producer))
     else:
         future_iter = future_gen(
             range(repeat_times), batch_size, runnable, call_with_para=False
         )
-        if logger.level > 10:   # not debug
+        if logger.level > 20:   # higher than INFO
             future_iter = tqdm.tqdm(future_iter, total=repeat_times)
 
     for f in future_iter:

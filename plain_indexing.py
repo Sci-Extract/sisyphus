@@ -1,4 +1,22 @@
 """creating a article database without embedding"""
+import argparse
 from sisyphus.index import create_plaindb
 
-create_plaindb(file_folder='your folder', db_name='your db name, end with .db, e.g., plain.db', full_text='True/False')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-d','--directory',
+        help='processed html articles dir'
+    )
+    parser.add_argument(
+        '--db_name',
+        help='the name of the indexed database'
+    )
+    parser.add_argument(
+        '--full_text',
+        help='set 0 to disable, set 1 to enable'
+    )
+    args = parser.parse_args()
+    full_text = bool(int(args.full_text))
+    create_plaindb(file_folder=args.directory, db_name=args.db_name, full_text=full_text)

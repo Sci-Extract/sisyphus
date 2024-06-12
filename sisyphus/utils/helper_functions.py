@@ -1,7 +1,7 @@
 """
 author: soike
 date: 6/2/2024
-description: provide easy use functions when creating `Chain` object
+description: provide convenient functions when creating `Chain` object
 """
 
 import os
@@ -41,8 +41,8 @@ def get_remote_chromadb(collection_name: str):
 
 def get_plain_articledb(db_name):
     """helper function to easily get plain db (db without embedding vectors)"""
-    db_url = 'sqlite:///' + os.path.join(DEFAULT_DB_DIR, db_name)
-    return  DocDB(create_engine(db_url))
+    db_url = 'sqlite:///' + os.path.join(DEFAULT_DB_DIR, db_name, '.db')
+    return DocDB(create_engine(db_url))
 
 
 def get_chat_model(
@@ -50,14 +50,14 @@ def get_chat_model(
 ):
     """helper function to easily get specified openai model, default to gpt-3.5-turbo"""
     return ChatOpenAIThrottle(
-        http_async_client=achat_httpx_client, model_name=model_name
+        http_async_client=achat_httpx_client, model_name=model_name, temperature=0
     )
 
 
 def get_create_resultdb(db_name, pydantic_model: BaseModel, default_dir='db'):
     """helper function to easily get and create result database"""
     result_db = ResultDB(
-        create_engine('sqlite:///' + os.path.join(default_dir, db_name)),
+        create_engine('sqlite:///' + os.path.join(default_dir, db_name) + '.db'),
         pydantic_model,
     )
     result_db.create_db()
@@ -113,5 +113,11 @@ def tool_example_to_messages(example: Example) -> List[BaseMessage]:
     ] * len(openai_tool_calls)
     for output, tool_call in zip(tool_outputs, openai_tool_calls):
         messages.append(ToolMessage(content=output, tool_call_id=tool_call["id"]))
+    return messages
+
+def create_example_messages(examples: list[tuple[str, list[BaseModel]]]):
+    messages = []
+    for input_, tool_calls in examples:
+        messages.extend(tool_example_to_messages({'input': input_, 'tool_calls': tool_calls}))
     return messages
     

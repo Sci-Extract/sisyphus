@@ -14,7 +14,6 @@ import os
 import glob
 import functools
 import logging
-import logging.config
 
 from tqdm import tqdm
 import chromadb
@@ -34,8 +33,7 @@ from .loader import ArticleLoader, Loader, FullTextLoader
 
 
 DEFAULT_DB_DIR = 'db'
-logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
-logger = logging.getLogger('debugLogger')
+logger = logging.getLogger(__name__)
 
 embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 
@@ -71,7 +69,7 @@ def embed_doc(file_path, record_manager, vector_store, full_text: bool = False):
 
 
 async def asupervisor(
-    client, file_folder, collection_name, batch_size: int = 10
+    client, file_paths, collection_name, batch_size: int = 10
 ):
     """
     asupervisor : manage the index process.
@@ -92,7 +90,6 @@ async def asupervisor(
     db = AsyncChroma(
         collection_name, client=client, embedding_function=embedding
     )
-    file_paths = glob.glob(os.path.join(file_folder, '*.html'))
 
     embed_runner = functools.partial(aembed_doc, record_manager=record_manager, vector_store=db)
     await bulk_runner(
@@ -101,9 +98,10 @@ async def asupervisor(
         batch_size=batch_size,
         runnable=embed_runner
     )
+    return db
 
 
-def supervisor(client, file_folder, collection_name):
+def supervisor(client, file_paths, collection_name):
     """
     supervisor : manage the index process.
 
@@ -121,29 +119,50 @@ def supervisor(client, file_folder, collection_name):
     db = chroma.Chroma(
         collection_name, client=client, embedding_function=embedding
     )
-    file_paths = glob.glob(os.path.join(file_folder, '*.html'))
     iter_ = iter(file_paths)
-    if logger.level > 10:   # not debug level
+    if logger.level > 20:   # higher than INFO level
         iter_ = tqdm(iter_, total=len(file_paths))
     for file_path in iter_:
         info = embed_doc(file_path, record_manager, db)
         logger.debug(info)
+    return db
 
 
-def acreate_vectordb(file_folder, collection_name, batch_size=10):
+def acreate_vectordb(file_folder, collection_name, batch_size=10, local=False):
     """
     create vector database. Ensuring database consistency, means that one can run this process multiple times
+        - set local to True to enable local storage of vector database
     """
-    client = chromadb.HttpClient()
-    asyncio.run(asupervisor(client, file_folder, collection_name, batch_size))
+    if local:
+        client = chromadb.PersistentClient() # default location was ./chroma
+    else:
+        client = chromadb.HttpClient()
 
+    file_paths = glob.glob(os.path.join(file_folder, '*.html'))
+    return asyncio.run(asupervisor(client, file_paths, collection_name, batch_size))
+
+
+def create_vectordb_in_memory(target_file, collection_name):
+    """
+    create_vectordb_in_memory: in memory, used for quick test
+
+    Args:
+        file_path (str): file path to the processed article
+        collection_name (str): collection name used for to specify in later retrieval process.
+    """
+    client = chromadb.Client()
+    loader = choose_loader(target_file, full_text=False)
+    documents = list(loader.lazy_load())
+    db = chroma.Chroma.from_documents(documents, embedding, client=client, collection_name=collection_name)
+    return db
 
 def create_vectordb(file_folder, collection_name):
     """
     sync version
     """
     client = chromadb.HttpClient()
-    supervisor(client, file_folder, collection_name)
+    file_paths = glob.glob(os.path.join(file_folder, '*.html'))
+    return supervisor(client, file_paths, collection_name)
 
 
 def save_doc(file_path, database: DocDB, full_text: bool = False):

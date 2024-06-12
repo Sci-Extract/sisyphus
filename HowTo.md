@@ -63,9 +63,10 @@ asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size
 # or 同时运行多条不同的chains (You may need to decrease the batch_size since it was running parallelly)
 asyncio.run(asyncio.gather(*[run_chains_with_extraction_history(chain, ...) for chain in [chains]]))
 ```
-切换显示进度条或者显示debug信息(当你想调试`Chain`对象时)：  
-- config/logging.conf文件中下logger_root.level 为DEBUG时不显示进度条，切换为INFO显示进度条。
-- logger_debugLogger.level 为DEBUG时显示debug信息，INFO不显示debug信息。
 
 ## patch at 6/5
 add full text loader, support full text indexing.
+
+## patch at 6/12
+add sync support for chain, add local storage for chroma embedding, update README.md as documentation.  
+- set logging level to 30 to enble task bar displaying.

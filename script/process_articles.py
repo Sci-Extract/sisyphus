@@ -25,18 +25,18 @@ class ArticleProcessingArgs:
         metadata={"help": "The path to the HTML/XML article file."}
     )
     output_dir: Optional[str] = field(
-        default='./output',
+        default='./',
         metadata={"help": "The output folder where the validation results and relevant information is saved."},
     )
     output_type: Optional[str] = field(
-        default='pt',
+        default='html',
         metadata={
             "choices": ["pt", "html", "jsonl"],
             "help": "output type"
         }
     )
     log_path: Optional[str] = field(
-        default=None,
+        default='',
         metadata={"help": "the directory of the log file. Set to '' to disable logging"}
     )
     skip_dois_path: Optional[str] = field(

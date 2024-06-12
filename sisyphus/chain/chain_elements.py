@@ -46,8 +46,7 @@ from sisyphus.chain.database import (
 from sisyphus.utils.run_bulk import bulk_runner
 
 
-logging.config.fileConfig(os.sep.join(['config', 'logging.conf']))
-logger = logging.getLogger('debugLogger')
+logger = logging.getLogger(__name__)
 RECORD_LOCATION = 'record'
 RECORD_NAME = 'extract_record.sqlite'
 
@@ -149,6 +148,15 @@ class Filter(BaseElement):
         filter_results = await asyncio.gather(
             *[self.afilter(doc) for doc in docs]
         )
+        filter_docs = []
+        for filter_boolean, doc in zip(filter_results, docs):
+            if filter_boolean:
+                filter_docs.append(doc)
+        return filter_docs if filter_docs else None
+
+    def invoke(self, input_):
+        docs = self.locate(input_)
+        filter_results = [self.filter_(doc) for doc in docs]
         filter_docs = []
         for filter_boolean, doc in zip(filter_results, docs):
             if filter_boolean:
@@ -274,6 +282,14 @@ class Extractor(BaseElement):
             if result:
                 docinfos.append(DocInfo(doc, result))
         return docinfos if docinfos else None
+    
+    def invoke(self, docs):
+        results = [self.extract(doc) for doc in docs]
+        docinfos = []
+        for result, doc in zip(results, docs):
+            if result:
+                docinfos.append(DocInfo(doc, result))
+        return docinfos if docinfos else None
 
 
 T = Callable[[DocInfo], Optional[DocInfo]]
@@ -327,6 +343,9 @@ class Validator(BaseElement):
         self, to_validates: list[DocInfo]
     ) -> Optional[list[DocInfo]]:
         return await self.avalidate(to_validates)
+    
+    def invoke(self, to_validates):
+        return self.validate(to_validates)
 
 
 class Writer(BaseElement):
@@ -353,6 +372,10 @@ class Writer(BaseElement):
                 for docinfo in doc_with_info
             ]
         )
+    
+    def invoke(self, doc_with_info):
+        for docinfo in doc_with_info:
+            self.save(docinfo.info, docinfo.doc)
 
 
 class ChainElementLambda(BaseElement):
@@ -366,6 +389,9 @@ class ChainElementLambda(BaseElement):
         if not inspect.iscoroutinefunction(self.func):
             return await asyncio.to_thread(self.func, input_)
         return await self.func(input_)
+    
+    def invoke(self, input_):
+        return self.func(input_)
 
 
 class Chain:
@@ -388,6 +414,16 @@ class Chain:
                 logger.debug('file: %s no result find', origin_input)
                 return
         return input_
+    
+    def compose(self, input_):
+        origin_input = input_
+        for index, component in enumerate(self.components):
+            input_ = component.invoke(input_)
+            if input_ is None and index < len(self.components) - 1:
+                logger.debug('file: %s no result find', origin_input)
+                return
+        return input_
+
 
 
 async def asupervisor(chain: Chain, directory: str, batch_size: int):
