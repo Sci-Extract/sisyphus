@@ -21,9 +21,11 @@ If you are on windows system, use '\' instead of '/'. Again, you can type python
 Good, we download and process those articles to a nice format, then it's time to open your proxy(vpn) to connect to the openai API. If you want to use the query functionality in later retrieval steps, following below.  
 In your command line, run  
 `python indexing.py -d /last/step/processed/dir -c <collection name> --local <0/1>`  
-> NOTE: collection name better fit to your extraction target, e.g., nlo. If you don't want to connect to the docker server which provide remote connection, then set --local to 1. When you don't need the query functionality in later process, run below.  
+> NOTE: collection name better fit to your extraction target, e.g., nlo. If you don't want to connect to the docker server which provide remote connection, then set --local to 1.  
+
+When you don't need the query functionality in later process, run below.  
 `python plain_indexing.py -d /last/step/processed/dir -db_name <your db name> --full_text <0/1>`  
-notes: db name better fit to your extraction object, e.g., nlo. Set full_text to 1 to enable full text instead of chunking articles to small pieces (useful when your target is scatterd).
+> NOTE: db name better fit to your extraction object, e.g., nlo. Set full_text to 1 to enable full text instead of chunking articles to small pieces (useful when your target is scatterd).
 
 ## Extraction
 siuuuuuu! the final step, but the most important one.  
@@ -39,5 +41,5 @@ define extraction chains
 ...
 asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>))
 ```
-> Note: you may want to know why you have to provide article dir again since in last indexing step we already indexing them. In here, I use the article dir to get those article names in order to locate the articles in the vetor/plain database, and there is an advantage, you can provide with a subset of the previous indexing files, which means that you can performing extraction only on those files. Batch size is number of articles to be processed in parallel, name space is the name to distinguish different extraction task, you can give name as 'nlo/shg'.
+> Note: you may want to know why you have to provide article dir again since in last indexing step we already indexing them. In here, I use the article dir to get those article names in order to locate the articles in the vetor/plain database, and there is an advantage, you can provide with a subset of the previous indexing files, which means that you can performing extraction only on those files. Batch size is number of articles to be processed in parallel, name space is the name to distinguish different extraction task, for example,  you can give name as 'nlo/shg'.
 
