@@ -26,7 +26,8 @@ def parse_file(file) -> list[str]:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("doi_file", help=".txt/.xlsx file contains dois you want to retrieve")
-    parser.add_argument('-r', '--rate', default=0.15, help='the rate of single crawler (rsc, wiley, acs...), default to 0.15, increase the number if you want to speed up, not recommand!')
+    parser.add_argument('-r', '--rate', default=0.15, help='the rate of single crawler (rsc, wiley, acs...), default to 0.15, increase the number if you want to speed up, but not recommand!')
+    parser.add_argument('--test', help='set to 1 to enable test mode', default=0)
     args = parser.parse_args()
 
     file: str = args.doi_file
@@ -43,5 +44,6 @@ if __name__ == "__main__":
     # prohibit aaas artilces due to the restriction rule
     doi_ls = [doi for doi in doi_ls if not doi.startswith('10.1126')]
     # doi_ls = [doi for doi in doi_ls if doi.startswith('10.1016')]
-    asyncio.run(manager(doi_ls, els_api_key=els_api_key, rate_limit=float(args.rate)))
+    test_mode = bool(args.test)
+    asyncio.run(manager(doi_ls, els_api_key=els_api_key, rate_limit=float(args.rate), test_mode=test_mode))
     print('We decide to ban aaas for now, maybe fix later')

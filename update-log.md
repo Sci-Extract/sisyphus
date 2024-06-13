@@ -1,18 +1,3 @@
-# Quick tutorial
-- downloading process and parsing process omitted here
-
-## Indexing
-```
-# before this remember to start chromadb docker container
-python indexing.py -d <directory which contains parsed html> -c <name of the database>
-# or you can choose to index without embedding, checkout plain_indexing.py
-```
-
-## Extracting
-```
-# adujusting code to adapt your working scenario in test_oop_implementation.py
-```
-
 # Release
 # New update at 5/13
 在 Indexing 之后，只需要在 test_chain.py 脚本文件下，定义 pydantic model 以及 filter function (nullable)，再添加上几个 examples 用以辅助大语言模型进行学习。最后修改 `create_all` 函数中的对应参数即可。
@@ -70,3 +55,6 @@ add full text loader, support full text indexing.
 ## patch at 6/12
 add sync support for chain, add local storage for chroma embedding, update README.md as documentation.  
 - set logging level to 30 to enble task bar displaying.
+
+## patch at 6/13
+add a script to easy get the left dois when crawler program exit unexpected, check script/get_left_dois.py for more information

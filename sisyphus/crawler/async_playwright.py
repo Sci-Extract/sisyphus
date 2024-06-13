@@ -72,10 +72,14 @@ class BaseCrawler(ABC):
         self.occupation = False # act as switch, control only one crawler working on same publisher at the same time
         self.pulse_rate = False # indicate rate change
         self.download_pdf = download_pdf
+        self.task_left = None
 
     async def run(self, doi_list: list[str]):
         restore_speed = self.rate_limit
         list_not_finished = True
+        length_of_dois = len(doi_list)
+        self.task_left = length_of_dois
+        logger.info('For %s, %d tasks waiting', type(self).__name__, length_of_dois)
         doi_generator = self._gen_doi(doi_list)
 
         if self.last_update_time is None:
@@ -176,6 +180,8 @@ class BaseCrawler(ABC):
                     await self._manipulation(page, source, doi)
                     logger.info(f"{url} finished")
                     self.task_in_progress -= 1
+                    self.task_left -= 1
+                    logger.info('For crawler %s, %d left', type(self).__name__, self.task_left)
 
             except Exception as e:
                 logger.error(f"error: {e}")
@@ -188,6 +194,8 @@ class BaseCrawler(ABC):
                     logger.info(f"{doi} reached retry attempts maximum, Run for next iteration")
                     self.status_tracker.doi_for_next_iteration.append(doi)
                     self.task_in_progress -= 1
+                    self.task_left -= 1
+                    logger.info('For crawler %s, %d left', type(self).__name__, self.task_left)
             
             finally:
                 await page.close()
@@ -353,6 +361,7 @@ class ElsevierRetriever(BaseCrawler):
     async def run(self, doi_list: list[str]):
         list_not_finished = True
         doi_generator = self._gen_doi(doi_list)
+        self.task_left = len(doi_list)
 
         if self.last_update_time is None:
             self.last_update_time = time.time()
@@ -418,6 +427,8 @@ class ElsevierRetriever(BaseCrawler):
             self._save(response.text, doi)
             logger.info(f"{url} has been finished")
             self.task_in_progress -= 1
+            self.task_left -= 1
+            logger.info('For crawler %s, %d left', type(self).__name__, self.task_left)
 
         except httpx.HTTPStatusError as e:
             if response.status_code == 429:
@@ -427,7 +438,7 @@ class ElsevierRetriever(BaseCrawler):
                 logger.error(f"status error:{e}")
             error = e
         except Exception as e:
-            logger.error(f"error: {e}")
+            logger.error("error", exc_info=1)
             error = e
 
         if error:
@@ -439,6 +450,8 @@ class ElsevierRetriever(BaseCrawler):
                 logger.info(f"{doi} reached retry attempts maximum, Run for next iteration")
                 self.status_tracker.doi_for_next_iteration.append(doi)
                 self.task_in_progress -= 1
+                self.task_left -= 1
+                logger.info('For crawler %s, %d left', type(self).__name__, self.task_left)
 
     def _save(self, content: str, doi: str):
             doi_suffix = doi.split('/')[1]
@@ -477,7 +490,7 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
     status_tracker = StatusTracker()
     sema = asyncio.Semaphore(concurrent_run_tasks)
     acs_queue, rsc_queue, spr_queue, nat_queue, aas_queue, wil_queue, els_queue = [asyncio.Queue() for _ in range(metainfo.supported_num)]
-    dir_names = ["ACS", "RSC", "SPR", "NAT", "AAS", "WIL", "ELS"]
+    dir_names = ["ACS", "RSC", "Springer", "Nature", "AAAS", "Wiley", "Elsevier"]
     acs_ls, rsc_ls, spr_ls, nat_ls, aas_ls, wil_ls, els_ls = [[] for _ in range(metainfo.supported_num)]
     
     project_path = os.getcwd()
@@ -564,4 +577,4 @@ async def manager(doi_list: list[str], els_api_key: str, rate_limit: float = 0.1
     
         if download_pdf:
             df = pd.DataFrame(status_tracker.si_metadata)
-            df.to_csv("si_metadata.csv", index=False)
+            df.to_csv("si_metadata.csv", index=False, mode='a+')
