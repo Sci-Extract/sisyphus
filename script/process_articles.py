@@ -36,7 +36,7 @@ class ArticleProcessingArgs:
         }
     )
     log_path: Optional[str] = field(
-        default='',
+        default=None,
         metadata={"help": "the directory of the log file. Set to '' to disable logging"}
     )
     skip_dois_path: Optional[str] = field(
@@ -85,7 +85,7 @@ def process_articles(args: ArticleProcessingArgs):
                 logger.error(f'Unsupported file type!')
                 continue
         except Exception as e:
-            logger.error(f"Failed to parse file. Error: {e}", exc_info=True)
+            logger.error(f"Failed to parse file {file_path}, Error: {e}", exc_info=True)
             continue
 
         try:
@@ -101,7 +101,7 @@ def process_articles(args: ArticleProcessingArgs):
 
             # save article to disk with specified file type
             save_dir[-1] = f"{substring_mapping(article.doi, CHAR_TO_HTML_LBS)}.{args.output_type}"
-            save_path = os.path.normpath(os.path.join(args.output_dir, os.sep.join(save_dir[-2:])))
+            save_path = os.path.normpath(os.path.join(args.output_dir, os.sep.join(save_dir[-1:])))
             os.makedirs(os.path.split(save_path)[0], exist_ok=True)
             getattr(article, f"save_{args.output_type}")(save_path)
 

@@ -44,3 +44,29 @@ define extract chains
 asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>))
 ```
 > 注意：您可能想知道为什么您必须再次提供文章目录，即使在上一个索引步骤中我们已经对它们进行了索引。在这里，我使用 article dir 来获取这些文章名称，以便在 vector/plain 数据库中定位文章，这样做有一个好处，你可以提供以前的索引文件的子集，这意味着你可以只对这些文件进行提取。批量大小是需要并行处理的文章数量，名称空间是区分不同提取任务的名称，例如你可以将其命名为“nlo/shg”。  
+
+## 高级用法
+这是一个奖励部分，如果您想要对 `Chain` 对象进行一些更高级的自定义，请阅读。  
+总之，sisyphus 允许您添加用户定义的函数来参与 `Chain` 的任何部分，这意味着，您可以不使用默认链 = Filetr + Extractor + Validator + Writer，而是使用您创建的链。  
+再次感谢 langchain，我从它的 `RunnableLambda` 中借用了这个想法。  
+我认为有两种情况可能更适合定义您自己的链，而不是覆盖 sisyphus 默认链的实现。一种是在 Extractor 之前修改要提取的内容。
+```
+# 假设您已经定义了 Filter、Extractor、Validator、Writer...
+def modify_content(docs): # docs 是 `Document` 对象的列表
+    # 更改原始内容
+    for doc in docs:
+        doc.page_content = doc.metadata.title + doc.page_content # 为简单起见，我仅将标题添加到原始内容
+    return docs # 您必须返回此内容
+
+# 然后您的链将看起来像
+chain_with_injection = filter + modify_content + extractor + validator + writer # 不要调用modify_content，sisyphus 稍后会调用它！！！
+```
+另一种情况是重定向提取的结果而不是保存到数据库
+```
+# 假设您已经定义了 Filter、Extractor、Validator...
+# 在这里，我们只是打印出结果，但您可以做任何事情，真的。
+def print_results(docinfos): # docinfos 是 `DocInfo` 对象的列表
+    for docinfo in docinfos:
+        print(docinfo.info)
+chain_without_writer = filter + extractor + validator + print_results
+```

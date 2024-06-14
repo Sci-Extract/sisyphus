@@ -39,9 +39,20 @@ def get_remote_chromadb(collection_name: str):
     )
     return db
 
+def get_local_chromadb(collection_name: str):
+    """helper function to get local saved chroma db by collection name"""
+    embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
+    client = chromadb.PersistentClient()
+    db = AsyncChroma(
+        collection_name=collection_name,
+        client=client,
+        embedding_function=embedding,
+    )
+    return db
+
 def get_plain_articledb(db_name):
     """helper function to easily get plain db (db without embedding vectors)"""
-    db_url = 'sqlite:///' + os.path.join(DEFAULT_DB_DIR, db_name, '.db')
+    db_url = 'sqlite:///' + os.path.join(DEFAULT_DB_DIR, db_name + '.db')
     return DocDB(create_engine(db_url))
 
 

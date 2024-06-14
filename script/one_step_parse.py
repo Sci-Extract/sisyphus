@@ -4,6 +4,10 @@ import shutil
 import argparse
 import subprocess
 
+
+TEMP_DIR = 'articles_unprocessed'
+DEFAULT_OUTPUT = 'articles_processed'
+
 def collect_articles_from_crawler(where, to):
     os.makedirs(to, exist_ok=True)
     for publisher in os.listdir(where):
@@ -22,12 +26,12 @@ if __name__ == '__main__':
         default='data_articles'
     )
     parser.add_argument(
-        '--to',
-        help='move to which dir',
-        default='articles_unprocessed'
+        '--output_dir',
+        help='place to save the parsed result',
+        default=DEFAULT_OUTPUT
     )
     
     args = parser.parse_args()
-    collect_articles_from_crawler(args.where, args.to)
+    # collect_articles_from_crawler(args.where, TEMP_DIR)
     script_loc = os.path.join('script', 'process_articles.py')
-    subprocess.run(['python', script_loc, '--input_dir', args.to], check=True)
+    subprocess.run(['python', script_loc, '--input_dir', TEMP_DIR, '--output_dir', args.output_dir], check=True)

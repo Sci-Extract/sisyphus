@@ -45,8 +45,6 @@ chain = filter + extractor + validator + writer
 asyncio.run(chain.acompose(<file_name>))
 # or 运行多条chains
 asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size>, <name_space>))
-# or 同时运行多条不同的chains (You may need to decrease the batch_size since it was running parallelly)
-asyncio.run(asyncio.gather(*[run_chains_with_extraction_history(chain, ...) for chain in [chains]]))
 ```
 
 ## patch at 6/5

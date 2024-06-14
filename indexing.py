@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 """
-@File    :   test_aindex.py
+@File    :   indexing.py
 @Time    :   2024/05/05 18:30:34
 @Author  :   soike
 @Version :   1.0
@@ -10,6 +10,7 @@
 """
 
 import argparse
+import logging
 
 from sisyphus.index import acreate_vectordb
 
@@ -29,11 +30,22 @@ def main():
         required=True
     )
     parser.add_argument(
+        '-v',
+        '--verbose',
+        help='set verbose to 1 to enable logging, otherwise showing task bar, default to 0',
+        default=0
+    )
+    parser.add_argument(
         '--local',
-        help='set local to 1 to enable local storage of chroma database',
+        help='set local to 1 to enable local storage of chroma database, default to 0',
         default=0
     )
     args = parser.parse_args()
+    verbose = bool(int(args.verbose))
+    if verbose:
+        logging.basicConfig(level=20)
+    else:
+        logging.basicConfig(level=30)
     local = bool(int(args.local))
     acreate_vectordb(file_folder=args.directory, collection_name=args.collection, local=local)
 

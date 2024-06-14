@@ -3,8 +3,8 @@
 | Elements/IO type | Input | Output |
 | ---- | ---- | ---- |
 | Parser | .html | list[Document] |
-| Filter | Document, file name [,query] | bool |
-| Extractor | Document | Pydantic |
+| Filter | Document, file name [,query] | list[Document] |
+| Extractor | Document | list[Pydantic] |
 | Validator | list[Pydantic] | list[Pydantic] |
 | Writer | list[Pydantic] | None |
 

@@ -150,10 +150,9 @@ def create_vectordb_in_memory(target_file, collection_name):
         file_path (str): file path to the processed article
         collection_name (str): collection name used for to specify in later retrieval process.
     """
-    client = chromadb.Client()
     loader = choose_loader(target_file, full_text=False)
     documents = list(loader.lazy_load())
-    db = chroma.Chroma.from_documents(documents, embedding, client=client, collection_name=collection_name)
+    db = chroma.Chroma.from_documents(documents, embedding, collection_name=collection_name)
     return db
 
 def create_vectordb(file_folder, collection_name):
@@ -182,7 +181,7 @@ def create_plaindb(file_folder, db_name, full_text: bool = False):
         file_folder (str): the folder where to store articles
         db_name (str): the name of the database
     """
-    sql_path = os.path.join(DEFAULT_DB_DIR, db_name)
+    sql_path = os.path.join(DEFAULT_DB_DIR, db_name + '.db')
     engine = create_engine('sqlite:///' + sql_path)
     db = DocDB(engine)
     db.create_db()
