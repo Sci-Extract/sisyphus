@@ -28,8 +28,14 @@ def load_config(path):
 sep = os.sep
 CONFIG_PATH = Path(os.sep.join(["config", "throttle_config.json"]))
 CONFIG = load_config(CONFIG_PATH)
+LOG_FILE_PATH = os.sep.join(['log', 'throttler.log'])
 
 logger = logging.getLogger(__name__)
+logger.setLevel(20)
+file_handler = logging.FileHandler(LOG_FILE_PATH)
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 # region chat
 @dataclass
@@ -110,7 +116,7 @@ class ChatThrottler:
         self.cool_down_start = time.time()
         self.openai_api_429_hits += 1
         
-        logger.debug('%s', retry_state.outcome.exception())
+        logger.info('%s', retry_state.outcome.exception())
 
     async def cool_down(self):
         """cool down for `cool_down_time` since last hit error"""
