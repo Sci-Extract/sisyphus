@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Tuple
 
 from bs4 import BeautifulSoup
@@ -512,9 +513,22 @@ class ArticleFunctions:
             else:
                 new_section_list.append(section_list[i])
 
+        new_section_list = ArticleFunctions.assign_xml_elsevier_title_size(new_section_list)
         article.sections = new_section_list
 
         return article, article_component_check
+    
+    @staticmethod
+    def assign_xml_elsevier_title_size(section_list):
+        content_title_pattern = re.compile(r'^\d(?!\.)') # to match titles like "1 Introduction"
+        section_title_pattern = re.compile(r'^\d\.\d') # to match titles like "1.1 Subsection"
+        for i, section in enumerate(section_list):
+            if section.type == ArticleElementType.SECTION_TITLE:
+                if content_title_pattern.match(section.content):
+                    section_list[i] = ArticleElement(type=ArticleElementType.SECTION_TITLE, content=section.content, title_size='h2')
+                elif section_title_pattern.match(section.content):
+                    section_list[i] = ArticleElement(type=ArticleElementType.SECTION_TITLE, content=section.content, title_size='h3')
+        return section_list
 
     @staticmethod
     def article_construct_xml_acs(root: ET.Element, doi: str):
@@ -734,7 +748,7 @@ def parse_html(file_path: Optional[str] = None,
     else:
         contents = html_content
 
-    soup = BeautifulSoup(contents, 'lxml')
+    soup = BeautifulSoup(contents, 'html.parser')
 
     # get publisher and doi
     doi, publisher = search_html_doi_publisher(soup)

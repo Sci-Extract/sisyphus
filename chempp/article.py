@@ -6,7 +6,7 @@ import logging
 from enum import Enum
 from dataclasses import dataclass
 from bs4 import BeautifulSoup, Tag
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, Literal
 
 from seqlbtoolkit.data import sort_tuples_by_element_idx
 
@@ -30,6 +30,7 @@ class ArticleElementType(Enum):
 class ArticleElement:
     type: ArticleElementType
     content: Union[Paragraph, Table, Figure, str]
+    title_size: Optional[str] = 'h2' # in order to distinguish section title and subtitle
 
     def __post_init__(self):
         if self.type == ArticleElementType.PARAGRAPH and isinstance(self.content, str):
@@ -327,7 +328,7 @@ class Article:
         for section in self.sections:
 
             if section.type == ArticleElementType.SECTION_TITLE:
-                section_title = soup.new_tag('h2')
+                section_title = soup.new_tag(section.title_size)
                 sec_div.insert(len(sec_div), section_title)
                 section_title.insert(0, section.content)
 

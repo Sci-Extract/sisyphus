@@ -26,7 +26,7 @@ def base_validator(*params):
 
 # You can customize your own prompt template used for validation process, but ensure include doc and info placeholder
 RE_CHECK_PROMPT = ChatPromptTemplate.from_messages([
-    ('system', 'Please verify the extracted results. Some of these results may not meet the requirements. Discard any that fail to meet the criteria and return the rest as is.'),
+    ('system', 'Please verify the extracted results. Some of these results may not meet the requirements. Discard unqualified results based on user provided criterias and remain the qualified results unchanged.'),
     ('human', 'origin text: {doc}\nextracted results: {info}.'),
     MessagesPlaceholder('check_prompt'),
     ('human', 'Respond in JSON format, maintaining the structure of the extracted results. Use the format: {{"verified_results": [extracted_results]}}. '
@@ -82,9 +82,12 @@ def llm_validator(chat_model, pydantic_model, prompt_template: ChatPromptTemplat
 # Extend this for user using case
 CHEM_ABBRE_MAPPING = {
     'methane': 'CH4',
+    'C1': 'CH4',
     'ethane': 'C2H6',
+    'C2': 'C2H6',
     'ethylene': 'C2H4',
     'propane': 'C3H6', 
+    'C3': 'C3H6'
 }
 
 def coercion_validator(coercion_fields: list[str]):
@@ -100,4 +103,3 @@ def coercion_validator(coercion_fields: list[str]):
         result_with_doc = DocInfo(doc=to_validate.doc, info=validate_results)
         return result_with_doc
     return validator
-

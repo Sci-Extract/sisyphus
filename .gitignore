@@ -8,11 +8,17 @@ trivial/
 nlo_extract_data/
 wos_doi/
 chroma/
-log/*
 articles/
 
 temp/*
 db/*
+record/*
+my_essay/*
+articles_processed/*
+articles_unprocessed/*
+logs/*
+ground_truth/*
+reproduce_inorganic/*
 
 *.ipynb
 **/.DS_Store

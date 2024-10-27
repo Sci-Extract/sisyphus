@@ -18,11 +18,17 @@ def get_downloaded_doi(target):
     return set(ls) 
 
 def get_diff(dowloaded, origin):
-    doi_ls = read_wos_excel(origin)
+    if origin.endswith('.txt'):
+        with open(origin, 'r', encoding='utf8') as f:
+            doi_ls = f.readlines()
+            doi_ls = [doi.strip() for doi in doi_ls]
+    elif origin.endswith('.xlsx'):
+        doi_ls = read_wos_excel(origin)
     valid_prefix = set(publishers_doi_prefix.values())
     def filter_func(doi):
         match = re.match(r'\d{2}\.\d{4}', doi).group()
-        return match in valid_prefix
+        in_ = match in valid_prefix
+        return in_
     filtered_doi = set(filter(filter_func, doi_ls))
     return filtered_doi.difference(dowloaded)
 
@@ -40,8 +46,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     left_dois = get_diff(get_downloaded_doi(args.downloaded), args.doi_file)
-    with open('doi_to_download.txt', 'w', encoding='utf8') as f:
-        for doi in left_dois:
-            f.write(doi + '\n')
-    print('left dois write to doi_to_download.txt, check it out')
+    if not left_dois:
+        print('\nalready downloaded all dois')
+    else:
+        with open('doi_to_download.txt', 'w', encoding='utf8') as f:
+            for doi in left_dois:
+                f.write(doi + '\n')
+        print('\nleft dois wrote to doi_to_download.txt, check it out')
         

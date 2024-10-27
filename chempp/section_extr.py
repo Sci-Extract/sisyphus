@@ -1,3 +1,7 @@
+"""This is the main script for destruction and re-construction of publisher's html file.
+A revise version of chempp by Soike.
+Driving force: To create a simple but structured and consistent formated html file from different publishers,
+bring convinience for later article processing (chunking, section searching, etc.)."""
 import copy
 import re
 import bs4
@@ -127,10 +131,11 @@ def html_section_extract_nature(section_root,
         block_name = child.name
         try:
             # if the child is a section title
-            if re.match(r"h[0-9]", block_name):
+            if match_obj:=re.match(r"h[0-9]", block_name):
+                title_size = match_obj.group(0)
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif block_name == 'p':
                 element_type = ArticleElementType.PARAGRAPH
@@ -169,10 +174,11 @@ def html_section_extract_wiley(section_root,
 
         try:
             # if the child is a section title
-            if re.match(r"h[0-9]", child_name):
+            if match_obj:=re.match(r"h[0-9]", child_name):
+                title_size = match_obj.group(0)
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif child_name == 'p':
                 element_type = ArticleElementType.PARAGRAPH
@@ -221,10 +227,11 @@ def html_section_extract_rsc(section_root,
 
         try:
             # if the child is a section title
-            if re.match(r"h[2-9]+", child_name):
+            if match_obj:=re.match(r"h[2-9]+", child_name):
+                title_size = match_obj.group(0)
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif child_name == 'p':
                 # the article cannot start with paragraph
@@ -289,10 +296,11 @@ def html_section_extract_springer(section_root,
             child_class = ''
         try:
             # if the child is a section title
-            if re.match(r"h[0-9]", child_name):
+            if match_obj:=re.match(r"h[0-9]", child_name):
+                title_size = match_obj.group(0)
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif child_name == 'p':
                 element_type = ArticleElementType.PARAGRAPH
@@ -506,13 +514,14 @@ def html_section_extract_acs(section_root,
         block_name = child.name
         try:
             # if the child is a section title
-            if re.match(r"h[0-9]", block_name):
+            if match_obj:=re.match(r"h[0-9]", block_name):
+                title_size = match_obj.group(0)
                 hid = child.get('id', '')
                 if not re.match(r"_i[0-9]+", hid):
                     continue
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif block_name == 'div':
                 div_class = child.get('class', [''])
@@ -542,8 +551,22 @@ def html_section_extract_acs(section_root,
                     tbl = html_table_extract_acs(child)
                     element_type = ArticleElementType.TABLE
                     element_list.append(ArticleElement(type=element_type, content=tbl))
+
+                elif div_class == 'hlFld-Abstract synopsis'.split():
+                    html_section_extract_aaas(section_root=child, element_list=element_list) # get synopsis first
+                    element_type = ArticleElementType.PARAGRAPH
+                    target_txt = format_text(child.text)
+                    element_list.append(ArticleElement(type=element_type, content=target_txt))
+                
                 else:
                     html_section_extract_acs(section_root=child, element_list=element_list)
+
+            elif block_name == 'p': # for the scenario which only contain <p> tag e.g, https://pubs.acs.org/doi/10.1021/acs.chemmater.6b05468
+                element_list.append(ArticleElement(type=ArticleElementType.SECTION_TITLE, content='')) # in order to be compatible with sisyphus loader which requires a section name
+                element_type = ArticleElementType.PARAGRAPH
+                target_txt = format_text(child.text)
+                element_list.append(ArticleElement(type=element_type, content=target_txt))
+
             elif 'figure' in block_name:
                 continue
             else:
@@ -566,13 +589,14 @@ def html_section_extract_aaas(section_root,
         block_name = child.name
         try:
             # if the child is a section title
-            if re.match(r"h[2-9]", block_name):
+            if match_obj:=re.match(r"h[2-9]", block_name):
+                title_size = match_obj.group(0)
                 h2_class = child.get('class', [])
                 if len(h2_class) > 0:
                     continue
                 element_type = ArticleElementType.SECTION_TITLE
                 target_txt = format_text(child.text)
-                element_list.append(ArticleElement(type=element_type, content=target_txt))
+                element_list.append(ArticleElement(type=element_type, content=target_txt, title_size=title_size))
             # if the child is a section block
             elif block_name == 'p':
                 pid = child.get('id', '')

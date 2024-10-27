@@ -18,10 +18,11 @@ import logging.config
 from typing import Optional, Callable, Union, NamedTuple, Any
 
 import tqdm
+from pydantic import BaseModel, ValidationError
 from openai import RateLimitError
 from langchain_community.vectorstores import chroma
+from langchain_community.callbacks import get_openai_callback
 from langchain.output_parsers import PydanticToolsParser
-from langchain_core.pydantic_v1 import BaseModel, ValidationError
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import (
@@ -108,7 +109,7 @@ class Filter(BaseElement):
         self.check_database()
         if self.query:
             docs = self.db.similarity_search(
-                query=self.query, filter={'source': file_name}
+                query=self.query, filter={'source': file_name}, k=10
             )
         else:
             if isinstance(self.db, chroma.Chroma):
@@ -212,7 +213,8 @@ class Extractor(BaseElement):
         self.examples = examples if examples else []
         self.prompt = DEFAULT_PROMPT_TEMPLATE
         self.parser = PydanticToolsParser(tools=self.pydantic_models)
-        self.chain = self.build_chain()
+        self.cost = 0 # use langchain openai callback to track
+        self.build_chain()
 
     def build_chain(self):
         chain = (
@@ -225,9 +227,9 @@ class Extractor(BaseElement):
         input_vars = self.prompt.input_variables
         if set(input_vars) != set(['examples', 'text']):
             raise ValueError(
-                f'prompt template arguments inconsistent with receive, receive: [examples, text], expect: {input_vars}'
+                f'prompt template arguments inconsistent with receive, expect: [examples, text], receive: {input_vars}'
             )
-        return chain
+        self.chain = chain
 
     @retry(
         retry=retry_if_exception_type(RateLimitError),
@@ -236,9 +238,11 @@ class Extractor(BaseElement):
     )
     def _extract(self, doc: Document) -> Optional[list[BaseModel]]:
         """extract info from doc"""
-        result = self.chain.invoke(
-            {'examples': self.examples, 'text': doc.page_content}
-        )
+        with get_openai_callback() as cb:
+            result = self.chain.invoke(
+                {'examples': self.examples, 'text': doc.page_content}
+            )
+            self.cost += cb.total_cost
         return result if result else None
 
     @retry(
@@ -259,9 +263,11 @@ class Extractor(BaseElement):
     )
     async def _aextract(self, doc: Document) -> Optional[list[BaseModel]]:
         """async version for extracting info from doc"""
-        result = await self.chain.ainvoke(
-            {'examples': self.examples, 'text': doc.page_content}
-        )
+        with get_openai_callback() as cb:
+            result = await self.chain.ainvoke(
+                {'examples': self.examples, 'text': doc.page_content}
+            )
+            self.cost += cb.total_cost
         return result if result else None
 
     @retry(
@@ -443,7 +449,9 @@ async def run_chains_with_extraction_history(
     chain: Chain, directory: str, batch_size: int, namespace: str
 ):
     """run multiple chains asynchronously with extraction history.
-    - provide different namespace for different extraction tasks, better use the name of your extraction object, e.g., nlo/band_gap"""
+    Args:
+        namespace: Give a name to current task. For example 'nlo/band_gap' is a good name for extracting band gap from NLO papers.
+    """
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
     file_names = [name.split(os.sep)[-1] for name in file_name_full]
 

@@ -32,7 +32,7 @@ class OpenAIEmbeddingThrottle(OpenAIEmbeddings):
     Patch langchain embedding, use anywhere else inside this project as substitution of `OpenAIEmbedding`.
     """
     max_retries: int = 0
-    _embed_throttler: EmbedThrottler = embed_throttler
+    # _embed_throttler: EmbedThrottler = embed_throttler
 
     async def _aget_len_safe_embeddings(self, texts: List[str], *, engine: str, chunk_size: int | None = None) -> List[List[float]]:
         async with embed_waiter(consumed_tokens=self.get_num_tokens(texts)):

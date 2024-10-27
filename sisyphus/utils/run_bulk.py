@@ -44,7 +44,7 @@ def future_gen(
 async def bulk_runner(
     *,
     task_producer: Sequence | None,
-    repeat_times: int | None,
+    repeat_times: int | None = None,
     batch_size: int,
     runnable: Callable
 ):

@@ -14,6 +14,7 @@ def collect_articles_from_crawler(where, to):
         for article_dir in os.listdir(os.path.join(where, publisher)):
             article_dir_path = os.path.join(where, publisher, article_dir) 
             file_paths = glob.glob(os.path.join(article_dir_path, '*.html'))
+            file_paths.extend(glob.glob(os.path.join(article_dir_path, '*.xml')))
             for file_path in file_paths:
                 file_name = file_path.split(os.sep)[-1]
                 shutil.copy(file_path, os.path.join(to, file_name))
@@ -32,6 +33,6 @@ if __name__ == '__main__':
     )
     
     args = parser.parse_args()
-    # collect_articles_from_crawler(args.where, TEMP_DIR)
+    collect_articles_from_crawler(args.where, TEMP_DIR)
     script_loc = os.path.join('script', 'process_articles.py')
     subprocess.run(['python', script_loc, '--input_dir', TEMP_DIR, '--output_dir', args.output_dir], check=True)

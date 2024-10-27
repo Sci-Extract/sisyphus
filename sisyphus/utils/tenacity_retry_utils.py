@@ -16,7 +16,7 @@ from tenacity import (
     retry_if_exception_type,
     wait_exponential,
 )
-from langchain.pydantic_v1 import ValidationError
+from pydantic import ValidationError
 from openai import RateLimitError
 
 from sisyphus.patch.throttle import chat_throttler

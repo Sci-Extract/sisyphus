@@ -53,6 +53,7 @@ async def aembed_doc(file_path, record_manager, vector_store, full_text: bool = 
         cleanup='incremental',
         source_id_key='source',
     )
+    logger.info(info)
     return info
 
 
@@ -65,6 +66,7 @@ def embed_doc(file_path, record_manager, vector_store, full_text: bool = False):
         cleanup='incremental',
         source_id_key='source',
     )
+    logger.info(info)
     return info
 
 
@@ -187,5 +189,5 @@ def create_plaindb(file_folder, db_name, full_text: bool = False):
     db.create_db()
 
     file_paths = glob.glob(os.path.join(file_folder, '*.html'))
-    for file_path in file_paths:
+    for file_path in tqdm(file_paths):
         save_doc(file_path, db, full_text)

@@ -26,7 +26,7 @@
 > 注意：请选择符合挖掘目标的名字作为集合名称，例如 nlo。如果您不想连接到提供远程连接的 docker 服务器，请将 --local 设置为 1。
 
 当您在以后的过程中不需要查询功能时，请在下面运行。  
-`python plain_indexing.py -d /last/step/processed/dir -db_name <your db name> --full_text <0/1>`
+`python plain_indexing.py -d /last/step/processed/dir --db_name <your db name> --full_text <0/1>`
 > 注意：请选择符合挖掘目标的名字作为数据库名，例如 nlo。将 full_text 设置为 1 以启用全文，而不是将文章分块成小块（当您的目标分散时很有用）。
 
 ## 提取
@@ -35,7 +35,7 @@ siuuuuuu！最后一步，但也是最重要的一步。
 首先浏览 [chain](./chain.ipynb) 笔记本。
 
 如果您已经阅读过 jupyter 笔记本，那么您可能想知道如何一次性批量提取文章。批量操作如下面的代码片段所示
-```
+```python
 import asyncio
 from sisyhphus.chain import run_chains_with_extraction_history
 ...
@@ -50,7 +50,7 @@ asyncio.run(run_chains_with_extraction_history(chain, <article_dir>, <batch_size
 总之，sisyphus 允许您添加用户定义的函数来参与 `Chain` 的任何部分，这意味着，您可以不使用默认链 = Filetr + Extractor + Validator + Writer，而是使用您创建的链。  
 再次感谢 langchain，我从它的 `RunnableLambda` 中借用了这个想法。  
 我认为有两种情况可能更适合定义您自己的链，而不是覆盖 sisyphus 默认链的实现。一种是在 Extractor 之前修改要提取的内容。
-```
+```python
 # 假设您已经定义了 Filter、Extractor、Validator、Writer...
 def modify_content(docs): # docs 是 `Document` 对象的列表
     # 更改原始内容
@@ -62,7 +62,7 @@ def modify_content(docs): # docs 是 `Document` 对象的列表
 chain_with_injection = filter + modify_content + extractor + validator + writer # 不要调用modify_content，sisyphus 稍后会调用它！！！
 ```
 另一种情况是重定向提取的结果而不是保存到数据库
-```
+```python
 # 假设您已经定义了 Filter、Extractor、Validator...
 # 在这里，我们只是打印出结果，但您可以做任何事情，真的。
 def print_results(docinfos): # docinfos 是 `DocInfo` 对象的列表

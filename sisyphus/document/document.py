@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 from langchain.indexes import SQLRecordManager
 from langchain_core.documents import Document as langchain_document
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from sqlmodel import create_engine
 
 from sisyphus.index.indexing import aembed_doc, save_doc

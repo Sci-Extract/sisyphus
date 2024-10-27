@@ -10,7 +10,7 @@ from typing import Literal, List, TypedDict
 
 import chromadb
 from sqlmodel import create_engine
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
@@ -112,7 +112,7 @@ def tool_example_to_messages(example: Example) -> List[BaseMessage]:
                     # This is implicit in the API right now,
                     # and will be improved over time.
                     "name": tool_call.__class__.__name__,
-                    "arguments": tool_call.json(),
+                    "arguments": tool_call.model_dump_json(),
                 },
             }
         )

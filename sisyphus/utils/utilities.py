@@ -72,7 +72,7 @@ class ErrorRequestsTracker:
                 if line_json[1] == "Failed": # indicate this request was failed
                     self.task_id.append(line_json[2]["task_id"])
         if not self.task_id: # no error
-            cprint("No errors, head to next step\n")
+            # cprint("No errors, head to next step\n")
             return False
         return True
         
@@ -129,7 +129,7 @@ class Elapsed:
         ret = self.func(*args, **kwargs)
         end = time.perf_counter()
         self.elapsed += end - start
-        cprint(f"Process finished, Runtime: {end - start:.2f}s\n", "red", attrs=["bold"])
+        # cprint(f"Process finished, Runtime: {end - start:.2f}s\n", "red", attrs=["bold"])
         return ret
 
 import shutil

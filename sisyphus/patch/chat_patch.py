@@ -23,6 +23,8 @@ from langchain_core.language_models.chat_models import agenerate_from_stream
 from sisyphus.patch.throttle import (
     chat_throttler,
     chat_waiter,
+    chat_throttler_4o,
+    chat_waiter_4o,
     ChatThrottler
 )
 
@@ -35,7 +37,8 @@ class ChatOpenAIThrottle(ChatOpenAI):
     """
     max_retries: int = 0
     """set default retry to zero, making sure that every request was managed by waiter"""
-    _chat_throttler: ChatThrottler = chat_throttler
+    # _chat_throttler: ChatThrottler = chat_throttler
+    # _chat_throttler_4o: ChatThrottler = chat_throttler_4o
 
     async def _agenerate(
         self,
@@ -44,5 +47,15 @@ class ChatOpenAIThrottle(ChatOpenAI):
         run_manager: Optional[AsyncCallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        async with chat_waiter(consumed_tokens=self.get_num_tokens_from_messages(messages)):
+        waiter = self.get_waiter()
+        async with waiter(consumed_tokens=self.get_num_tokens_from_messages(messages)):
             return await super()._agenerate(messages, stop, run_manager, **kwargs)
+            
+    def get_waiter(self):
+        if self.model_name == 'gpt-3.5-turbo':
+            return chat_waiter
+        elif self.model_name == 'gpt-4o':
+            return chat_waiter_4o
+        else:
+            logger.info('model not belong to gpt-3.5-turbo/gpt-4o, fallback to gpt-3.5-turbo limit setting')
+            return chat_waiter # For compatible, treat other models as the same limiting as 3.5

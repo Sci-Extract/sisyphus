@@ -123,6 +123,7 @@ class ChatThrottler:
 
 
 chat_throttler = ChatThrottler(CONFIG["chat"]["max_tokens"], CONFIG["chat"]["time_frame"])
+chat_throttler_4o = ChatThrottler(CONFIG["chat_4o"]["max_tokens"], CONFIG["chat"]["time_frame"])
 
 @asynccontextmanager
 async def chat_waiter(consumed_tokens: int):
@@ -130,7 +131,11 @@ async def chat_waiter(consumed_tokens: int):
     yield
     # some clean steps...
 
-# endregion
+@asynccontextmanager
+async def chat_waiter_4o(consumed_tokens: int):
+    await chat_throttler_4o.wait_capacity(consumed_tokens)
+    yield
+
 
 # region embed
 class EmbedThrottler(ChatThrottler):

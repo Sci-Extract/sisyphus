@@ -26,7 +26,7 @@ In your command line, run
 > NOTE: better fit the collection name to your extraction target, e.g., nlo. If you don't want to connect to the docker server which provide remote connection, then set --local to 1.  
 
 When you don't need the query functionality in later process, run below.  
-`python plain_indexing.py -d /last/step/processed/dir -db_name <your db name> --full_text <0/1>`  
+`python plain_indexing.py -d /last/step/processed/dir --db_name <your db name> --full_text <0/1>`  
 > NOTE: better fit to your db name to extraction object, e.g., nlo. Set full_text to 1 to enable full text instead of chunking articles to small pieces (useful when your target is scatterd).
 
 ## Extraction
@@ -35,7 +35,7 @@ In this step, you need to write some code, but don't worry, nothing is that hard
 Go through [chain](./chain.ipynb) notebook first.  
 
 If you have read the jupyter notebook, then you probably want to know how to extract those articles at one time. Taking a look at the code snippet showing below
-```
+```python
 import asyncio
 from sisyhphus.chain import run_chains_with_extraction_history
 ...
@@ -50,7 +50,7 @@ This is a bonus section, read if you want some high customizations of `Chain` ob
 In a word, sisyphus permit you to add user defined function to participate in any part of `Chain`, which means, you can not use the default chain = Filetr + Extractor + Validator + Writer, but to use what you created.  
 Again, thanks to langchain, I borrowed this idea from its `RunnableLambda`.  
 There are two scenario which I think might be useful to define your own chain than to overwrite implementation of sisyphus default chain. One is to modify the content to extract before the Extractor.
-```
+```python
 # assumed you have defined your Filter, Extractor, Validator, Writer...
 def modify_content(docs): # docs is a list of `Document` objects
     # change the original content
@@ -62,7 +62,7 @@ def modify_content(docs): # docs is a list of `Document` objects
 chain_with_injection =  filter + modify_content + extractor + validator + writer # do not call modify_content, sisyphus will call it later!!!
 ```
 And another scenario is to redirect extracted result instead of saving to database
-```
+```python
 # assumed you have defined your Filter, Extractor, Validator...
 # here, we just print out the results, you can do any things, really.
 def print_results(docinfos): # docinfos is a list of `DocInfo` objects
@@ -70,3 +70,7 @@ def print_results(docinfos): # docinfos is a list of `DocInfo` objects
         print(docinfo.info) 
 chain_without_writer = filter + extractor + validator + print_results
 ```
+
+## Future development
+Since the object of extraction is quite variaty, ranging from chem/physi properties to chemical reactions. It's hard to define a googd pipeline for a new task without futher tuning. For example, If I want to extract solid-state inorganic reactions from paper, for the prompt chaining method (which is now implemented by sisyphus), one could think that create a classification module and then the extraction module (module is an abstraction of LLM program). To achieve a promising output, every component needed to maintain in order to coordinate with each other, so, a lot of prompt engineering and expert knowledge required. It was brittle in other words.
+DSPy is a tool to systematically to create a LLM program, it's do not require any prompt (well, mostly). Breifly, it's a tool to easily create promgram and make it to the best suite out of box.

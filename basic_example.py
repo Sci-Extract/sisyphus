@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 from sisyphus.index import create_vectordb_in_memory
 from sisyphus.chain import Filter, Extractor, Validator, Writer

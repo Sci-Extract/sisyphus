@@ -12,7 +12,7 @@
 import os
 import glob
 from collections import namedtuple
-from typing import AsyncIterator, Iterator
+from typing import AsyncIterator, Iterator, Optional
 
 import nltk
 import aiofiles
@@ -20,7 +20,7 @@ import tiktoken
 from bs4 import BeautifulSoup as bs
 from langchain_core.documents import Document
 from langchain_core.document_loaders import BaseLoader
-from langchain.pydantic_v1 import (
+from pydantic import (
     BaseModel,
     create_model
 )
@@ -46,63 +46,60 @@ class ArticleLoader(Loader):
     def __init__(self, file_path: str):
         super().__init__(file_path)
         self.file_name = file_path.split(os.sep)[-1]
-        self.metadata = create_model('MetaData', source=(str, ...), section=(str, ...), title=(str, ...))
+        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), content_title=(str, ""), section_title=(str, ""), title=(str, ...))
 
     async def alazy_load(self) -> AsyncIterator[Document]:
         async with aiofiles.open(self.file_path, encoding='utf8') as file:
             doc = await file.read()
         soup = bs(doc, 'html.parser')
         title = soup.find('title').text.strip('\n ')
-        try:
-            abstract = soup.css.select('div#abstract > p')[0]
-        except IndexError:
-            print(self.file_name)
-            return
-        abstract_chunks = self.chunk_text(abstract.text.strip('\n '))
-        for chunk in abstract_chunks:
-            yield Document(
-                page_content=chunk,
-                metadata=dict(self.metadata(source=self.file_name, section='abstract', title=title)),
-            )
-        for section in self.get_sections(soup=soup, title=title):
-            yield section
+        doi = soup.head.p.a.text.strip('\n ')
+        for chunk in self.get_abstract(soup, title, doi):
+            yield chunk
+        for chunk in self.get_sections(soup, title, doi):
+            yield chunk
+
 
     def lazy_load(self) -> Iterator[Document]:
         with open(self.file_path, encoding='utf8') as file:
             doc = file.read()
         soup = bs(doc, 'html.parser')
         title = soup.find('title').text.strip('\n ')
-        try:
-            abstract = soup.css.select('div#abstract > p')[0]
-        except IndexError:
-            print(self.file_name)
-            return
-        abstract_chunks = self.chunk_text(abstract.text.strip('\n '))
-        for chunk in abstract_chunks:
-            yield Document(
-                page_content=chunk,
-                metadata=dict(self.metadata(source=self.file_name, section='abstract', title=title)),
-            )
-        for section in self.get_sections(soup=soup, title=title):
-            yield section
+        doi = soup.head.p.a.text.strip('\n ')
+        yield from self.get_abstract(soup, title, doi)
+        yield from self.get_sections(soup, title, doi)
 
-    def get_sections(self, soup: bs, title: str):
+    def get_abstract(self, soup, title, doi):
+        # Since abstract is relatively simple, I don't need to chunk it.
+        abstract = soup.find(id='abstract')
+        for child in abstract:
+            if child.name == 'p':
+                yield Document(
+                    page_content=child.text.strip('\n '),
+                    metadata=dict(self.metadata(source=self.file_name, doi=doi, content_title='abstract', title=title)),
+                )
+
+    def get_sections(self, soup: bs, title: str, doi):
         """
         Get rest sections.
-        TODO: better use nested section name, e.g. Experimental/<sub_section>
         """
-        section = (
-            'abstract'  # a few papers have abstract which more than one para
-        )
-        for child in soup.find(id='sections'):
+        content_title, section_title =  "", ""
+        content_title_i, section_title_i = 0, 0
+        for i, child in enumerate(soup.find(id='sections')):
             if child.name == 'h2':
-                section = child.text.strip('\n ')
+                content_title = child.text.strip('\n ')
+                content_title_i = i
+            elif child.name == 'h3':
+                section_title = child.text.strip('\n ')
+                section_title_i = i
             elif child.name == 'p':
+                if content_title_i > section_title_i: # scenario like content title "3 characterization" followed by "2.3 procedure"
+                    section_title = ""
                 chunks = self.chunk_text(child.text.strip('\n '))
                 for chunk in chunks:
                     yield Document(
                         page_content=chunk,
-                        metadata=dict(self.metadata(source=self.file_name, section=section, title=title)),
+                        metadata=dict(self.metadata(source=self.file_name, doi=doi, content_title=content_title, section_title=section_title, title=title)),
                     )
 
     def chunk_text(self, text) -> list[str]:
@@ -147,7 +144,7 @@ class FullTextLoader(Loader):
     def __init__(self, file_path: str):
         super().__init__(file_path)
         self.file_name = file_path.split(os.sep)[-1]
-        self.metadata = create_model('MetaData', source=(str, ...), title=(str, ...))
+        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), title=(str, ...))
     
     def lazy_load(self) -> Iterator[Document]:
         """when I write this, I know I should write load function instead, but I want to keep the interface consistentency"""
@@ -160,10 +157,11 @@ class FullTextLoader(Loader):
                 for tag in tags:
                     tag.decompose()
         title = soup.find('title').text.strip('\n ')
+        doi = soup.head.p.a.text.strip('\n ')
         text = soup.get_text(separator='\n', strip=True)
         chunks = self.ensure_safe_len(text)
         for chunk in chunks:
-            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, title=title)))
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title)))
 
     async def alazy_load(self) -> AsyncIterator[Document]:
         async with aiofiles.open(self.file_path, encoding='utf8') as file:
@@ -175,10 +173,11 @@ class FullTextLoader(Loader):
                 for tag in tags:
                     tag.decompose()
         title = soup.find('title').text.strip('\n ')
+        doi = soup.head.p.a.text.strip('\n ')
         text = soup.get_text(separator='\n', strip=True)
         chunks = self.ensure_safe_len(text)
         for chunk in chunks:
-            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, title=title)))
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title)))
     
     def ensure_safe_len(self, text):
         # TODO consolidate this to avoid of possibly context losing

@@ -3,7 +3,7 @@ from pathlib import Path
 import tiktoken
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain.output_parsers import PydanticToolsParser
 from sisyphus.patch import achat_httpx_client
 
