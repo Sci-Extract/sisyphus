@@ -1,0 +1,227 @@
+{
+  "reaction_type": ["solid-state", "flux", "sol-gel", "hydrothermal", "co-precipitation", "others"],
+  "examples": [
+    {
+      "id": 1,
+      "text": "Fe2O3 and Y2O3 were used as starting materials to prepare YFeO3 by hydrothermal method, sol-gel and solid state reaction in most previous work, which requires the calcination step at a high temperature of above 700 °C. The reaction is heterogeneous due to the poor solubility of the used precursors in the reaction medium. In our present work, the use of water soluble Fe(NO3)3 and Y(NO3)3 precursors enables the adequate mixing and thus the homogenous reaction, benefiting the formation of monophasic YFeO3 in our synthetic strategy although it is thermodynamically unstable.",
+      "reactions": [
+        {
+          "precursors": ["Fe2O3", "Y2O3"],
+          "additives": [],
+          "target": "YFeO3",
+          "reaction_type": "hydrothermal"
+        },
+        {
+          "precursors": ["Fe2O3", "Y2O3"],
+          "additives": [],
+          "target": "YFeO3",
+          "reaction_type": "sol-gel"
+        },
+        {
+          "precursors": ["Fe2O3", "Y2O3"],
+          "additives": [],
+          "target": "YFeO3",
+          "reaction_type": "solid-state"
+        },
+        {
+          "precursors": ["Fe(NO3)3", "Y(NO3)3"],
+          "additives": [],
+          "target": "YFeO3",
+          "reaction_type": "others"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "text": "Nonetheless, the molten salt flux assistance has room for optimization and provides control over the synthesized material. The effect of controlling the flux parameters (reactant to flux molar ratio, temperature, and time) on the hydrogen evolution photocatalytic activity of SnNb2O6 was investigated as a means to control the surface properties. They started from SnO and Nb2O5 with excess SnCl2, and the molar ratio of reactant to flux was varied between 1:1 and 1:14. The crystal morphology was tuned by increasing the flux to reactant molar ratio, affording well-defined particles with non-aggregated surfaces. The XRD patterns and SEM analyses confirmed a 2D anisotropic growth along the (bc) plane, providing a plate-like morphology as the flux ratio increased. Fig. 6 shows SEM images of SnNb2O6 synthesized by the molten salt flux-assisted method and by solid-state synthesis.",
+      "reactions": [
+        {
+          "precursors": ["SnO", "Nb2O5"],
+          "additives": ["SnCl2"],
+          "target": "SnNb2O6",
+          "reaction_type": "flux"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "text": "The particles of SrTiO3:Rh(2%) were prepared via the water-based hetero-chelate method (WH-method), which was recently developed by our group, using a stable titania sol as a precursor. The aqueous titania sol (AA-sol) was prepared by mixing TIPT, an aqueous solution of acac, and an aqueous solution of AcOH. The AA-sol was mixed with an aqueous solution containing both Sr(OAc)2 (1.08 mol L-1) and lactic acid (2.16 mol L-1) and an aqueous solution of RhCl3 (0.24 mol L-1) at a ratio of Sr:Ti:Rh = 1.02:0.98:0.02, and stirred for 1 hour at room temperature, yielding an orange transparent sol. To the sol was added an acrylic emulsion and it was stirred for 15 minutes at room temperature, then dried at 80 °C for 3 hours, and finally calcined at 1000 °C for 10 hours, yielding SrTiO3:Rh (Rh: 2%) powdered samples (these samples are denoted as WH-particles). For comparison, SrTiO3:Rh(2%) particles were also prepared via the solid state reaction method (SS-method) using TiO2, SrCO3 and Rh2O3 as raw materials, and calcination at 1000 °C for 10 hours (these samples will be denoted by SS-particles) followed.",
+      "reactions": [
+        {
+          "precursors": ["TiO2", "SrCO3", "Rh2O3"],
+          "additives": [],
+          "target": "SrTiO3:Rh(2%)",
+          "reaction_type": "solid-state"
+        },
+        {
+          "precursors": ["titania sol", "Sr(OAc)2", "RhCl3"],
+          "additives": ["lactic acid", "acrylic emulsion"],
+          "target": "SrTiO3:Rh(2%)",
+          "reaction_type": "others"
+        }
+      ]
+    },
+    {
+        "id": 4,
+        "text": "Strontium titanate doped with rhodium species (SrTiO3:Rh) was prepared by solid state reaction. A mixture of SrCO3, TiO2 and Rh2O3 (Sr:Ti:Rh = 1:0.99:0.01 to form the ideal formula of SrTi0.99Rh0.01O3-δ) was calcined in air at 873 K for 2 h and subsequently at 1273 K for 10 h. A Pt cocatalyst was loaded onto SrTiO3:Rh by impregnation using H2PtCl6 6H2O and subsequent heating under a H2 flow at 573 K for 2 h. In the case of a Ru cocatalyst, Ru species were loaded on SrTiO3:Rh by means of a photodeposition method using RuCl3 nH2O as a Ru source, according to the method reported previously.",
+        "reactions": [
+          {
+            "precursors": ["SrCO3", "TiO2", "Rh2O3"],
+            "additives": [],
+            "target": "SrTi0.99Rh0.01O3",
+            "reaction_type": "solid-state"
+          }
+        ]
+    },
+    {
+        "id": 5,
+        "text": "SrTiO3 doped with 5 atom% of Na was also prepared by a solid state reaction. SrCO3, Na2CO3, and TiO2 were mixed in a molar ratio 0.95:0.025:1.0, then the mixture was calcined in air at 1173 K for 1 h followed by 1273 K for 20 h with intermediate grinding.",
+        "reactions": [
+          {
+            "precursors": ["SrCO3", "Na2CO3", "TiO2"],
+            "additives": [],
+            "target": "(Sr0.95Na0.05)TiO3",
+            "reaction_type": "solid-state"
+          }
+       ]   
+    },
+    {
+        "id": 6,
+        "text": "CaBiO2Cl samples were prepared by a two-step process. All chemicals used were analytic grade reagents without further purification. The starting materials of Bi(NO3)3 and KCl (1:1 molar ratio) were mixed together, and then 60 mL of distilled water was added. White precipitate appeared immediately and was stirred for 5 h to complete the precipitation reaction. The precipitate was collected and washed with deionized water thoroughly and dried at 80 °C in air. The final BiOCl powder was obtained as seen from XRD patterns (see Fig. S1 in ESI†). In what followed, BiOCl and Ca(NO3)2 (1:1 molar ratio) were used to synthesize CaBiO2Cl by a solid-state reaction. The reactant powders were thoroughly ground together into a homogeneous mixture using a mortar and pestle, transferred to an alumina crucible, and subsequently heated in air at different temperatures for 12 h. A pale yellow polycrystalline powder (CaBiO2Cl) was obtained from the reactions. TiO2-xNx known for its good photocatalytic activity in the decomposition of pollutants under visible-light irradiation, was also prepared as a reference.",
+        "reactions": [
+            {
+                "precursors": ["Bi(NO3)3", "KCl"],
+                "additives": [],
+                "target": "BiOCl",
+                "reaction_type": "co-precipitation"
+            },
+            {
+                "precursors": ["BiOCl", "Ca(NO3)2"],
+                "additives": [],
+                "target": "CaBiO2Cl",
+                "reaction_type": "solid-state"
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "text": "Solutions of zinc nitrate hexahydrate and ferric nitrate nonahydrate in stoichiometric proportion were mixed into citric acid solution by keeping the ratio of cations to citric acid to be 1:3. The mixture was kept magnetically stirred at 90 °C for 2 h to get a viscous solution. The viscous solution was dried for almost 6 h by heating between 100 and 200 °C on a hot plate to obtain precursor (ZF000). Precursor was subsequently annealed at different temperatures ranging from 300 to 1200 °C in order to obtain nano-sized ZnFe2O4 These materials are coded as ZF300, ZF400, ZF500, ZF600, ZF800, ZF1000, and ZF1200. To get micro-sized zinc ferrite particles, these nanoparticles were given thermal treatment analogous to the solid-state reaction method. These nanoparticles were annealed at 1200 °C for 12 h. The treatment hereafter is known as bulk treatment (BT). Materials synthesized after bulk treatment are coded as ZF-BT, ZF300-BT, ZF400-BT, ZF500-BT, ZF600-BT, ZF800-BT, ZF1000-BT, and ZF1200-BT. The detailed procedure is shown in Fig. 1.",
+        "reactions": [
+            {
+                "precursors": ["Zn(NO3) 6H2O", "Fe(NO3)3 9H2O"],
+                "additives": ["citric acid"],
+                "target": "ZnFe2O4",
+                "reaction_type": "sol-gel"
+            },
+            {
+              "precursors": ["ZnFe2O4"],
+              "additives": [],
+              "target": "ZnFe2O4",
+              "reaction_type": "solid-state"
+            }
+        ]
+    },
+    {
+        "id": 8,
+        "text": "Several Cu(I)-containing mixed-metal oxides are reported to exist in the Cu2O-M2O5 (M = Nb, Ta) system that cannot be synthesized using conventional solid-state methods. For example, the synthesis of Cu2Nb8O21, a metastable p-type semiconductor, was prepared in high purity by the reaction of Cu2O and Nb2O5 nanoparticles within a CuCl flux using a 10:1 flux-to-reactant molar ratio. The CuCl flux solvent was preferentially utilized in these reactions owing to its low melting point, ability to solubilize Cu2O, and the common Cu(I) cations as that of the Cu2O reagent. The reaction mixture was heated in an evacuated fused-silica ampoule at 550 °C for 24 h that was immediately quenched. The Cu2Nb8O21 phase does not form in the absence of a molten flux at lower temperatures of 550 °C. At a higher reaction temperature of 650 °C the Cu2Nb8O21 compound begins to transform into CuNb3O8, and after the temperature reaches 750 °C, the Cu2Nb8O21 compound has completely transformed into CuNb3O8. In the Cu2O-Ta2O5 system, the Cu2Ta4O11 and Cu7Ta15O41 phases have not been reported to have been synthesized in high purity, but instead have been found as side products at reaction temperatures ranging from 700 °C to 1000 °C. Both the Cu2Ta4O11 and Cu7Ta15O41 phases have been calculated to have 33% and 22% vacancies on the copper-site positions within the unit cell, respectively. The Cu2Ta4O11 phase has been reported to be stabilized through doping with zirconium and by utilizing solid solutions such as Cu2-xNaxTa4O11. These Cu(I)-containing mixed-metal oxides exhibit band gaps deep within the visible-light energy range, spanning from ~1.3 eV to ~2.6 eV, and have shown high cathodic photocurrents for water reduction under visible-light in the form of polycrystalline photoelectrodes. Thus, the preparation of new Cu(I)-oxides in high purity can be facilitated with the use of a flux-mediated synthetic route in combination with binary-oxide nanoparticle precursors.",
+        "reactions": [
+            {
+                "precursors": ["Cu2O", "Nb2O5"],
+                "additives": ["CuCl"],
+                "target": "Cu2Nb8O21",
+                "reaction_type": "flux"
+            },
+            {
+              "precursors": ["Cu2Nb8O21"],
+              "additives": [],
+              "target": "CuNb3O8",
+              "reaction_type": "others"
+            },
+            {
+                "precursors": ["Cu2O", "Ta2O5"],
+                "additives": ["CuCl"],
+                "target": "Cu2Ta4O11",
+                "reaction_type": "flux"
+            },
+            {
+                "precursors": ["Cu2O", "Ta2O5"],
+                "additives": ["CuCl"],
+                "target": "Cu7Ta15O41",
+                "reaction_type": "flux"
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "text": "Three interesting papers published during this review period demonstrated the ability of XRF techniques to give chemical information on multilayered structures. Doomes and McGuire391 reported their work on ion beam sputtered multilayer SiO2/Ta2O5 coatings on fused SiO2 substrates. XAS gave chemical and structural features of the dielectric multilayered NO2/Ta2O5 mirror coatings. Rajput et al.392 studied the depth resolved structural information of heavy ion induced phase formation in Si/Fe/Si trilayers. XRF measurements gave the Fe depth distribution, whilst Mossbauer spectroscopy and XAFS provided information about changes in local structure. Synthesis and characterisation of a new four-layer Aurivillius phase Bi2SrNa2Nb4O15 was reported by Liang et al.393 Following a solid state reaction of Bi2SrNa2Nb4O9 and NaNbO3 at 1100 °C, XRD was used to show the resultant crystalline structure and XRF and thermogravimetry used for the measurement of composition the multilayers formed.",
+        "reactions": [
+            {
+                "precursors": ["Bi2SrNa2Nb4O9", "NaNbO3"],
+                "additives": [],
+                "target": "Bi2SrNa2Nb4O15",
+                "reaction_type": "solid-state"
+            }
+        ]
+    },
+    {
+        "id": 10,
+        "text": "Single crystals of Cd4YbO(BO3)3 were grown through high-temperature solid state reactions. A mixture of CdCO3 (8.0 mmol), H3BO3 (6.0 mmol) and Yb2O3 (1.0 mmol) in the molar ratio of 8:6:1 was ground and loaded into a platinum crucible. The synthesis was performed in four steps. First, the mixture was heated at 500 °C for one day in order to decompose H3BO3 and CdCO3. Second, the resulting mixture was further heated for one day at 1200 °C until a transparent and clear melt was formed. Third, the melt was allowed to cool slowly (3 °C h-1) to the final crystallization temperature (1100 °C). Finally, the obtained mixture was quenched to room temperature. Colorless, transparent crystals were obtained for structure determination. After proper structural analysis, pure powder samples of Cd4YbO(BO3)3 were obtained in quantitative yield through the solid-state reactions from a stoichiometric mixture of CdCO3, H3BO3 and Yb2O3 at 950 °C for 5 days.",
+        "reactions": [
+            {
+                "precursors": ["CdCO3", "H3BO3", "Yb2O3"],
+                "additives": [],
+                "target": "Cd4YbO(BO3)3",
+                "reaction_type": "solid-state"
+            }   
+        ]
+    },
+    {
+        "id": 11,
+        "text": "Perovskite nanosheets were prepared by delaminating layered perovskites according to previously described procedures. (-22, 23) The starting material KCa2Nb3O10, prepared by a solid-state reaction, was converted into a protonic form, HCa2Nb3O10 1.5H2O, in HNO3 solution. A colloidal suspension of Ca2Nb3O10 nanosheets was synthesized by delaminating HCa2Nb3O10 1.5H2O, with tetrabutylammonium hydroxide solution (TBAOH). Sr2Nb3O10, Ca2Ta3O10, and Sr2Ta3O10 nanosheets were also synthesized by delaminating layered perovskites (KSr2Nb3O10, KCa2Ta3O10, and KSr2Ta3O10).",
+        "reactions": [
+            {
+              "precursors": ["KCa2Nb3O10"],
+              "additives": ["HNO3"],
+              "target": "HCa2Nb3O10 1.5H2O",
+              "reaction_type": "others"
+            },
+            {
+                "precursors": ["HCa2Nb3O10 1.5H2O"],
+                "additives": ["TBAOH"],
+                "target": "Ca2Nb3O10",
+                "reaction_type": "others"
+            },
+            {
+                "precursors": ["KSr2Nb3O10"],
+                "additives": ["TBAOH"],
+                "target": "Sr2Nb3O10",
+                "reaction_type": "others"
+            },
+            {
+                "precursors": ["KCa2Ta3O10"],
+                "additives": ["TBAOH"],
+                "target": "Ca2Ta3O10",
+                "reaction_type": "others"
+            },
+            {
+                "precursors": ["KSr2Ta3O10"],
+                "additives": ["TBAOH"],
+                "target": "Sr2Ta3O10",
+                "reaction_type": "others"
+            }
+        ]
+    },
+    {
+        "id": 12,
+        "text": "Polycrystalline LiFeP2O7 was synthesized by solid-state methods. Stoichiometric amounts of LiH2PO4 (Alfa Aesar, 97%), Fe2O3 (Fisher Scientific, Certified), and NH4H2PO4 (Alfa Aesar, 98.0%) were ground thoroughly, packed tightly in a platinum crucible, and heated to 200 °C for 10 h to decompose ammonium dihydrogen phosphate, and then 600 °C for 20 h and 850 °C for 20 h with intermittent regrindings. The purity of polycrystalline LiFeP2O7 was confirmed by powder XRD (see Figure S1).",
+        "reactions": [
+            {
+                "precursors": ["LiH2PO4", "Fe2O3", "NH4H2PO4"],
+                "additives": [],
+                "target": "LiFeP2O7",
+                "reaction_type": "solid-state"
+            }
+        ]
+    }
+  ]
+}

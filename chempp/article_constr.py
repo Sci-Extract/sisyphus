@@ -15,6 +15,16 @@ from .article import (
 from .section_extr import *
 
 
+reference_tag_pattern = re.compile(r'[\[\(]?\d+([,-]\s?\d+)*[\]\)]?') # to match reference tags like [1], (1), [1, 2], (1, 2), [1-3], (2,9,10-11), etc.
+def get_reference_tag(tag):
+    """called by BeautifulSoup.find_all"""
+    if tag.name != 'a':
+        return False
+    if re.search('fig', tag.text, re.I):
+        return False
+    return bool(reference_tag_pattern.search(tag.text))
+
+
 class ArticleFunctions:
     def __init__(self):
         pass
@@ -25,6 +35,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'nature'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         head = soup.head
@@ -90,6 +102,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'wiley'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         title = soup.find_all('title')
@@ -141,6 +155,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'rsc'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         head = soup.head
@@ -186,6 +202,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'springer'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         head = soup.head
@@ -286,6 +304,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'acs'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         head = soup.head
@@ -394,6 +414,8 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'aaas'
+        ref_tags = soup.find_all(get_reference_tag)
+        [ref_tag.decompose() for ref_tag in ref_tags]
 
         # --- get title ---
         head = soup.head
@@ -433,7 +455,6 @@ class ArticleFunctions:
         article_component_check = ArticleComponentCheck()
         article.doi = doi
         article.publisher = 'elsevier'
-
         ori_txt = root.findall(r'{http://www.elsevier.com/xml/svapi/article/dtd}originalText')[0]
         doc = ori_txt.findall(r'{http://www.elsevier.com/xml/xocs/dtd}doc')[0]
 

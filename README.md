@@ -74,3 +74,6 @@ chain_without_writer = filter + extractor + validator + print_results
 ## Future development
 Since the object of extraction is quite variaty, ranging from chem/physi properties to chemical reactions. It's hard to define a googd pipeline for a new task without futher tuning. For example, If I want to extract solid-state inorganic reactions from paper, for the prompt chaining method (which is now implemented by sisyphus), one could think that create a classification module and then the extraction module (module is an abstraction of LLM program). To achieve a promising output, every component needed to maintain in order to coordinate with each other, so, a lot of prompt engineering and expert knowledge required. It was brittle in other words.
 DSPy is a tool to systematically to create a LLM program, it's do not require any prompt (well, mostly). Breifly, it's a tool to easily create promgram and make it to the best suite out of box.
+
+## Known issue
+Parsed articles which from elsevier publisher are failed to get rid of the reference tag. Others works fine.
