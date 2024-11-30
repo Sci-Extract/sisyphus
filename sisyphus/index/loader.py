@@ -28,6 +28,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
 encoding = tiktoken.get_encoding('cl100k_base')
+HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 
 # region loader
 class Loader(BaseLoader):
@@ -38,15 +39,15 @@ class Loader(BaseLoader):
 
 class ArticleLoader(Loader):
     # TODO: load table
-    """convert article.html to langchain `Document` object
-    
+    """Load from article.html files, convert text into langchain `Document` object
+        - NOTE: must contain 'source' in metadata fields, others is configurable.
     presently not considering table
     """
 
     def __init__(self, file_path: str):
         super().__init__(file_path)
         self.file_name = file_path.split(os.sep)[-1]
-        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), content_title=(str, ""), section_title=(str, ""), title=(str, ...))
+        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), sub_titles=(str, ...), title=(str, ...))
 
     async def alazy_load(self) -> AsyncIterator[Document]:
         async with aiofiles.open(self.file_path, encoding='utf8') as file:
@@ -76,31 +77,25 @@ class ArticleLoader(Loader):
             if child.name == 'p':
                 yield Document(
                     page_content=child.text.strip('\n '),
-                    metadata=dict(self.metadata(source=self.file_name, doi=doi, content_title='abstract', title=title)),
+                    metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles='Abstract', title=title)),
                 )
 
-    def get_sections(self, soup: bs, title: str, doi):
-        """
-        Get rest sections.
-        """
-        content_title, section_title =  "", ""
-        content_title_i, section_title_i = 0, 0
-        for i, child in enumerate(soup.find(id='sections')):
-            if child.name == 'h2':
-                content_title = child.text.strip('\n ')
-                content_title_i = i
-            elif child.name == 'h3':
-                section_title = child.text.strip('\n ')
-                section_title_i = i
+    def get_sections(self, soup: bs, title: str, doi: str):
+        title_hierarchy = ["" for _ in range(len(HEADING_TAGS))] # initialize correspond title for each heading tag
+        for child in soup.find(id='sections'):
+            if child.name in HEADING_TAGS:
+                title_index = HEADING_TAGS.index(child.name)
+                title_hierarchy[title_index] = child.text.strip('\n ')
+                title_hierarchy[title_index + 1:] = [""] * (len(HEADING_TAGS) - title_index - 1)
             elif child.name == 'p':
-                if content_title_i > section_title_i: # scenario like content title "3 characterization" followed by "2.3 procedure"
-                    section_title = ""
+                sub_titles = '/'.join(filter(None, title_hierarchy))
                 chunks = self.chunk_text(child.text.strip('\n '))
                 for chunk in chunks:
                     yield Document(
                         page_content=chunk,
-                        metadata=dict(self.metadata(source=self.file_name, doi=doi, content_title=content_title, section_title=section_title, title=title)),
+                        metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles=sub_titles, title=title))
                     )
+
 
     def chunk_text(self, text) -> list[str]:
         """

@@ -37,14 +37,26 @@ def extend_fields(sql_model: SQLModel, pydantic_model: BaseModel) -> SQLModel:
     return create_model('ResultBase', __base__=sql_model, **field_defs)
 
 
-def doc_getter(engine, sql_table: SQLModel):
+def doc_getter(engine, sql_table: SQLModel, with_abstract: bool = False):
     """get doc using its source, always return one doc"""
 
     def get_article(source):
         with Session(bind=engine) as session, session.begin():
             result = session.exec(text(f"SELECT page_content, meta from document WHERE json_extract(meta, '$.source') = '{source}'")).all() # TODO: find a solution using orm, which is more generalizable, ^_^ I hate sql.
             assert result, f'not find given {source}'
-            documents = [Document(page_content=res[0], metadata=json.loads(res[1])) for res in result]
+            if not with_abstract:
+                documents = [Document(page_content=res[0], metadata=json.loads(res[1])) for res in result]
+            else:
+                page_meta_pairs = [(res[0], json.loads(res[1])) for res in result]
+                abstract = ''
+                for pair in page_meta_pairs:
+                    if pair[1]['sub_titles'] == 'Abstract':
+                        abstract = pair[0]
+                        break
+                assert abstract, f'not find abstract for {source}, you may not have sub_titles field in your database or the abstract of {source} is absent' # for testing, comment this when in production
+                for pair in page_meta_pairs:
+                    pair[1].update(abstract=abstract)
+                documents = [Document(page_content=res[0], metadata=res[1]) for res in page_meta_pairs]
         return documents
 
     return get_article
@@ -120,7 +132,7 @@ class DocDB(DB):
         )
 
         class Doc(NewDocBase, table=True):
-            __tablename__ = 'document'
+            __tablename__ = 'documents'
 
         return Doc
 
@@ -128,9 +140,9 @@ class DocDB(DB):
         """invocate `SQLModel.metadata.create_all`"""
         self.NewBase.metadata.create_all(self.engine)
 
-    def get(self, source):
+    def get(self, source, with_abstract=False):
         """get article using correspond source name"""
-        getter = doc_getter(self.engine, self.Document)
+        getter = doc_getter(self.engine, self.Document, with_abstract)
         return getter(source)
 
     def save_texts(self, texts: list[str], metadatas: list[dict[str]]):

@@ -85,6 +85,7 @@ class Filter(BaseElement):
         db: Union[chroma.Chroma, DocDB],
         query: Optional[str] = None,
         filter_func: Optional[Callable[[], bool]] = None,
+        with_abstract: bool = False,
     ):
         """
         create filter
@@ -97,10 +98,13 @@ class Filter(BaseElement):
             used for semantic search, by default None
         filter_func : Optional[Callable], optional
             other customize function, by default None
+        with_abstract : bool, optional
+            contain abstract, not work for vector database. With this setting to True, you can access by abstract attr of the output docs, by default False
         """
         self.db = db
         self.query = query
         self.filter_func = filter_func
+        self.with_abstract = with_abstract
 
     def locate(self, file_name) -> list[Document]:
         """select list of `Document` object in an article based on creterions, e.g., semantic similarity or use all.
@@ -120,7 +124,7 @@ class Filter(BaseElement):
                 docs = self._convert_chroma_result_to_document(results)
             elif isinstance(self.db, DocDB):
                 self.db: DocDB
-                docs = self.db.get(source=file_name)
+                docs = self.db.get(source=file_name, with_abstract=self.with_abstract)
             else:
                 raise NotImplementedError('use chroma or DocDB!')
         return docs
