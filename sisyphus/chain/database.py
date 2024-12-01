@@ -42,7 +42,7 @@ def doc_getter(engine, sql_table: SQLModel, with_abstract: bool = False):
 
     def get_article(source):
         with Session(bind=engine) as session, session.begin():
-            result = session.exec(text(f"SELECT page_content, meta from document WHERE json_extract(meta, '$.source') = '{source}'")).all() # TODO: find a solution using orm, which is more generalizable, ^_^ I hate sql.
+            result = session.exec(text(f"SELECT page_content, meta from documents WHERE json_extract(meta, '$.source') = '{source}'")).all() # TODO: find a solution using orm, which is more generalizable, ^_^ I hate sql.
             assert result, f'not find given {source}'
             if not with_abstract:
                 documents = [Document(page_content=res[0], metadata=json.loads(res[1])) for res in result]
