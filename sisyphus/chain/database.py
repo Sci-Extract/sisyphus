@@ -310,6 +310,22 @@ class ResultDB(DB):
             **field_defs
         )
         return result_model
+    
+    def load_as_json(self, with_doi: bool, limit: Optional[int] = None) -> list[dict]:
+        """load result as defined pydantic model in dict format"""
+        from ..utils.helper_functions import field_getter
+        datas = []
+        with Session(self.engine) as session, session.begin():
+            stmt = select(self.Result, self.Document).join(self.Document).limit(limit)
+            results = session.exec(stmt)
+            for result, document in results:
+                fields = self.created_models.keys()
+                pydantic_json = {field: field_getter(field)(result) for field in fields}
+                if with_doi:
+                    doi = document.meta['doi']
+                    pydantic_json.update(doi=doi)
+                datas.append(pydantic_json)
+        return datas
 
 
 NewBase = get_new_sql_base()
