@@ -5,10 +5,9 @@ import os
 import json
 from typing import Optional
 from contextvars import ContextVar
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 import dspy
-from tqdm import tqdm
 from pydantic import BaseModel, Field
 
 from sisyphus.chain import Filter, Writer
@@ -23,7 +22,7 @@ dspy.configure(lm=lm)
 # ARTICLE = 'inorganic_dspy'
 ARTICLE = '40_with_good_title'
 # TARGET = 'dspy_inorganic_4o_mini'
-TARGET = 'test_10.1002&sol;adfm.201300663'
+TARGET = 'reaction_10_test'
 
 def load_json(file_path):
     with open(file_path, 'r', encoding='utf8') as f:
@@ -121,24 +120,15 @@ fs_abbrev_getter = dspy.LabeledFewShot(k=2).compile(
 )
 
 exp_section_pattern = re.compile(r'\b(?:experiment(?:al|s|ing|ed)?|synthesis(?:es|ing|ed)?|preparation(?:s|al|ed|ing)?|process(?:es|ion|ing)?|method(?:s)?)\b', re.I)
+def filter_with_kw(doc):
+    return bool(exp_section_pattern.search(doc.metadata['sub_titles']))
 
 article_db = get_plain_articledb(ARTICLE)
-article_getter = Filter(article_db, with_abstract=True)
+article_getter = Filter(article_db, filter_func=filter_with_kw, with_abstract=True)
 result_db = get_create_resultdb(TARGET, Reaction)
 
-def return_valid(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        return result if result else None
-    return wrapper
+from sisyphus.utils.helper_functions import return_valid
 
-@return_valid
-def customized_filter(documents):
-    docs = []
-    for doc in documents:
-        if exp_section_pattern.search(doc.metadata['sub_titles']):
-            docs.append(doc)
-    return docs
 
 cot = ExtractReactionWithType()
 cot.load('compiled_extractor.json')
@@ -168,13 +158,9 @@ def extract(doc):
         reactions = prediction.reactions
         return reactions
 
-@return_valid
-def customized_extractor(docs):
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        results = executor.map(extract, docs)
-    zipped_results = filter(lambda x: x[1], zip(docs, results))
-    doc_infos = [DocInfo(doc=doc, info=result) for doc, result in zipped_results]
-    return doc_infos
+from sisyphus.chain.customized_elements import customized_extractor
+
+my_extractor = customized_extractor(extract, 'thread', 5)
 
 @return_valid
 def get_abbrevs(docinfos: list[DocInfo]):
@@ -243,15 +229,12 @@ def customized_validator(docinfos):
     return replaced_docinfos
 
 # chain = article_getter + customized_filter + customized_extractor + get_abbrevs + customized_validator + Writer(result_db=result_db)
-chain = article_getter + customized_filter + customized_extractor + Writer(result_db=result_db)
-files = os.listdir('articles_processed')
+chain = article_getter + my_extractor + Writer(result_db=result_db)
 
 import time
 start = time.time()
-chain.compose("10.1002&sol;adfm.201300663.html")
-# with ThreadPoolExecutor(max_workers=5) as executor:
-#     futures = [executor.submit(chain.compose, file) for file in files]
-#     for future in tqdm(as_completed(futures), total=len(files)):
-#         future.result()
-# end = time.time()
-# print(f'time elapsed: {end - start:.2f}s')
+# chain.compose("10.1002&sol;adfm.201300663.html")
+from sisyphus.chain.chain_elements import run_chains_with_extarction_history_multi_threads
+run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'reaction_extraction_test', extract_nums=10)
+end = time.time()
+print('time:', end - start)

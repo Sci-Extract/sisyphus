@@ -5,44 +5,23 @@ total: 3541 results
 take 90 from 1-1000 dois
 """
 import re
-import os
 from typing import Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import ujson
 import dspy
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
+from tenacity import retry, retry_if_exception, stop_after_attempt
 
-from sisyphus.chain.chain_elements import Filter, Writer, DocInfo
-from sisyphus.utils.helper_functions import get_plain_articledb, get_create_resultdb
+import sisyphus.patch.dspy_patch
+from sisyphus.chain.chain_elements import Filter, Writer, run_chains_with_extarction_history_multi_threads
+from sisyphus.chain.customized_elements import customized_extractor
+from sisyphus.utils.helper_functions import get_plain_articledb, get_create_resultdb, return_valid
 
 # config
 lm = dspy.LM('openai/gpt-4o-mini', cache=False)
 dspy.configure(lm=lm)
 file_db = 'pvc_90'
-result_db = 'pvc_90_result'
-
-# patch
-def custom_save(self, path, save_field_meta=False):
-    def convert_to_dict(obj):
-        if isinstance(obj, BaseModel):
-            return obj.model_dump()
-        elif isinstance(obj, dict):
-            return {k: convert_to_dict(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_to_dict(i) for i in obj]
-        elif isinstance(obj, dspy.Example):
-            d = dict(obj)
-            return convert_to_dict(d)
-        else:
-            return obj
-
-    state = self.dump_state(save_field_meta)
-    state = convert_to_dict(state)
-    with open(path, "w") as f:
-        f.write(ujson.dumps(state, indent=2))
-
-dspy.Module.save = custom_save
+result_db = 'pvc_90_result_less_code'
 
 def read_examples(path):
     with open(path, 'r') as f:
@@ -79,33 +58,25 @@ def critisize(gold, pred, trace=None):
     return dspy.ChainOfThought(signature=Critical)(gold=gold_sc, pred=pred_sc).answer
  
 examples = read_examples('curated_pce_examples.json')
-# zero_shot_extractor = dspy.ChainOfThought(signature=PCE)
-# prediction = zero_shot_extractor(context=examples[0]['context']).solar_cells
-# print(prediction)
-
-# compile first
-# optimizer = dspy.BootstrapFewShot(metric=critisize, max_bootstrapped_demos=1)
-# compiled_extractor = optimizer.compile(dspy.ChainOfThought(signature=PCE), trainset=examples)
-# compiled_extractor.save('compiled_pce_extractor.json')
 
 # load compiled extractor
 compiled_extractor = dspy.ChainOfThought(PCE)
 compiled_extractor.load('compiled_pce_extractor.json')
 
+def my_filter(document):
+    if match_pce_regex.search(document.metadata['sub_titles']):
+        return True
+    return False
+
 # integrated with sisyphus pipeline
 plaindb = get_plain_articledb(file_db)
-filter_ = Filter(db=plaindb, with_abstract=True)
+filter_ = Filter(db=plaindb, with_abstract=True, filter_func=my_filter)
 writer = Writer(get_create_resultdb(result_db, SolarCell))
 classifier = dspy.ChainOfThought(Classifier)
 match_pce_regex = re.compile(r'result|introduction', re.I)
 
-def return_valid(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        return result if result else None
-    return wrapper
-
 @return_valid
+# @retry(retry=retry_if_exception(ValidationError), stop=stop_after_attempt(2), retry_error_callback=lambda r: None)
 def extract(doc):
     if classifier(context=doc).answer:
         text = doc.page_content
@@ -115,31 +86,7 @@ def extract(doc):
         formatted_text = f'title: {title}\nabstract: {abstract}\nsection title: {sub_titles}\ntext: {text}'
         return compiled_extractor(context=formatted_text).solar_cells
 
-@return_valid
-def customized_filter(documents):
-    docs = []
-    for doc in documents:
-        if match_pce_regex.search(doc.metadata['sub_titles']):
-            docs.append(doc)
-    return docs
+extractor = customized_extractor(my_extractor=extract, mode='thread', concurrent_number=5)
 
-def customized_extractor(docs):
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        results = executor.map(extract, docs)
-    zipped_results = filter(lambda x: x[1], zip(docs, results))
-    doc_infos = [DocInfo(doc=doc, info=result) for doc, result in zipped_results]
-    return doc_infos
-
-chain = filter_ + customized_filter + customized_extractor + writer
-files = os.listdir('articles_processed')
-
-from tqdm import tqdm
-import time
-start = time.time()
-files.pop(0)
-with ThreadPoolExecutor(max_workers=5) as executor:
-    futures = [executor.submit(chain.compose, file) for file in files]
-    for future in tqdm(as_completed(futures), total=len(files)):
-        future.result()
-end = time.time()
-print(f'time elapsed: {end - start:.2f}s')
+chain = filter_ + extractor + writer
+run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', batch_size=10, namespace='pvc_90', extract_nums=3)

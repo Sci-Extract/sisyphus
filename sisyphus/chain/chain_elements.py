@@ -15,6 +15,7 @@ import glob
 import logging
 import inspect
 import logging.config
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Callable, Union, NamedTuple, Any
 
 import tqdm
@@ -43,6 +44,7 @@ from sisyphus.chain.database import (
     ResultDB,
     ExtractManager,
     add_manager_callback,
+    aadd_manager_callback,
 )
 from sisyphus.utils.run_bulk import bulk_runner
 
@@ -84,7 +86,7 @@ class Filter(BaseElement):
         self,
         db: Union[chroma.Chroma, DocDB],
         query: Optional[str] = None,
-        filter_func: Optional[Callable[[], bool]] = None,
+        filter_func: Optional[Callable[[Document], bool]] = None,
         with_abstract: bool = False,
     ):
         """
@@ -450,7 +452,7 @@ async def asupervisor(chain: Chain, directory: str, batch_size: int):
 
 
 async def run_chains_with_extraction_history(
-    chain: Chain, directory: str, batch_size: int, namespace: str
+    chain: Chain, directory: str, batch_size: int, namespace: str, extract_nums: Optional[int] = None
 ):
     """run multiple chains asynchronously with extraction history.
     Args:
@@ -458,6 +460,8 @@ async def run_chains_with_extraction_history(
     """
     file_name_full = glob.glob(os.path.join(directory, '*.html'))
     file_names = [name.split(os.sep)[-1] for name in file_name_full]
+    if extract_nums:
+        file_names = file_names[:extract_nums]
 
     # skip extracted ones
     manager = ExtractManager(
@@ -473,7 +477,7 @@ async def run_chains_with_extraction_history(
     if not file_names:
         raise ValueError('no file needed to be extracted')
     # register manager callback
-    runnable = add_manager_callback(chain.acompose, manager)
+    runnable = aadd_manager_callback(chain.acompose, manager)
 
     await bulk_runner(
         task_producer=file_names,
@@ -481,3 +485,33 @@ async def run_chains_with_extraction_history(
         batch_size=batch_size,
         runnable=runnable,
     )
+
+def run_chains_with_extarction_history_multi_threads(
+    chain: Chain, directory: str, batch_size: int, namespace: str, extract_nums: Optional[int] = None
+):
+    """run multiple chains with extraction history in multi-threads"""
+    file_name_full = glob.glob(os.path.join(directory, '*.html'))
+    file_names = [name.split(os.sep)[-1] for name in file_name_full]
+    if extract_nums:
+        file_names = file_names[:extract_nums]
+        
+    # skip extracted ones
+    manager = ExtractManager(
+        namespace,
+        db_url='sqlite:///' + os.path.join(RECORD_LOCATION, RECORD_NAME),
+    )
+    manager.create_schema()
+    exists = manager.exists(file_names)
+    file_names = [
+        file_name for file_name, exist in zip(file_names, exists) if not exist
+    ]
+    logger.debug('total processed files: %d', len(file_names))
+    if not file_names:
+        raise ValueError('no file needed to be extracted')
+    # register manager callback
+    runnable = add_manager_callback(chain.compose, manager)
+
+    with ThreadPoolExecutor(max_workers=batch_size) as executor:
+        futures = [executor.submit(runnable, file_name) for file_name in file_names]
+        for future in tqdm.tqdm(as_completed(futures), total=len(file_names)):
+            future.result()

@@ -131,4 +131,25 @@ def create_example_messages(examples: list[tuple[str, list[BaseModel]]]):
     for input_, tool_calls in examples:
         messages.extend(tool_example_to_messages({'input': input_, 'tool_calls': tool_calls}))
     return messages
-    
+
+def field_getter(attr):
+    """To get specified field from result database
+    - usage:
+    >>> field_getter(<attritbute_name>)(<result_object>) -> <list or single value>
+    """
+    from operator import attrgetter
+    def wrapper(obj):
+        operator_ = attrgetter(attr)
+        if not operator_(obj):
+            return None
+        if isinstance(operator_(obj), list):
+            return [operator_(i) for i in operator_(obj)]
+        return operator_(operator_(obj))
+    return wrapper
+
+def return_valid(func):
+    """A decorator to return None if the result is empty"""
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        return result if result else None
+    return wrapper

@@ -357,11 +357,19 @@ class ExtractManager:
         await asyncio.to_thread(self.update, key)
 
 
-def add_manager_callback(func: Callable, manager: ExtractManager):
+def aadd_manager_callback(func: Callable, manager: ExtractManager):
     """wrap a callable to use extract manager, must be a coroutine func!"""
     @wraps(func)
     async def wrapper(key):
         r = await func(key)
         await manager.aupdate(key)
+        return r
+    return wrapper
+
+def add_manager_callback(func: Callable, manager: ExtractManager):
+    @wraps(func)
+    def wrapper(key):
+        r = func(key)
+        manager.update(key)
         return r
     return wrapper
