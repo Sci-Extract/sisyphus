@@ -1,0 +1,304 @@
+DOI: 10.1021/cg3001587
+Reactions in paper:
+0.5 Fe2O3 + 1 LiH2PO4 + 1 NH4H2PO4 == 1 LiFeP2O7 + 2.5 H2O + 1 NH3
+Reactions in work:
+0.5 Fe2O3 + 1 LiH2PO4 + 1 NH4H2PO4 == 1 LiFeP2O7 + 2.5 H2O + 1 NH3
+ -> LiFeP2O7
+
+DOI: 10.1039/c5ce02461g
+Reactions in paper:
+2 Fe(NO3)3·9H2O + 1 Zn(NO3)2·6H2O + 8 [OH-] == 1 ZnFe2O4 + 28 H2O + 8 [NO3-]
+Reactions in work:
+2 Fe(NO3)3·9H2O + 1 Zn(NO3)2·6H2O + 8 [OH-] == 1 ZnFe2O4 + 28 H2O + 8 [NO3-]
+ZnFe2O4 nanoparticles -> ZnFe2O4
+
+DOI: 10.1039/c3cy00014a
+Reactions in paper:
+1 SrCO3 + 1 TiO2 == 1 SrTiO3 + 1 CO2
+Reactions in work:
+1 SrCO3 + 1 TiO2 == 1 SrTiO3 + 1 CO2 ; target SrTiO3 with additives Na via Na2CO3
+
+DOI: 10.1002/aenm.201200833
+Reactions in paper:
+1.5 Li2CO3 + 0.5 V2O5 == 1 Li3VO4 + 1.5 CO2
+Reactions in work:
+1.5 Li2CO3 + 0.5 V2O5 == 1 Li3VO4 + 1.5 CO2
+
+DOI: 10.1021/nn101453v
+Reactions in paper:
+1 HCa2Nb3O10·1.5H2O + 0.25 O2 == 1 Ca2Nb3O10 + 2 H2O
+Reactions in work:
+ -> KCa2Nb3O10
+
+DOI: 10.1016/j.jnucmat.2009.04.010
+Reactions in paper:
+2 Li2CO3 + 1 SiO2 == 1 Li4SiO4 + 2 CO2
+Reactions in work:
+2 Li2CO3 + 1 SiO2 == 1 Li4SiO4 + 2 CO2
+4 LiOH·H2O + 1 SiO2 == 1 Li4SiO4 + 6 H2O
+
+DOI: 10.1016/j.jnucmat.2013.02.060
+Reactions in paper:
+1 Li2CO3 + 1 TiO2 == 1 Li2TiO3 + 1 CO2
+Reactions in work:
+LiOH·H2O + H2TiO3 -> LMT with additional Li
+1 Li2CO3 + 1 TiO2 == 1 Li2TiO3 + 1 CO2
+lithium metatitanate powder + binder -> LMT pebbles
+
+DOI: 10.1016/j.elecom.2012.03.014
+Reactions in paper:
+1.5 Li2CO3 + 1.5 Nd2O3 + 2 WO3 == 1 Li3Nd3W2O12 + 1.5 CO2
+Reactions in work:
+1.5 Li2CO3 + 1.5 Nd2O3 + 2 WO3 == 1 Li3Nd3W2O12 + 1.5 CO2
+
+DOI: 10.1016/j.apcatb.2007.11.020
+Reactions in paper:
+1 Cu(NO3)2 + 2 Fe(NO3)3 + 8 [OH-] == 1 CuFe2O4 + 4 H2O + 8 [NO3-]
+Reactions in work:
+1 Cu(NO3)2 + 2 Fe(NO3)3 + 8 [OH-] == 1 CuFe2O4 + 4 H2O + 8 [NO3-]
+1 CuO + 1 Fe2O3 == 1 CuFe2O4
+CuFe2O4 -> Cu + Fe3O4
+
+DOI: 10.1039/c6cy01666a
+Reactions in paper:
+1 Nb2O5 + 1 SnO == 1 SnNb2O6
+Reactions in work:
+1 Nb2O5 + 0.5 O2 + 1 Sn == 1 SnNb2O6
+1 Nb2O5 + 1 O2 + 2 Sn == 1 Sn2Nb2O7
+1 Nb2O5 + 1 SnO == 1 SnNb2O6
+1 Nb2O5 + 2 SnO == 1 Sn2Nb2O7
+1 Nb2O5 + 0.333 Sn3O2(OH)2 == 1 SnNb2O6 + 0.333 H2O
+
+DOI: 10.1002/adfm.201201684
+Reactions in paper:
+2 Li2CO3 + 5 TiO2 == 1 Li4Ti5O12 + 2 CO2
+Reactions in work:
+2 Li2CO3 + 5 TiO2 == 1 Li4Ti5O12 + 2 CO2
+
+DOI: 10.1039/b915056k
+Reactions in paper:
+1 Bi2SrNa2Nb4O9 + 3 O2 == 1 Bi2SrNa2Nb4O15
+Reactions in work:
+2 Ca + 2 O2 + 1 Pb == 1 Ca2PbO4
+
+DOI: 10.1039/c4ce01587h
+Reactions in paper:
+1 Cu2O + 1 Nb2O5 == 1 Cu2O-M2O5; M = Nb
+1 Cu2O + 4 Nb2O5 == 1 Cu2Nb8O21
+Reactions in work:
+1 PbO + 1 TiO2 == 1 PbTiO3
+Cu(I) + Nb2O5 -> CuNb3O8
+Cu(I) + Nb2O5 -> Cu2Nb8O21
+Cu3Ta7O19 + PbCl2 -> Pb1.5Ta7O19
+A2Ta4O11 + PbCl2 -> PbTa4O11
+A2Ta4O11 + PbCl2 -> PbTa2O6
+A2Ta4O11 + PbCl2 -> Pb3Ta4O13
+Ln (rare-earth elements) + Fe -> LnFeO3
+
+DOI: 10.1002/aic.13882
+Reactions in paper:
+1 Fe2O3 + 1 NiO == 1 NiFe2O4
+Reactions in work:
+1 Fe2O3 + 1 NiO == 1 NiFe2O4
+H2O -> H2, O2
+
+DOI: 10.1016/j.apcatb.2014.04.041
+Reactions in paper:
+0.6 Ba(NO3)2 + 0.4 La(NO3)3 + 0.2 Mg(NO3)2 + 0.8 Mn(NO3)2 + 0.4 O2 + 4.4 [OH-] == 1 La0.4Ba0.6Mn0.8Mg0.2O3 + 2.2 H2O + 4.4 [NO3-]
+Reactions in work:
+0.6 Ba(NO3)2 + 0.4 La(NO3)3 + 0.2 Mg(NO3)2 + 0.8 Mn(CH3COO)2 + 0.4 O2 + 4.4 [OH-] == 1 La0.4Ba0.6Mn0.8Mg0.2O3 + 2.2 H2O + 1.6 [CH3COO-] + 2.8 [NO3-]
+
+DOI: 10.1021/cg301834x
+Reactions in paper:
+0.99 LiOH·3H2O + 1 NiOH + 0.502 O2 == 1 Li0.99NiO2 + 3.965 H2O
+Reactions in work:
+transition-metal hydroxides -> transition-metal oxides
+LiOH·H2O + transition-metal hydroxide nanoplates -> lithium-ion intercalation materials
+Ni(NO3)2 6H2O -> Ni(OH)2
+Co(NO3)2 6H2O -> Co(OH)2
+Ni2+ + Co2+ -> Ni(OH)2
+Mn2+ -> Mn(OH)2
+Ni(OH)2 -> NiO
+Co(OH)2 -> Co3O4
+cobalt-substituted nickel hydroxide -> NiCo2O4
+cobalt-substituted nickel hydroxide + LiOH 3H2O -> Li(Ni0.6Co0.4)O2
+0.99 LiOH·3H2O + 1 NiOH + 0.502 O2 == 1 Li0.99NiO2 + 3.965 H2O
+
+DOI: 10.1016/j.apcatb.2009.01.013
+Reactions in paper:
+4 K2CO3 + 4 TiO2 == 1 K8(TiO3)4 + 4 CO2
+1 K2CO3 + 4 TiO2 == 1 K2Ti4O9 + 1 CO2
+6 K2CO3 + 6 TiO2 == 1 K12(TiO3)6 + 6 CO2
+1 K2CO3 + 6 TiO2 == 1 K2Ti6O13 + 1 CO2
+Reactions in work:
+1 K2CO3 + 4 TiO2 == 1 K2Ti4O9 + 1 CO2
+1 K2CO3 + 6 TiO2 == 1 K2Ti6O13 + 1 CO2
+
+DOI: 10.1016/j.jpcs.2005.02.003
+Reactions in paper:
+1 BaS + 1 Ga2S3 == 1 BaGa2S4 ; target BaGa2S4 with additives Eu via Eu2O3, EuS ; target BaGa2S4 with additives Eu via Eu2O3
+Reactions in work:
+1 BaS + 1 Ga2S3 == 1 BaGa2S4 ; target BaGa2S4 with additives Eu2+ via EuF3
+
+DOI: 10.1016/j.jpcs.2018.03.005
+Reactions in paper:
+0.5 (NH4)10H2(W2O7) + 1.25 O2 + 1 ZnO == 1 ZnWO4 + 3 H2O + 5 NH3
+Reactions in work:
+Zn(NO2)3.6H2O + Na2WO4 -> ZnWO4
+Zn(CH3COO)2.2H2O + Na2WO4 -> ZnWO4
+ZnSO4.7H2O + Na2WO4 -> ZnWO4
+ZnCl2 + Na2WO4 -> ZnWO4
+0.5 (NH4)10H2(W2O7) + 1.25 O2 + 1 ZnO == 1 ZnWO4 + 3 H2O + 5 NH3
+
+DOI: 10.1002/adfm.201101123
+Reactions in paper:
+2 Li2CO3 + 5 TiO2 == 1 Li4Ti5O12 + 2 CO2
+Reactions in work:
+PI-b-PEO + titanium tetraisopropoxide + lithium ethoxide + oxalic acid -> Li4Ti5O12
+PI-b-PEO + TTIP + lithium ethoxide + oxalic acid -> mesoporous Li4Ti5O12 (Meso-LTO-C)
+2 Li2CO3 + 5 TiO2 == 1 Li4Ti5O12 + 2 CO2
+
+DOI: 10.1002/chem.201503839
+Reactions in paper:
+2 MoO3 + 0.75 O2 + 1 Th(NO3)·H2O + 1 [OH-] == 1 ThMo2O8 + 1.5 H2O + 1 [NO3-]
+Reactions in work:
+Th(NO3)5H2O + MoO3 -> ThMo2O8
+2 MoO3 + 1 Th(NO3)4·5H2O + 4 [OH-] == 1 ThMo2O8 + 7 H2O + 4 [NO3-]
+
+DOI: 10.1021/acs.cgd.5b01649
+Reactions in paper:
+3 Na2CO3 + 4 TeO2 + 6 WO3 == 1 Na6Te4W6O29 + 3 CO2
+Reactions in work:
+3 Na2CO3 + 4 TeO2 + 6 WO3 == 1 Na6Te4W6O29 + 3 CO2
+Na6Te4W6O29 + TeO2 -> Na6Te4W6O29
+
+DOI: 10.1021/cg500293w
+Reactions in paper:
+1 BiOCl + 1 SeO2 == 1 BiSeO3Cl
+Reactions in work:
+1 Bi + 1 Cl + 1.5 O2 + 1 Se == 1 BiSeO3Cl
+6 Bi + 10 Cl + 6 O2 + 4 Se == 1 Bi6(SeO3)4Cl10
+10 Bi + 8 Cl + 18 O2 + 1 Pb + 12 Se == 1 PbBi10(SeO3)12Cl8
+1 BiOCl + 1 SeO2 == 1 BiSeO3Cl
+1.333 Bi2O3 + 3.333 BiCl3 + 4 SeO2 == 1 Bi6(SeO3)4Cl10
+PbO + BiOCl + SeO2 -> PbBi10(SeO3)12Cl8
+1 BiOCl + 1 SeO2 == 1 BiSeO3Cl
+
+DOI: 10.1002/adfm.201500644
+Reactions in paper:
+3 LiOH + 0.5 V2O5 == 1 Li3VO4 + 1.5 H2O
+Reactions in work:
+VO(C5H7O2)2 + LiOH -> Li3VO4 (carbon-encapsulated)
+3 LiOH + 0.5 V2O5 == 1 Li3VO4 + 1.5 H2O
+
+DOI: 10.1021/cg1006204
+Reactions in paper:
+2 CaCO3 + 1.5 Nb2O5 + 0.25 O2 == 1 Ca2Nb3O10 + 2 CO2
+Reactions in work:
+2 CaCO3 + 0.5 K2CO3 + 1.5 Nb2O5 == 1 KCa2Nb3O10 + 2.5 CO2
+
+DOI: 10.1021/nn405246h
+Reactions in paper:
+3 Ca(OH)2 + 2 H3PO4 == 1 Ca3(PO4)2 + 6 H2O
+2.86 Ca(OH)2 + 2 H3PO4 + 0.14 Mg(OH)2 == 1 Ca2.86Mg0.14(PO4)2 + 6 H2O
+Reactions in work:
+Ca(OH)2 + Mg(OH)2 + H3PO4 -> Ca18Mg2(HPO4)2(PO4)12
+10 Ca(OH)2 + 6 H3PO4 == 1 Ca10(PO4)6(OH)2 + 18 H2O
+2 (NH4)2HPO4 + 3 CaCO3 == 1 Ca3(PO4)2 + 3 CO2 + 3 H2O + 4 NH3
+2 (NH4)2HPO4 + 2.86 CaCO3 + 0.14 MgCO3 == 1 Ca2.86Mg0.14(PO4)2 + 3 CO2 + 3 H2O + 4 NH3
+
+DOI: 10.1002/adfm.201303492
+Reactions in paper:
+0.1 Fe2O3 + 1 PbO + 0.1 Ta2O5 + 0.282 TiO2 + 0.318 ZrO2 == 1 Pb(Fe0.5Ta0.5)0.4(Zr0.53Ti0.47)0.6O3
+Reactions in work:
+0.1 Fe2O3 + 1 PbO + 0.1 Ta2O5 + 0.282 TiO2 + 0.318 ZrO2 == 1 Pb(Fe0.5Ta0.5)0.4(Zr0.53Ti0.47)0.6O3
+
+DOI: 10.1021/cm980126j
+Reactions in paper:
+13 BaCO3 + 4 Ni + 4 O2 == 1 R8Ba5Ni4O21 + 13 CO2; R = Ba
+Reactions in work:
+1 BaCO3 + 1 Ni + 0.5 O2 == 1 BaNiO2 + 1 CO2
+BaNiO2+x + R2O3 + BaCO3 -> R8Ba5Ni4O21
+
+DOI: 10.1002/chem.201200536
+Reactions in paper:
+1 Co(NO3)3 + 0.125 O2 + 0.25 Sm2O3 + 0.5 Sr(NO3)2 + 4 [OH-] == 1 Sm0.5Sr0.5CoO3 + 2 H2O + 4 [NO3-]
+0.05 C4H6O4Pd + 0.85 Fe(NO3)3·H2O + 0.6 La(NO3)3·H2O + 0.1 Mn(NO3)2·H2O + 0.138 O2 + 0.4 Sr(NO3)2 + 5.45 [OH-] == 1 La0.6Sr0.4Fe0.85Pd0.05Mn0.1O3 + 4.275 H2O + 0.1 [CH3COO-] + 5.35 [NO3-]
+Reactions in work:
+0.05 C4H6O4Pd + 0.85 Fe(NO3)3·9H2O + 0.6 La(NO3)3·6H2O + 0.1 Mn(NO3)2·6H2O + 0.138 O2 + 0.4 Sr(NO3)2 + 5.45 [OH-] == 1 La0.6Sr0.4Fe0.85Pd0.05Mn0.1O3 + 14.575 H2O + 0.1 [CH3COO-] + 5.35 [NO3-]
+1 Co(NO3)3 + 0.125 O2 + 0.25 Sm2O3 + 0.5 Sr(NO3)2 + 4 [OH-] == 1 Sm0.5Sr0.5CoO3 + 2 H2O + 4 [NO3-]
+
+DOI: 10.1002/aenm.201500440
+Reactions in paper:
+0.5 Li2CO3 + 0.667 Mn3O4 + 0.417 O2 == 1 LiMn2O4 + 0.5 CO2
+0.32 Co(CH3COO)2 + 1.15 Li(CH3COO)·2H2O + 1.53 Mn(CH3COO)2·4H2O + 0.788 O2 + 4.85 [OH-] == 1 Li1.15Co0.32Mn1.53O4 + 10.845 H2O + 4.85 [CH3COO-]
+Reactions in work:
+0.5 Li2CO3 + 0.667 Mn3O4 + 0.417 O2 == 1 LiMn2O4 + 0.5 CO2
+
+DOI: 10.1039/c5cy00979k
+Reactions in paper:
+1 SrCO3 + 1 TiO2 == 1 SrTiO3 + 1 CO2
+Reactions in work:
+Sr(OAc)2 + lactic acid + RhCl3 -> SrTiO3:Rh
+1 SrCO3 + 1 TiO2 == 1 SrTiO3 + 1 CO2 ; target SrTiO3 with additives Rh via Rh2O3
+SrTiO3 + Rh -> SrTiO3:Rh
+
+DOI: 10.1016/j.psep.2017.10.007
+Reactions in paper:
+1 TiO2 + 2 ZnO == 1 2ZnO-TiO2
+Reactions in work:
+1 TiO2 + 2 ZnO == 1 2ZnO-TiO2
+
+DOI: 10.1002/adfm.201300663
+Reactions in paper:
+0.65 Hf + 1-z Ni + z Pt + 0.02 Sb + 0.98 Sn + 0.35 Zr == 1 Hf0.65Zr0.35Ni1-zPtzSn0.98Sb0.02
+Reactions in work:
+No reactions found.
+
+DOI: 10.1016/j.apcatb.2012.04.033
+Reactions in paper:
+0.5 Ag2O + 0.5 Sb2O5 == 1 AgSbO3
+Reactions in work:
+Sb2O5 + AgAc -> AgSbO3
+0.5 Ag2O + 0.5 Sb2O5 == 1 AgSbO3
+
+DOI: 10.1039/c1cy00199j
+Reactions in paper:
+1 Fe(NO3)3 + 1 Y(NO3)3 + 6 [OH-] == 1 YFeO3 + 3 H2O + 6 [NO3-]
+Reactions in work:
+1 Fe(NO3)3·9H2O + 1 Y(NO3)3·6H2O + 6 [OH-] == 1 YFeO3 + 18 H2O + 6 [NO3-]
+
+DOI: 10.1021/cm981011i
+Reactions in paper:
+7 BaCO3 + 1 MoO3 + 2 Nb2O5 == 1 Ba7Nb4MoO20 + 7 CO2
+Reactions in work:
+7 BaCO3 + 1 MoO3 + 2 Nb2O5 == 1 Ba7Nb4MoO20 + 7 CO2
+
+DOI: 10.1039/c4nj01421a
+Reactions in paper:
+4 CdCO3 + 3 H3BO3 + 0.5 Yb2O3 == 1 Cd4YbO(BO3)3 + 4 CO2 + 4.5 H2O
+Reactions in work:
+4 CdCO3 + 3 H3BO3 + 0.5 Yb2O3 == 1 Cd4YbO(BO3)3 + 4 CO2 + 4.5 H2O
+
+DOI: 10.1039/c5cy00128e
+Reactions in paper:
+1 SrCO3 + 1 TiO2 == 1 SrTiO3 + 1 CO2
+0.003 O2 + 0.005 Rh2O3 + 1 SrCO3 + 0.99 TiO2 == 1 SrTi0.99Rh0.01O3 + 1 CO2
+Reactions in work:
+ex-Ca2Nb3O10/K+ + [Pt(NH3)4](OH)2 + [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6 + [Ir(NH3)6]Cl3 + [Rh(NH3)6]Cl3 + [Co(NH3)6]Cl3 -> MOy/ex-Ca2Nb3O10/K+
+0.003 O2 + 0.005 Rh2O3 + 1 SrCO3 + 0.99 TiO2 == 1 SrTi0.99Rh0.01O3 + 1 CO2
+
+DOI: 10.1039/c2ce25672j
+Reactions in paper:
+1 BiOCl + 1 Ca(NO3)2 + 2 [OH-] == 1 CaBiO2Cl + 1 H2O + 2 [NO3-]
+Reactions in work:
+Bi(NO3)3 + KCl -> BiOCl
+1 BiOCl + 1 Ca(NO3)2 + 2 [OH-] == 1 CaBiO2Cl + 1 H2O + 2 [NO3-]
+
+DOI: 10.1021/acs.cgd.6b00081
+Reactions in paper:
+2 BaCO3 + 1 CsNO3 + 1.5 Ta2O5 + 1 [OH-] == 1 CsBa2Ta3O10 + 2 CO2 + 0.5 H2O + 1 [NO3-]
+Reactions in work:
+2 BaCO3 + 1 CsNO3 + 1.5 Ta2O5 + 1 [OH-] == 1 CsBa2Ta3O10 + 2 CO2 + 0.5 H2O + 1 [NO3-]
+CsBa2Ta3O10 -> nitrided CsBa2Ta3O10
+

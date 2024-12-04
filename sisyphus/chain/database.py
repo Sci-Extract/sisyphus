@@ -156,24 +156,7 @@ class DocDB(DB):
             for record in records:
                 session.add(record)
 
-def get_inner_annotation(annotation):
-    """example: Optional[List[str]] -> Optional[str]; str -> str; Optional[str] -> Optional[str]"""
-    if get_origin(annotation) is Union:
-        for anno in get_args(annotation):
-            if anno in [str, int, float, bool]:
-                return annotation
-            elif get_origin(anno) is list:
-                return Optional[get_args(anno)[0]]
-    else:
-        return annotation if get_origin(annotation) is not list else get_args(annotation)[0]
 
-def get_result_field_annotation(annotation, field_table):
-    if get_origin(annotation) is Union:
-        non_none_args = [arg for arg in get_args(annotation) if arg is not None] 
-        return Optional[get_result_field_annotation(non_none_args[0], field_table)] # since sqlmodel does not suppport non-optional union as field type]
-    else:
-        return list[field_table] if get_origin(annotation) is list else field_table
-    
 class ResultDB(DB):
     """provide functionality for creating database, saving data, searching through database"""
 
@@ -181,30 +164,8 @@ class ResultDB(DB):
         self.engine = engine
         self.result_pydantic = result_pydantic
         self.NewBase = get_new_sql_base()
-        self.created_models = self.create_sqlmodel_from_pydantic()
         self.Document, self.Result = self._define_sqltable()
 
-    # def _define_sqltable(self) -> tuple[SQLModel, SQLModel]:
-    #     NewDocBase = create_model(
-    #         'NewDocBase', __base__=self.NewBase, **DOCBASE_DEF
-    #     )
-    #     NewResultBase = create_model(
-    #         'NewResultBase', __base__=self.NewBase, **RESULT_DEF
-    #     )
-    #     ExtendResultBase = extend_fields(NewResultBase, self.result_pydantic)
-        
-    #     class Doc(NewDocBase, table=True):
-    #         __tablename__ = 'documents'
-
-    #         results: list['Result'] = Relationship(back_populates='document')
-        
-    #     class Result(ExtendResultBase, table=True):
-    #         document: Doc = Relationship(back_populates='results')
-        
-    #     Doc = cast(SQLModel, Doc)
-    #     Result = cast(SQLModel, Result)
-    #     return Doc, Result
-    
     def _define_sqltable(self):
         NewDocBase = create_model(
             'NewDocBase', __base__=self.NewBase, **DOCBASE_DEF
@@ -215,9 +176,9 @@ class ResultDB(DB):
         class Document(NewDocBase, table=True):
             __tablename__ = 'documents'
             results: list['Result'] = Relationship(back_populates='document')
-        Result = self.complete_result_sqlmodel(NewResultBase)
-        Document = cast(SQLModel, Document)
-        Result = cast(SQLModel, Result)
+        Result = self._complete_result_sqlmodel(NewResultBase)
+        Document = cast(type[SQLModel], Document)
+        Result = cast(type[SQLModel], Result)
         return Document, Result
 
     def create_db(self):
@@ -228,104 +189,52 @@ class ResultDB(DB):
         """get article using correspond source name"""
         getter = doc_getter(self.engine, self.Document)
         return getter(source)
-    
-    # def save_result(self, text: str, metadata: dict[str, str], results: list[BaseModel]):
-    #     """save text with extracted resutls"""
-    #     assert super().check_source(metadata), 'metadata must have source field'
-    #     assert isinstance(results[0], self.result_pydantic), f'model mismatch, expect {self.result_pydantic}'
-    #     with Session(self.engine) as session, session.begin():
-    #         document = self.Document(page_content=text, meta=metadata)
-    #         for result in results:
-    #             params = dict(result)
-    #             result_sqlmodel = self.Result(**params)
-    #             document.results.append(result_sqlmodel)
-    #         session.add(document)
         
     def save_result(self, text: str, metadata: dict[str, str], results: list[BaseModel]):
-        """called on the `Writer` object, save text with extracted resutls"""
+        """invoked by the `Writer`, save text with extracted resutls"""
         assert super().check_source(metadata), 'metadata must have a field named source'
         with Session(self.engine) as session, session.begin():
             document = self.Document(page_content=text, meta=metadata)
             for result in results:
-                kw_args = self.construct_arguments_from_result(result)
-                result = self.Result(**kw_args)
+                result = self.Result(result=result.model_dump())
                 document.results.append(result)
             session.add(document)
 
-
-    def construct_arguments_from_result(self, result:BaseModel):
-        kw_args = {}
-        pydantic_fields = dict(result)
-        for field_name, field in pydantic_fields.items():
-            if field is None:
-                continue
-            if isinstance(field, list):
-                kw_args[field_name] = [self.created_models[field_name](**{field_name: item}) for item in field]
-            else:
-                kw_args[field_name] = self.created_models[field_name](**{field_name: field})
-        return kw_args
-
-
-    def create_sqlmodel_from_pydantic(self):
-        fields = self.result_pydantic.model_fields
-        created_models = {}
-
-        for field_name, field in fields.items():
-            model_name = field_name.capitalize()
-            table_name = f'result_{field_name}'
-            # field_type = field.annotation if get_origin(field.annotation) is not list else get_args(field.annotation)[0]
-            field_type = get_inner_annotation(field.annotation)
-            default = field.default if not field.is_required() else ...
-
-            created_model = create_model(
-                model_name,
-                __base__=self.NewBase,
-                __cls_kwargs__={'table': True},
-                __tablename__=table_name,
-                id=(Optional[int], Field(default=None, primary_key=True)),
-                result_id=(Optional[int], Field(default=None, foreign_key='results.id')),
-                **{field_name: (field_type, Field(default))},
-                result=(Optional['Result'], Relationship(back_populates=field_name))
-            )
-            # setattr(created_model, 'result', Relationship(back_populates=field_name))
-            created_models[field_name] = created_model
-
-        return created_models
-    
-    def complete_result_sqlmodel(self, base_model: Type[SQLModel]):
-        # created_models = create_sqlmodel_from_pydantic(pydantic_model)
-        fields = self.result_pydantic.model_fields
-        field_defs = {}
-        for field_name, field in fields.items():
-            # field_type = list[created_models[field_name]] if get_origin(field.annotation) is list else created_models[field_name] 
-            field_type = get_result_field_annotation(field.annotation, self.created_models[field_name]) # return list[field_table] or field_table
-            field_defs[field_name] = (field_type, Relationship(back_populates='result'))
-        field_defs['document'] = ('Document', Relationship(back_populates='results')) # seems that `Relationship` object cannot be defined in the resultbase, so we need to define it here
-        
+    def _complete_result_sqlmodel(self, base_model: Type[SQLModel]):
+        """create a sqlmodel for result table, add result field"""
         result_model = create_model(
             'Result',
             __base__=base_model,
             __cls_kwargs__={'table': True},
             __tablename__='results',
-            **field_defs
+            result=(dict, Field(sa_type=JSON)),
+            document=('Document', Relationship(back_populates='results'))
         )
         return result_model
     
-    def load_as_json(self, with_doi: bool, limit: Optional[int] = None) -> list[dict]:
+    def load_as_json(self, with_doi: bool = False, limit: Optional[int] = None) -> list[dict]:
         """load result as defined pydantic model in dict format"""
-        from ..utils.helper_functions import field_getter
         datas = []
         with Session(self.engine) as session, session.begin():
             stmt = select(self.Result, self.Document).join(self.Document).limit(limit)
             results = session.exec(stmt)
             for result, document in results:
-                fields = self.created_models.keys()
-                pydantic_json = {field: field_getter(field)(result) for field in fields}
+                pydantic_json = result.result
                 if with_doi:
                     doi = document.meta['doi']
                     pydantic_json.update(doi=doi)
                 datas.append(pydantic_json)
         return datas
+    
+    def clear_tables(self):
+        """quick way to clear all rows within your database.
+        Don't use it unless you are sure what you are doing"""
+        with Session(self.engine) as session, session.begin():
+            returns = session.exec(select(self.Result, self.Document).join(self.Document))
+            for result, doc in returns:
+                session.delete(result)
+                session.delete(doc)
+            session.commit()
 
 
 NewBase = get_new_sql_base()

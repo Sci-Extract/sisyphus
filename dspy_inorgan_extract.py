@@ -22,7 +22,7 @@ dspy.configure(lm=lm)
 # ARTICLE = 'inorganic_dspy'
 ARTICLE = '40_with_good_title'
 # TARGET = 'dspy_inorganic_4o_mini'
-TARGET = 'reaction_10_test'
+TARGET = 'new_type_db'
 
 def load_json(file_path):
     with open(file_path, 'r', encoding='utf8') as f:
@@ -48,11 +48,15 @@ class Classify_CoT(dspy.Module):
         prediction = self.predictor(text=text, solid_state_definition=solid_state_definition)
         return prediction
     
-    
+
+class Target(BaseModel):
+    target_formula: str
+    extra_description: Optional[str] = Field(description='extra description other than the formula')
+
 class Reaction(BaseModel):
     precursors: list[str] = Field(description='the precursors or starting material of reaction, ensure it is a valid chemical formula')
     additives: list[str] = Field(description='the additives of the reaction')
-    target: str = Field(description='the product of the reaction, make sure it is a valid chemical formula')
+    target: Target = Field(description='the product of the reaction, make sure it is a valid chemical formula')
     reaction_type: str = Field(description='the type of the reaction, choose from [solid-state, sol-gel, co-preciptation, hydrothermal, flux, others]')
 
 
@@ -131,7 +135,7 @@ from sisyphus.utils.helper_functions import return_valid
 
 
 cot = ExtractReactionWithType()
-cot.load('compiled_extractor.json')
+# cot.load('compiled_extractor.json')
 compiled_extractor = cot
 
 with open('resolve_examples.json', 'r', encoding='utf8') as f:
@@ -230,11 +234,17 @@ def customized_validator(docinfos):
 
 # chain = article_getter + customized_filter + customized_extractor + get_abbrevs + customized_validator + Writer(result_db=result_db)
 chain = article_getter + my_extractor + Writer(result_db=result_db)
+# chain_with_out_writer = article_getter + my_extractor
 
 import time
 start = time.time()
-# chain.compose("10.1002&sol;adfm.201300663.html")
-from sisyphus.chain.chain_elements import run_chains_with_extarction_history_multi_threads
-run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'reaction_extraction_test', extract_nums=10)
-end = time.time()
-print('time:', end - start)
+# from sisyphus.chain.chain_elements import run_chains_with_extarction_history_multi_threads
+# run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'reaction_extraction_test', extract_nums=10)
+# result_db.clear_tables()
+# with dspy.context(lm=dspy.LM('openai/gpt-4o-mini')):
+docinfos = chain.compose('10.1021&sol;nn101453v.html')
+# end = time.time()
+# print('time:', end - start)
+# ds = result_db.load_as_json(with_doi=True)
+# for d in ds:
+#     print(d)
