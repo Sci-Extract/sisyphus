@@ -153,3 +153,23 @@ def return_valid(func):
         result = func(*args, **kwargs)
         return result if result else None
     return wrapper
+
+def load_from_curated_examples(file, fields: tuple[str], input_keys: tuple[str], output_model: type[BaseModel]):
+    """Load curated examples from json file"""
+    from dspy import Example
+    import json
+    out_key = list(set(fields).difference(input_keys))
+    loaded_examples = []
+    if len(out_key) != 1:
+        raise ValueError(f'Only one output key is allowed, received {out_key}')
+    replace_key = out_key[0]
+    with open(file, 'r', encoding='utf8') as f:
+        examples = json.load(f)['examples']
+    for example in examples:
+        non_used_keys = list(set(example.keys()).difference(fields))
+        for key in non_used_keys:
+            example.pop(key)
+        outputs = example[replace_key]
+        example[replace_key] = [output_model(**out_put) for out_put in outputs]
+        loaded_examples.append(Example(**example).with_inputs(*input_keys)) 
+    return loaded_examples

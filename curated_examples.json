@@ -139,7 +139,8 @@
             "target_formula": "Bi0.5Na0.5TiO3",
             "amount_var": {},
             "extra_description": "BNT"
-          }
+          },
+          "reaction_type": "solid-state"
         },
         {
           "precursors": [
@@ -211,7 +212,9 @@
           "target": {
             "target_formula": "TbBaMn2O6\u2212y",
             "amount_var": {
-              "y": 1
+              "y": [
+                1
+              ]
             },
             "extra_description": "A-site ordered oxygen-deficient perovskite"
           },
