@@ -515,3 +515,18 @@ def run_chains_with_extarction_history_multi_threads(
         futures = [executor.submit(runnable, file_name) for file_name in file_names]
         for future in tqdm.tqdm(as_completed(futures), total=len(file_names)):
             future.result()
+
+def run_chains_with_extraction_history_for_one(
+    chain: Chain, file_name: str, namespace: str
+):
+    """run chain with extraction history for one file"""
+    manager = ExtractManager(
+        namespace,
+        db_url='sqlite:///' + os.path.join(RECORD_LOCATION, RECORD_NAME),
+    )
+    manager.create_schema()
+    exists = manager.exists([file_name])
+    if exists[0]:
+        raise ValueError('no file needed to be extracted')
+    runnable = add_manager_callback(chain.compose, manager)
+    runnable(file_name)

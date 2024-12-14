@@ -30,6 +30,53 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 encoding = tiktoken.get_encoding('cl100k_base')
 HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 
+# gpt-4o gen table parser
+from bs4 import BeautifulSoup
+import json
+
+def parse_html_table_to_json(html):
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Extract table and caption (if present)
+    table = soup.find('table')
+    caption = table.find('caption').get_text(strip=True) if table.find('caption') else None
+
+    # Extract rows from the table body
+    rows = table.find('tbody').find_all('tr')
+
+    # Initialize storage for headers and data
+    headers = []
+    data = []
+
+    # Iterate through rows and extract cells
+    for i, row in enumerate(rows):
+        cells = row.find_all(['td', 'th'])
+        cell_text = [cell.get_text(strip=True) for cell in cells]
+
+        if i == 0:  # First row as headers
+            headers = cell_text
+        else:  # Other rows as data
+            entry = {}
+            for idx, value in enumerate(cell_text):
+                header = headers[idx] if idx < len(headers) else f'Column {idx + 1}'
+                entry[header] = value
+            data.append(entry)
+
+    # Extract table footnotes (if present)
+    footnotes = []
+    tfoot = table.find('tfoot')
+    if tfoot:
+        for row in tfoot.find_all('tr'):
+            footnotes.append(' '.join(cell.get_text(strip=True) for cell in row.find_all(['td', 'th'])))
+
+    # Create the JSON structure
+    result = {
+        'caption': caption,
+        'data': data,
+        'footnotes': footnotes
+    }
+    return result
+
 # region loader
 class Loader(BaseLoader):
     """base loader"""
@@ -133,57 +180,77 @@ class ArticleLoader(Loader):
 
 class FullTextLoader(Loader):
     """Full text loader, used for validation process (resolving abbreviation definitions) or as extracted object"""
-    include_table = False
+    include_table = True
     max_token = 5000
 
     def __init__(self, file_path: str):
         super().__init__(file_path)
         self.file_name = file_path.split(os.sep)[-1]
-        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), title=(str, ...))
+        self.title = ''
+        self.metadata = create_model('MetaData', source=(str, ...), doi=(str, ...), title=(str, ...), type_=(str, ...))
     
     def lazy_load(self) -> Iterator[Document]:
         """when I write this, I know I should write load function instead, but I want to keep the interface consistentency"""
         with open(self.file_path, encoding='utf8') as file:
             doc = file.read()
         soup = bs(doc, 'html.parser')
-        if not self.include_table:
-            tags = soup.find_all('table')
-            if tags:
-                for tag in tags:
-                    tag.decompose()
         title = soup.find('title').text.strip('\n ')
+        self.title = title
         doi = soup.head.p.a.text.strip('\n ')
-        text = soup.get_text(separator='\n', strip=True)
+
+        if self.include_table:
+            for tag in soup.find_all('table'):
+                table_json = parse_html_table_to_json(str(tag))
+                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='table')))
+
+        tags = soup.find_all('table')
+        if tags:
+            for tag in tags:
+                tag.decompose()
+
+        text = soup.body.get_text(separator='\n', strip=True)
         chunks = self.ensure_safe_len(text)
         for chunk in chunks:
-            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title)))
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='text')))
 
     async def alazy_load(self) -> AsyncIterator[Document]:
         async with aiofiles.open(self.file_path, encoding='utf8') as file:
             doc = await file.read()
         soup = bs(doc, 'html.parser')
-        if not self.include_table:
-            tags = soup.find_all('table')
-            if tags:
-                for tag in tags:
-                    tag.decompose()
         title = soup.find('title').text.strip('\n ')
+        self.title = title
         doi = soup.head.p.a.text.strip('\n ')
-        text = soup.get_text(separator='\n', strip=True)
+
+        if self.include_table:
+            for tag in soup.find_all('table'):
+                table_json = parse_html_table_to_json(str(tag))
+                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='table')))
+
+        tags = soup.find_all('table')
+        if tags:
+            for tag in tags:
+                tag.decompose()
+
+        text = soup.body.get_text(separator='\n', strip=True)
         chunks = self.ensure_safe_len(text)
         for chunk in chunks:
-            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title)))
+            yield Document(page_content=chunk, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='text')))
     
     def ensure_safe_len(self, text):
         # TODO consolidate this to avoid of possibly context losing
         text_encoding = encoding.encode(text)
-        start = 0
-        chunk = encoding.decode(text_encoding[start: start + self.max_token])
-        if chunk:
-            yield chunk
-            start += self.max_token
-        else:
-            return
-
+        next_start = 0
+        while True:
+            chunk = encoding.decode(text_encoding[next_start: next_start + self.max_token])
+            if len(encoding.encode(chunk)) < self.max_token:
+                yield self.add_title(chunk)
+                return
+            chunk_with_break = chunk.rsplit('\n', 1)[0]
+            chunk_with_b_len = len(encoding.encode(chunk_with_break))
+            next_start += chunk_with_b_len
+            yield self.add_title(chunk_with_break)
+    
+    def add_title(self, text):
+        return f'Title: {self.title}\n{text}'
 
 # endregion

@@ -3,7 +3,7 @@
 import re
 import os
 import json
-from typing import Optional
+from typing import Optional, Literal
 from contextvars import ContextVar
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,12 +17,12 @@ from sisyphus.utils.helper_functions import get_plain_articledb, get_create_resu
 
 additional_args = ContextVar('additional_args', default={})
 # config
-lm = dspy.LM('openai/gpt-4o-mini', cache=False)
+lm = dspy.LM('openai/gpt-4o', cache=False)
 dspy.configure(lm=lm)
 # ARTICLE = 'inorganic_dspy'
 ARTICLE = '40_with_good_title'
 # TARGET = 'dspy_inorganic_4o_mini'
-TARGET = 'new_type_db'
+TARGET = 'test_single_replace_r_re'
 
 def load_json(file_path):
     with open(file_path, 'r', encoding='utf8') as f:
@@ -50,21 +50,21 @@ class Classify_CoT(dspy.Module):
     
 
 class Target(BaseModel):
-    target_formula: str
+    target_formula: str = Field(description='the formula of the target product, make sure it is a valid chemical formula')
+    amount_var: dict[str, list[float]] = Field(description='the amount variable in the formula, e.g. AxBC, {x: [1, 2]}')
     extra_description: Optional[str] = Field(description='extra description other than the formula')
 
 class Reaction(BaseModel):
     precursors: list[str] = Field(description='the precursors or starting material of reaction, ensure it is a valid chemical formula')
     additives: list[str] = Field(description='the additives of the reaction')
-    target: Target = Field(description='the product of the reaction, make sure it is a valid chemical formula')
-    reaction_type: str = Field(description='the type of the reaction, choose from [solid-state, sol-gel, co-preciptation, hydrothermal, flux, others]')
+    target: Target = Field(description='the product of the reaction')
+    reaction_type: Literal['solid-state', 'sol-gel', 'co-precipitation', 'hydrothermal', 'flux', 'others'] = Field(description='the type of the reaction')
 
 
 class QA(dspy.Signature):
-    """extract reaction consitituent from the text"""
-    text: str = dspy.InputField(desc='a piece of text which may contains chemical reaction')
+    """extract all chmemical reactions consitituent from the text, for reactions with element variables, please subsitute them with the corresponding element names"""
+    text: str = dspy.InputField(desc='a piece of text which may contains chemical reactions')
     reactions: Optional[list[Reaction]] = dspy.OutputField(desc='the reactions extracted from the text, return null if no reaction found')
-
 
 class ExtractReactionWithType(dspy.Module):
     def __init__(self):
@@ -135,8 +135,9 @@ from sisyphus.utils.helper_functions import return_valid
 
 
 cot = ExtractReactionWithType()
-# cot.load('compiled_extractor.json')
+cot.load('compiled_direct')
 compiled_extractor = cot
+compiled_extractor.predictor.signature = QA
 
 with open('resolve_examples.json', 'r', encoding='utf8') as f:
     data = json.load(f)
@@ -238,13 +239,17 @@ chain = article_getter + my_extractor + Writer(result_db=result_db)
 
 import time
 start = time.time()
-# from sisyphus.chain.chain_elements import run_chains_with_extarction_history_multi_threads
-# run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'reaction_extraction_test', extract_nums=10)
+from sisyphus.chain.chain_elements import run_chains_with_extarction_history_multi_threads
+run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'dspy_6_shot_inorgan_recipes')
 # result_db.clear_tables()
 # with dspy.context(lm=dspy.LM('openai/gpt-4o-mini')):
-docinfos = chain.compose('10.1021&sol;nn101453v.html')
+docinfos = chain.compose('10.1021&sol;cm980126j.html')
 # end = time.time()
 # print('time:', end - start)
-# ds = result_db.load_as_json(with_doi=True)
+extracted = result_db.load_as_json(with_doi=True)
+with open('replace_R.json', 'w', encoding='utf8') as f:
+    json.dump(extracted, f, indent=2, ensure_ascii=False)
+
+print(lm.inspect_history(2))
 # for d in ds:
-#     print(d)
+    # print(d)

@@ -20,6 +20,6 @@ def custom_save(self, path, save_field_meta=False):
     state = self.dump_state(save_field_meta)
     state = convert_to_dict(state)
     with open(path, "w") as f:
-        f.write(ujson.dumps(state, indent=2))
+        f.write(ujson.dumps(state, indent=2, ensure_ascii=False))
 
 dspy.Module.save = custom_save
