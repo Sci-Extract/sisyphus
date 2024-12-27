@@ -1,0 +1,526 @@
+{   
+    "description": "the following reaction only contains solid-state reaction and did not include title and abstarct information", 
+    "records":[
+    {
+        "doi": "10.1039/b915056k",
+        "reactions": [
+            {
+                "text": "Three interesting papers published during this review period demonstrated the ability of XRF techniques to give chemical information on multilayered structures. Doomes and McGuire391 reported their work on ion beam sputtered multilayer SiO2/Ta2O5 coatings on fused SiO2 substrates. XAS gave chemical and structural features of the dielectric multilayered NO2/Ta2O5 mirror coatings. Rajput et al.392 studied the depth resolved structural information of heavy ion induced phase formation in Si/Fe/Si trilayers. XRF measurements gave the Fe depth distribution, whilst Mossbauer spectroscopy and XAFS provided information about changes in local structure. Synthesis and characterisation of a new four-layer Aurivillius phase Bi2SrNa2Nb4O15 was reported by Liang et al.393 Following a solid state reaction of Bi2SrNa2Nb4O9 and NaNbO3 at 1100 °C, XRD was used to show the resultant crystalline structure and XRF and thermogravimetry used for the measurement of composition the multilayers formed.",
+                "precursors": ["Bi2SrNa2Nb4O9", "NaNbO3"],
+                "target": "Bi2SrNa2Nb4O15",
+                "is_right_located": false
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.elecom.2012.03.014",
+        "reactions": [
+            {
+                "text": "Li3Nd3W2O12 was synthesized by a conventional solid-state method as reported by Cussen and Yip [1]. Li2CO3, Nd2O3 and WO3 were used as the starting materials. The well-ground powder was first heated at 750 °C for 2 days and then reground, pelletized and heated at 880 °C for 3 days. X-ray diffraction (Philips X'pert Pro) was employed to monitor the phase formation and to refine the lattice parameter. The FullProf software package was employed to refine the XRD pattern and the lattice parameter.",
+                "precursors": ["Li2CO3", "Nd2O3", "WO3"],
+                "target": "Li3Nd3W2O12",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.jnucmat.2013.02.060",
+        "reactions": [
+            {
+                "text": "India is involved in the preparation of LMT powder by two different routes. (I) In the Solution Combustion Synthesis Process (SCSP), TiO2 is used as a precursor material instead of costly precursors like TiCl4 or Ti-isopropoxide and Li2CO3 is used as the lithium source. First, titanium sulphate is formed by the reaction of titania in sulphuric acid (H2SO4), which can be enhanced by adding ammonium sulphate (NH4)2SO4. In a later stage, titanium sulphate is converted to Ti-nitrate solution by the precipitation with ammonia solution and dissolution in nitric acid. Using the stable Ti-nitrate solution and citric acid as a fuel/complexing agent in controlled amounts, nanoparticles of LMT have been successfully synthesized by the citrate–nitrate auto-combustion route [6]. It was observed that the microstructure of the sintered specimen strongly depends on the sintering temperature. The thermal expansion coefficient of the sintered specimens was investigated by dilatometry in air and was found to be around 19 × 10−6 K−1. The thermal diffusivity of 1173 K sintered samples, measured by the laser flash method, was about 2.5 W/m K [7]. (II) In the solid state reaction, Li2TiO3 is synthesized from a mixture of Li2CO3 and TiO2, and calcined at 1173 K for 24 h. The fused mass is subsequently milled [8]. In both cases, pebbles are fabricated by extrusion and spheronization and subsequently sintered at 1173 K. The process details of SCSP and the solid state route are given in Fig. 1. In India, LMT pebbles were also prepared by a sol–gel route, in which a gel of Ti(OH)4 and Li2O is prepared from an aqueous solution of TiOCl2, LiNO3, hexa-methylene-tetra-amine (HTMA), and urea at 273–277 K (0–4 °C). The gel is then washed with an aqueous solution of NH4OH. Dried gel pebbles were calcined and sintered at 1273 K.",
+                "precursors": ["Li2CO3", "TiO2"],
+                "target": "Li2TiO3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c2ce25672j",
+        "reactions": [
+            {
+                "text": "CaBiO2Cl samples were prepared by a two-step process. All chemicals used were analytic grade reagents without further purification. The starting materials of Bi(NO3)3 and KCl (1 : 1 molar ratio) were mixed together, and then 60 mL of distilled water was added. White precipitate appeared immediately and was stirred for 5 h to complete the precipitation reaction. The precipitate was collected and washed with deionized water thoroughly and dried at 80 °C in air. The final BiOCl powder was obtained as seen from XRD patterns (see Fig. S1 in ESI†). In what followed, BiOCl and Ca(NO3)2 (1 : 1 molar ratio) were used to synthesize CaBiO2Cl by a solid-state reaction. The reactant powders were thoroughly ground together into a homogeneous mixture using a mortar and pestle, transferred to an alumina crucible, and subsequently heated in air at different temperatures for 12 h. A pale yellow polycrystalline powder (CaBiO2Cl) was obtained from the reactions. TiO2-xNx known for its good photocatalytic activity in the decomposition of pollutants under visible-light irradiation, was also prepared as a reference.",
+                "precursors": ["BiOCl", "Ca(NO3)2"],
+                "target": "CaBiO2Cl",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.psep.2017.10.007",
+        "reactions": [
+            {
+                "text": "2ZnO–TiO2 mixed powder photocatalysts were prepared using a simple, low-cost, and three-step mechanochemical solid-state method. Starting precursors (ZnO and TiO2 Sigma Aldrich, purity 99.9%) were grounded in an agate mortar for 10 min in molar ratio 2:1, annealed at 700 °C in air for two hours and grounded again for 10 min. It has recently been reported that binary nanopowders based on ZnO exhibit photocatalytic activity which depends slightly on molar ratio, which is however maximized for ZnO-rich compositions ",
+                "precursors": ["ZnO", "TiO2"],
+                "target": "2ZnO–TiO2",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cm980126j",
+        "reactions": [
+            {
+                "text": "Crystal Growth and Sample Preparation. Because of the high melting point of the R8Ba5Ni4O21 series compounds and to the difficulty of obtaining single crystals free of flux contamination, we followed a two-step synthesis path based on the exothermic solid-state reaction between BaCO3 (AR) and Ni (99.95%) metal at 1300 °C, that gives a liquid precursor BaNiO2+x. In a second step, the precursor reacts with a mixture of R2O3 (99.9%) and BaCO3 in a ratio R:Ba = 4:1. Final products are obtained by heating this mixture in air for 3 days at 1300 °C. After removing the flux with acetic acid, paper filtration allowed recovery of the crystals that were characterized by energy-dispersive X-ray analysis and X-ray powder diffraction.",
+                "precursors": ["BaCO3", "Ni"],
+                "target": "BaNiO2+x",
+                "is_right_located": true
+            },
+            {
+                "text": "Crystal Growth and Sample Preparation. Because of the high melting point of the R8Ba5Ni4O21 series compounds and to the difficulty of obtaining single crystals free of flux contamination, we followed a two-step synthesis path based on the exothermic solid-state reaction between BaCO3 (AR) and Ni (99.95%) metal at 1300 °C, that gives a liquid precursor BaNiO2+x. In a second step, the precursor reacts with a mixture of R2O3 (99.9%) and BaCO3 in a ratio R:Ba = 4:1. Final products are obtained by heating this mixture in air for 3 days at 1300 °C. After removing the flux with acetic acid, paper filtration allowed recovery of the crystals that were characterized by energy-dispersive X-ray analysis and X-ray powder diffraction.",
+                "precursors": ["BaNiO2+x", "R2O3", "BaCO3"],
+                "target": "R8Ba5Ni4O21, R = Y, Er, Tm, Yb, and Lu",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c5ce02461g",
+        "reactions": null
+    },
+    {
+        "doi": "10.1021/acs.cgd.6b00081",
+        "reactions": [
+            {
+                "text": "The DJ-type layered perovskite CsBa2Ta3O10 (CBTO) crystals were grown by a conventional solid-state reaction using a stoichiometric mixture of BaCO3 (99.9%), Ta2O5 (99.9%), and CsNO3 (99.9%) purchased from Wako Pure Chemical Industries Ltd. Note that an excess amount of CsNO3 (25 mol %) was added to compensate for the loss of Cs by volatilization. After manual dry mixing in the glovebox, the mixture was put into a platinum crucible and closed loosely with a platinum lid. The mixture-containing platinum crucible was then placed in a high-temperature electric muffle furnace, heated to 1000 °C at a heating rate of 50 °C·h–1, held at this temperature for 6 h, and then cooled to room temperature at a cooling rate of 150 °C·h–1. The resulting crystal product was ground and calcined again using the same temperature profile. The nitrided layered CsBa2Ta3O10 crystals were obtained by nitriding the as-grown CsBa2Ta3O10 crystals at 800 °C for 2, 5, 8, and 11 h under an NH3 flow (200 mL/min). The layered oxide and oxynitride crystals were proton exchanged by mixing 0.2 g of sample with 50 mL of 1 M HCl solution for 7 days and dried at room temperature. As Ida et al. (33) pointed out that the oxynitride nanosheets cannot be fabricated without an ethylamine (EA)-intercalation step, the protonated samples (0.2 g) were therefore mixed with 50 mL of 0.4 M EA aqueous solution (70%, Wako Pure Chemical Industries Ltd.) for 7 days to intercalate EA into the interlayer gallery. Further, the EA-intercalated samples (0.15 g) were mixed with 50 mL of 0.0025 M tetrabutylammonium hydroxide (TBA+OH–) aqueous solution (40 wt % in H2O, Sigma-Aldrich) for 7 days to exfoliate into nanosheets. The unexfoliated crystals were separated from nanosheets by centrifugation.",
+                "precursors": ["BaCO3", "Ta2O5", "CsNO3"],
+                "target": "CsBa2Ta3O10",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/adfm.201500644",
+        "reactions": [
+            {
+                "text": "Sample Preparation: All reagents in this experiment were used without any further purification. The LVO/C core–shell nanostructured material was synthesized via a simple solid-state reaction. VO(C5H7O2)2 (Sigma-Aldrich, >99%) was mixed with LiOH (Sinopharm Chemical Reagent, >98.0%) and then heated to 600 °C for 2 h at a rate of 10 °C min−1 under Ar (>99.999%). The molar ratio of the LiOH to VO(C5H7O2)2 was 3. For comparison, the pristine LVO was prepared by a modified solid-state method. First, V2O5 (TianJin··FUChemical, >99.0%) was dissolved in a LiOH solution in deionized water and ethanol. Then, the mixture was sonicated for 10 min and stirred for 10 h. The precursor was collected and treated at 55 °C for 12 h. The dried composite was subsequently treated at 600 °C for 2 h under Ar.",
+                "precursors": ["VO(C5H7O2)2", "LiOH"],
+                "target": "LVO/C",
+                "is_right_located": true
+            },
+            {
+                "text": "Sample Preparation: All reagents in this experiment were used without any further purification. The LVO/C core–shell nanostructured material was synthesized via a simple solid-state reaction. VO(C5H7O2)2 (Sigma-Aldrich, >99%) was mixed with LiOH (Sinopharm Chemical Reagent, >98.0%) and then heated to 600 °C for 2 h at a rate of 10 °C min−1 under Ar (>99.999%). The molar ratio of the LiOH to VO(C5H7O2)2 was 3. For comparison, the pristine LVO was prepared by a modified solid-state method. First, V2O5 (TianJin··FUChemical, >99.0%) was dissolved in a LiOH solution in deionized water and ethanol. Then, the mixture was sonicated for 10 min and stirred for 10 h. The precursor was collected and treated at 55 °C for 12 h. The dried composite was subsequently treated at 600 °C for 2 h under Ar.",
+                "precursors": ["V2O5", "LiOH"],
+                "target": "Li3VO4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c1cy00199j",
+        "reactions": [
+            {
+                "text": "Fe2O3 and Y2O3 were used as starting materials to prepare YFeO3 by hydrothermal method, sol–gel and solid state reaction in most previous work,23–25 which requires the calcination step at a high temperature of above 700 °C. The reaction is heterogeneous due to the poor solubility of the used precursors in the reaction medium. In our present work, the use of water soluble Fe(NO3)3 and Y(NO3)3 precursors enables the adequate mixing and thus the homogenous reaction, benefiting the formation of monophasic YFeO3 in our synthetic strategy although it is thermodynamically unstable.",
+                "precursors": ["Fe2O3", "Y2O3"],
+                "target": "YFeO3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.apcatb.2009.01.013",
+        "reactions": [
+            {
+                "text": "Titania nanoparticles, P25 supplied by Nippon Aerosil, were hydrothermally treated with a 17-mol L−1 potassium hydroxide solution in a pressure-tolerant Teflon bottle at 383 K for 20 h. The resulting precipitate was washed and neutralized using deionized water and an aqueous acetic acid solution, respectively. After freeze-drying, thus-obtained titanate nanowires were calcined in air at various temperatures (673–973 K) for 1 h. The calcined samples are denoted as TNWx, in which x means the calcination temperature in the unit of K, and TNW0 is used to denote titanate nanowires without calcination. Potassium tetratitanate (K2Ti4O9) and potassium hexatitanate (K2Ti6O13) were prepared by solid-state reaction of a stoichiometric mixture of potassium carbonate and titania at 1173 K for 24 h",
+                "precursors": ["TiO2", "K2CO3"],
+                "target": "K2Ti4O9",
+                "is_right_located": true
+            },
+            {
+                "text": "Titania nanoparticles, P25 supplied by Nippon Aerosil, were hydrothermally treated with a 17-mol L−1 potassium hydroxide solution in a pressure-tolerant Teflon bottle at 383 K for 20 h. The resulting precipitate was washed and neutralized using deionized water and an aqueous acetic acid solution, respectively. After freeze-drying, thus-obtained titanate nanowires were calcined in air at various temperatures (673–973 K) for 1 h. The calcined samples are denoted as TNWx, in which x means the calcination temperature in the unit of K, and TNW0 is used to denote titanate nanowires without calcination. Potassium tetratitanate (K2Ti4O9) and potassium hexatitanate (K2Ti6O13) were prepared by solid-state reaction of a stoichiometric mixture of potassium carbonate and titania at 1173 K for 24 h",
+                "precursors": ["TiO2", "K2CO3"],
+                "target": "K2Ti6O13",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c4ce01587h",
+        "reactions": [
+            {
+                "text": "Ternary tantalates and niobates of the Am+(n+1)/mB3n+1O(8n+3) (Am+ = Na(i), Ag(i), Cu(i), Pb(ii); B = Nb, Ta) structural family can be prepared by exchange of the A-site cations using a molten flux. For example, the hexagonal lead-tantalate phases Pb1.5Ta7O19 and PbTa4O11 were discovered by flux-mediated lead-exchange reactions starting from the Cu3Ta7O19 and A2Ta4O11 (A = Na, Ag) parent structures and a PbCl2 flux at 800 °C and 700 °C, respectively. These lead tantalate phases could only be achieved by lead-exchange reactions using a PbCl2 flux in vacuum sealed fused-silica tubes. Solid-state syntheses and lead-exchange reactions of A2Ta4O11 (A = Na, Ag) using PbCl2 in air instead yielded the PbTa2O6 and Pb3Ta4O13 phases, respectively.27,117 Lead-exchange reactions under vacuum and in air yielded rod- and octahedron-shaped morphologies for PbTa4O11 and Pb3Ta4O13 phases, respectively. The fast growth of Am+2/mTa4O11 along the c axis results in rod-shaped particles, as shown in Fig. 10. The PbTa4O11 phase exhibits a bandgap size of ~3.8 eV,27 which is ~0.5 eV smaller in energy than that found for Na2Ta4O11 at ~4.3 eV.19 A reduction in the band gap was also observed with an increase in the Pb(ii) content as a result of the flux exchange, and which served to increase the photocatalytic activities for hydrogen and oxygen production. The PbTa4O11 phase was reported with a photocatalytic activity of ~175 μmol H2 g−1 h−1 in aqueous methanol under ultraviolet and visible irradiation, while the solid-state prepared precursor Ag2Ta4O11 had a rate of ~23 μmol H2 g−1 h−1. The PbTa4O11 phase generated ~181 μmol O2 g−1 h−1 in aqueous silver nitrate under ultraviolet and visible irradiation, while its precursor Ag2Ta4O11 exhibited a similar rate of ~165 μmol O2 g−1 h−1. Higher activity for water reduction was found for layered tantalate structures comprised of TaO7 pentagonal bipyramid layers, which can serve as extended charge-migration pathways.",
+                "precursors": ["Na2Ta4O11", "PbCl2"],
+                "target": "PbTa2O6",
+                "is_right_located": true
+            },
+            {
+                "text": "Ternary tantalates and niobates of the Am+(n+1)/mB3n+1O(8n+3) (Am+ = Na(i), Ag(i), Cu(i), Pb(ii); B = Nb, Ta) structural family can be prepared by exchange of the A-site cations using a molten flux. For example, the hexagonal lead-tantalate phases Pb1.5Ta7O19 and PbTa4O11 were discovered by flux-mediated lead-exchange reactions starting from the Cu3Ta7O19 and A2Ta4O11 (A = Na, Ag) parent structures and a PbCl2 flux at 800 °C and 700 °C, respectively. These lead tantalate phases could only be achieved by lead-exchange reactions using a PbCl2 flux in vacuum sealed fused-silica tubes. Solid-state syntheses and lead-exchange reactions of A2Ta4O11 (A = Na, Ag) using PbCl2 in air instead yielded the PbTa2O6 and Pb3Ta4O13 phases, respectively.27,117 Lead-exchange reactions under vacuum and in air yielded rod- and octahedron-shaped morphologies for PbTa4O11 and Pb3Ta4O13 phases, respectively. The fast growth of Am+2/mTa4O11 along the c axis results in rod-shaped particles, as shown in Fig. 10. The PbTa4O11 phase exhibits a bandgap size of ~3.8 eV,27 which is ~0.5 eV smaller in energy than that found for Na2Ta4O11 at ~4.3 eV.19 A reduction in the band gap was also observed with an increase in the Pb(ii) content as a result of the flux exchange, and which served to increase the photocatalytic activities for hydrogen and oxygen production. The PbTa4O11 phase was reported with a photocatalytic activity of ~175 μmol H2 g−1 h−1 in aqueous methanol under ultraviolet and visible irradiation, while the solid-state prepared precursor Ag2Ta4O11 had a rate of ~23 μmol H2 g−1 h−1. The PbTa4O11 phase generated ~181 μmol O2 g−1 h−1 in aqueous silver nitrate under ultraviolet and visible irradiation, while its precursor Ag2Ta4O11 exhibited a similar rate of ~165 μmol O2 g−1 h−1. Higher activity for water reduction was found for layered tantalate structures comprised of TaO7 pentagonal bipyramid layers, which can serve as extended charge-migration pathways.",
+                "precursors": ["Ag2Ta4O11", "PbCl2"],
+                "target": "Pb3Ta4O13",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/chem.201200536",
+        "reactions": [
+            {
+                "text": "Synthesis: The Pd-doped perovskite La0.6Sr0.4Fe0.85Pd0.05Mn0.1O3 (LSFMP) powder was prepared from C4H6O4Pd (98 %, Wako Chemical Co. Ltd., Japan), La(NO3)3⋅6 H2O (99.9 %, Wako Chemical Co. Ltd., Japan), Sr(NO3)2 (98 %, Wako Chemical Co. Ltd., Japan), Fe(NO3)3⋅9 H2O (99 %, Kishinda Chemical Co. Ltd., Japan), and Mn(NO3)2⋅6 H2O (99.9 %, Wako Chemical Co. Ltd., Ltd., Japan) by using a conventional solid-state reaction method. First, palladium acetate and the other nitrate precursors were dissolved in acetone and EtOH, respectively, and the acetone-based solution was added into the EtOH mixture, which was then stirred and heated at 343 K for 5 h. The resulting solution was evaporated by heating on a hot plate and the obtained powder was calcined in an electric furnace at 1473 K for 6 h.",
+                "precursors": ["C4H6O4Pd", "La(NO3)3⋅6 H2O", "Sr(NO3)2", "Fe(NO3)3⋅9 H2O", "Mn(NO3)2⋅6 H2O"],
+                "target": "La0.6Sr0.4Fe0.85Pd0.05Mn0.1O3",
+                "is_right_located": true
+            },
+            {
+                "text": "Sample preparation: The electrolyte used herein had the composition La0.8Sr0.2Ga0.8Mg0.15Co0.05O3 (LSGMC). The self-supporting LSGMC electrolyte disk was prepared with a fixed thickness of 0.27 mm by using a tape-casting method and final sintering was performed at 1773 K for 6 h in air. Sm0.5Sr0.5CoO3 (SSC) was prepared by using a conventional solid-state reaction method with calcination of the precursor at 1473 K for 6 h in air. The precursor was obtained by evaporation of an aqueous solution of Sm2O3, Sr(NO3)2, and Co(NO3)3. As-obtained SSC was used as the cathode (diameter: 5 mm). Each face of the LSGMC electrolyte contained an anode (diameter: 5 mm) and a cathode (thickness: about 30 μm), which were coated with the obtained electrode powder by using a screen-printing method and then calcined at 1273 K for 30 min. A platinum electrode, which was prepared by using a commercial Pt paste (Tanaka TR7902), served as the reference electrode and was placed close to the cathode. The current lead wire was connected to the Pt reference electrode. Pt mesh was used for current-collection and a Pt wire was used for the lead line. A negligible influence of the Pt mesh on power density was confirmed in our previous study",
+                "precursors": ["Sm2O3", "Sr(NO3)2", "Co(NO3)3"],
+                "target": "Sm0.5Sr0.5CoO3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.jnucmat.2009.04.010",
+        "reactions": [
+            {
+                "text": "Li4SiO4 powders were prepared by solid state reaction and the water-based sol–gel method, respectively. In the synthesis by solid state reaction, the powders of SiO2 (Analytical Reagent, AR) and Li2CO3 (AR) were blended with the Li/Si molar ratio of 4 by planetary ball milling for 4 h using ethyl alcohol as the milling medium. Li4SiO4 powders were obtained by calcining the dried precursors at 900 °C for 4 h. For the water-based sol–gel method, SiO2 (aerosil) and LiOH·H2O (AR) were chosen as the starting materials with citric acid (C6H8O7) as the chelating agent. The detailed procedure for the preparation process is shown in Fig. 1. LiOH·H2O was dissolved in distilled water. C6H8O7 was used to adjust the pH value of the solution to 8.5. The concentration of lithium ion in the solution was controlled at about 0.3 mol/L. Stoichiometric aerosil SiO2 was added into the solution and colloidal solution was then obtained. The colloidal solution was vaporized at 70 °C and a transparent gel was formed ultimately. The gel was dried at 150 °C for 24 h. The dried precursor was sieved with 200 mesh screen and then calcined at 675 °C for 4 h.",
+                "precursors": ["SiO2", "Li2CO3"],
+                "target": "Li4SiO4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.apcatb.2012.04.033",
+        "reactions": [
+            {
+                "text": "All of the reagents were analytical grade and used without further purifications. Nanocrystalline pyrochlore AgSbO3 samples were prepared by a hydrothermal method. In a typical procedure, Sb2O5 powder (0.24 g, 0.75 mmol) was added to 70 ml aqueous solution containing AgAc (0.25 g, 1.5 mmol) under vigorous stirring. The pH of the resulting mixture was adjusted by nitric acid solution or sodium hydrate solution. The mixture was loaded into a 100 mL Teflon-lined autoclave and sealed tightly. The autoclaves were kept at 180 °C for 48 h. After cooling to room temperature, the precipitate was collected, washed with distilled water and absolute ethanol for several times, and then dried in air at 80 °C. For comparison, bulk pyrochlore AgSbO3 sample was prepared from Ag2O and Sb2O5 via the conventional solid-state reaction according to the literature.",
+                "precursors": ["Ag2O", "Sb2O5"],
+                "target": "AgSbO3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.apcatb.2014.04.041",
+        "reactions": [
+            {
+                "text": "Sol–gel synthesis based on EDTA-citrate complexing process was used to examine the products of LBMM and SDC. La(NO3)3, Ba(NO3)2, Mn(NO3)2, Mg(NO3)2, Sm(NO3)3 and Ce(NO3)3 according to the stoichiometry of LBMM + SDC (80:20 in weight ratio) were mixed in the solution and further calcined at 1100 °C for 8 h. The obtained products reflect the most stable production of the solid–state reaction between LBMM and SDC. It is well known that Sm and Ce can both dope into the A-site and B-site of the perovskite. However, Sm3+(0.958 Å),Ce3+ (1.01 Å) and Ce4+(0.87 Å) have smaller ionic radii than La3+ (1.36 Å) and Ba2+ (1.61 Å), and the doping into A-site of LBMM would result in the shrinking of the lattice, but they have larger ionic radii than Mn2+ (HS-0.83 Å), Mn3+ (HS-0.645 Å), Mn4+ (HS-0.53 Å) and Mg2+(0.72 Å). The doping of Ce or Sm into B-site would result in the expansion of the lattice. Therefore, Sm and Ce were likely incorporated into the A-site of LBMM. However, there is a strong peak of CeO2 from the XRD of (La0.4Ba0.6)0.8Ce0.2Mn0.8Mg0.2O3–δ and (La0.4Ba0.6)0.8(Sm0.2Ce0.8)0.2Mn0.8Mg0.2O3–δ in Fig. 4. Its means Ce cannot be doping in LBMM at the 1100 °C. It's demonstrated that the phase reaction between LBMM and SDC was closely related with the firing temperatures.",
+                "precursors": ["La(NO3)3", "Ba(NO3)2", "Mn(NO3)2", "Mg(NO3)2", "Sm(NO3)3", "Ce(NO3)3"],
+                "target": "La0.4Ba0.6Mn0.8Mg0.2O3–δ, Sm0.2Ce0.8O1.9",
+                "is_right_located": false
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cm981011i",
+        "reactions": [
+            {
+                "text": "Ba7Nb4MoO20 was prepared by the solid-state reaction of BaCO3 (Aldrich, 99.98%), MoO3 (Aldrich, 99.5%), and Nb2O5 (Aldrich, 99.5%). Stoichiometric amounts of initial reagents were ground and the mixture was pressed into a pellet. This pellet was heated at 1300 °C for 72 h. The pale cream homogeneous product was cooled in air to room temperature in the platinum crucibles used for the synthesis.",
+                "precursors": ["BaCO3", "MoO3", "Nb2O5"],
+                "target": "Ba7Nb4MoO20",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/aic.13882",
+        "reactions": [
+            {
+                "text": "In particular, the NiFe2O4 material synthesized by solid-phase self-propagating high-temperature synthesis was employed (denoted, hereafter, as SHS NiFe2O4), due to the amenability of this route for the synthesis of large material quantities. Few comparative experiments at particular cycle conditions were also performed with a NiFe2O4 synthesized via solid-state synthesis (denoted, hereafter, as SSS NiFe2O4)23 from the co-firing of the respective single-metal oxides (NiO and Fe2O3).",
+                "precursors": ["NiO", "Fe2O3"],
+                "target": "NiFe2O4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cg301834x",
+        "reactions": [
+            {
+                "text": "More importantly, the transition-metal hydroxides can be transformed into the corresponding lithium-ion intercalation materials. The conversion is based on the reaction between hydroxides and LiOH through the simple solid-state reactions (see Experimental Section for details). Li(Ni0.6Co0.4)O2 nanoparticles were produced by sintering the mixed powder of cobalt-substituted nickel hydroxide (the sample in Figure 3b) and LiOH·3H2O at 700 °C. Figure S4a (Supporting Information) shows the SEM image of as-prepared Li(Ni0.6Co0.4)O2 nanomaterials. The XRD pattern (Figure S4b, Supporting Information) is in good agreement with the standard pattern of Li(Ni0.6Co0.4)O2 (JCPDS Card No. 87-1564). Furthermore, as shown in Figure S4c (Supporting Information), Li0.99NiO2 nanomaterials were also synthesized by heating the mixture of NiOH nanoplates and LiOH·3H2O at 800 °C in air atmosphere. The X-ray diffraction pattern (Figure S4d, Supporting Information) shows that the diffraction peaks could be indexed to Li0.99NiO2 (JCPDS Card No. 87-1553).",
+                "precursors": ["cobalt-subsituted Ni(OH)2", "LiOH·3H2O"], 
+                "target": "Li(Ni0.6Co0.4)O2",
+                "is_right_located": true
+            },
+            {
+                "text": "More importantly, the transition-metal hydroxides can be transformed into the corresponding lithium-ion intercalation materials. The conversion is based on the reaction between hydroxides and LiOH through the simple solid-state reactions (see Experimental Section for details). Li(Ni0.6Co0.4)O2 nanoparticles were produced by sintering the mixed powder of cobalt-substituted nickel hydroxide (the sample in Figure 3b) and LiOH·3H2O at 700 °C. Figure S4a (Supporting Information) shows the SEM image of as-prepared Li(Ni0.6Co0.4)O2 nanomaterials. The XRD pattern (Figure S4b, Supporting Information) is in good agreement with the standard pattern of Li(Ni0.6Co0.4)O2 (JCPDS Card No. 87-1564). Furthermore, as shown in Figure S4c (Supporting Information), Li0.99NiO2 nanomaterials were also synthesized by heating the mixture of NiOH nanoplates and LiOH·3H2O at 800 °C in air atmosphere. The X-ray diffraction pattern (Figure S4d, Supporting Information) shows that the diffraction peaks could be indexed to Li0.99NiO2 (JCPDS Card No. 87-1553).",
+                "precursors": ["NiOH", "LiOH·3H2O"],
+                "target": "Li0.99NiO2",
+                "is_right_located": true
+            },
+            {
+                "text": "Additionally, the corresponding transition-metal oxides and lithium-ion intercalation materials can also be produced by simple chemical reactions. The NiO and Co3O4 nanomaterials were obtained through solid-state reactions. Figure 7a shows the as-prepared NiO nanoplates by calcining the corresponding hydroxides at 350 °C in air atmosphere for 3 h. The corresponding XRD pattern (Figure 7b) is in good agreement with the standard pattern of NiO (JCPDS Card No. 47-1049), with no peaks of impurity detected. It is notable that the plate-like morphology still remains after the high temperature reaction. As shown in Figure 7c, Co3O4 nanoplates were produced under the same calcining condition. The diffraction peaks of the as-prepared Co3O4 nanoplates (Figure 7d) have been assigned to cubic Co3O4 (JCPDS Card No. 42-1467). Moreover, NiCo2O4 nanoplates were also obtained using cobalt-substituted nickel hydroxide (the sample in Figure 3d) as a precursor. After calcination at 350 °C for 3 h, the hydroxide precursor converted into NiCo2O4 nanoplates (Figure 8a). Figure 8b shows the XRD pattern of the as-obtained NiCo2O4 nanoplates. All diffraction peaks match well with cubic NiCo2O4 (JCPDS Card No. 20-0781).",
+                "precursors": ["Ni(OH)2"],
+                "target": "NiO",
+                "is_right_located": true
+            },
+            {
+                "text": "Additionally, the corresponding transition-metal oxides and lithium-ion intercalation materials can also be produced by simple chemical reactions. The NiO and Co3O4 nanomaterials were obtained through solid-state reactions. Figure 7a shows the as-prepared NiO nanoplates by calcining the corresponding hydroxides at 350 °C in air atmosphere for 3 h. The corresponding XRD pattern (Figure 7b) is in good agreement with the standard pattern of NiO (JCPDS Card No. 47-1049), with no peaks of impurity detected. It is notable that the plate-like morphology still remains after the high temperature reaction. As shown in Figure 7c, Co3O4 nanoplates were produced under the same calcining condition. The diffraction peaks of the as-prepared Co3O4 nanoplates (Figure 7d) have been assigned to cubic Co3O4 (JCPDS Card No. 42-1467). Moreover, NiCo2O4 nanoplates were also obtained using cobalt-substituted nickel hydroxide (the sample in Figure 3d) as a precursor. After calcination at 350 °C for 3 h, the hydroxide precursor converted into NiCo2O4 nanoplates (Figure 8a). Figure 8b shows the XRD pattern of the as-obtained NiCo2O4 nanoplates. All diffraction peaks match well with cubic NiCo2O4 (JCPDS Card No. 20-0781).",
+                "precursors": ["cobalt hydroxide"],
+                "target": "Co3O4",
+                "is_right_located": true
+            },
+            {
+                "text": "Additionally, the corresponding transition-metal oxides and lithium-ion intercalation materials can also be produced by simple chemical reactions. The NiO and Co3O4 nanomaterials were obtained through solid-state reactions. Figure 7a shows the as-prepared NiO nanoplates by calcining the corresponding hydroxides at 350 °C in air atmosphere for 3 h. The corresponding XRD pattern (Figure 7b) is in good agreement with the standard pattern of NiO (JCPDS Card No. 47-1049), with no peaks of impurity detected. It is notable that the plate-like morphology still remains after the high temperature reaction. As shown in Figure 7c, Co3O4 nanoplates were produced under the same calcining condition. The diffraction peaks of the as-prepared Co3O4 nanoplates (Figure 7d) have been assigned to cubic Co3O4 (JCPDS Card No. 42-1467). Moreover, NiCo2O4 nanoplates were also obtained using cobalt-substituted nickel hydroxide (the sample in Figure 3d) as a precursor. After calcination at 350 °C for 3 h, the hydroxide precursor converted into NiCo2O4 nanoplates (Figure 8a). Figure 8b shows the XRD pattern of the as-obtained NiCo2O4 nanoplates. All diffraction peaks match well with cubic NiCo2O4 (JCPDS Card No. 20-0781).",
+                "precursors": ["coboalt-substituted Ni(OH)2"],
+                "target": "NiCo2O4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.jpcs.2018.03.005",
+        "reactions": [
+            {
+                "text": "For a typical synthesis of ZnWO4 nanoparticles by hot injection method, Zn (NO2)3.6H2O, Zn(CH3COO)2.2H2O, ZnSO4.7H2O, and ZnCl2 were used as the starting precursors as a zinc source. A stoichiometric amount of sodium tungstate was dissolved in 50 ml of double distilled water and heated up to 90 °C under constant stirring process which serves as tungstate source. Simultaneously, the zinc metal ion precursors were dissolved in 50 ml of double distilled water and injected into a hot aqueous solution of sodium tungstate. The resultant suspension was kept under stirring for 2 h. The formed precipitate was repeatedly washed with double distilled water and then dried at 100 °C for 12 h. Finally, the dried sample was calcinated at 500 °C for 2 h to improve the crystallinity of the sample. The sample prepared using different zinc precursors such as Zn (NO2)3.6H2O, Zn(CH3COO)2.2H2O, ZnSO4.7H2O, and ZnCl2 are denoted as ZNH, ZAH, ZSH, and ZCH, respectively, where Z represents ZnWO4, the second letter denotes the precursor-like N - nitrate, A - acetate, S - sulphate and C - chloride. Then the third letter H indicates the hot injection method. As well as ZnWO4 nanoparticles prepared by a co-precipitation method (ZAC), where Z and A has usual meaning as mentioned above and C refers co-precipitation method. Similarly, a solid-state method is employed to synthesize ZnWO4 nanoparticles using ZnO and (NH4)10H2(W2O7) oxides are represented as SSM.",
+                "precursors": ["ZnO", "(NH4)10H2(W2O7)"],
+                "target": "ZnWO4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1016/j.apcatb.2007.11.020",
+        "reactions": [
+            {
+                "text": "The reduction process of CuFe2O4-based spinel was schematically shown in Fig. 17 . As previously reported [7,13,17], the sample pre-calcined in air below 900°C was less active for methanol steam reforming step (1) in DME SR than those heated at 900°C and 1000°C. The BET surface area after heating at or higher than 900°C was very small (ca. 1m2 g-1). The particles are grown in size during complete solid state reaction between copper oxide and iron oxide to form CuFe2O4 spinel. During the calcination in air at elevated temperatures, the Cu and Fe atoms are accommodated to respective cationic sites in the spinel structure; i.e.. atomic dispersion was achieved at this stage. The oxidation states of copper and iron are di- and tri-valent, respectively. After reduction with hydrogen at 250°C or 350°C, however, these oxidation states are no longer stable. Copper is readily reduced to metallic state and iron oxide to Fe3O4 with inverse spinel structure. Metallic iron was also observed for the sample reduced at 350°C, though the fraction was small. Formation of these phases accompanies separation of two components and volume shrinkage. The large extent of textural modification and the pore formation were observed by TEM. The comparison of the reduced samples at 250°C and 350°C clearly indicated that, upon reduction, the phase separation and pore formation were progressed. This microstructural change agreed with that of surface area upon reduction. Deposited Cu grains should be small in size at the initial stage of the reduction, but grown in size with a further progress of reduction. However, strong chemical interaction of deposited Cu and the host spinel oxide could be expected from this study. Thus, the Cu deposits remain small in size as compared with the Cu catalysts prepared by impregnation on an inert support. The growth of the Cu particles is one of the main causes of the degradation in Cu-based catalysts for DME reforming. The main factors for deactivation of CuFe2O4 +γ-alumina are deposition of carbonaceous species and sintering of Cu. Especially, in the reaction at or higher than 350°C, thermal degradation with sintering is dominated. Therefore, the preparation of Cu catalyst from the spinel oxide via phase separation should be effective in maintaining the fine metallic state of Cu, though the overall BET surface area is small.",
+                "precursors": ["CuO", "Fe2O3"],
+                "target": "CuFe2O4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/nn405246h",
+        "reactions": [
+            {
+                "text": "WH was synthesized using a precipitation method with calcium hydroxide (Ca(OH)2, 99.0%, High Purity Chemical, Japan), magnesium hydroxide (Mg(OH)2, 95.0%, Junsei Chemical Co., Japan), and phosphoric acid (H3PO4, 85.0%, Junsei Chemical Co., Japan) in a water-based system. Initially, Ca(OH)2 and Mg(OH)2 were mixed at the suggested ratios in Figures 1 and 5a, and heat was applied between 60 and 90 °C to achieve a fast kinetic reaction. Then, according to Figures 1 and 5a, an appropriate amount of H3PO4 was added dropwise at a rate of 12.5 mL/min into the Ca(OH)2 and Mg(OH)2 mixed solution using a digital buret (Metrohm 876, Dosimat Plus) while vigorously stirring. The precipitates were aged for more than 9 h and then filter-pressed and dried using a lyophilizer. HAP was also synthesized using a similar precipitation method with identical starting materials. First, 500 mL of a 0.5 M Ca(OH)2 aqueous solution and 500 mL of a 0.3 M H3PO4 aqueous solution were prepared. Then, the H3PO4 solution was added dropwise at a rate of 12.5 mL/min to the Ca(OH)2 aqueous solution while continuously stirring. After 24 h, the precipitants were filter-pressed to be collected and freeze-dried. TCP (Ca3(PO4)2) and TCMP (Ca2.86Mg0.14(PO4)2) were synthesized using a general solid-state method with calcium carbonate (CaCO3, 99.99%, High Purity Chemical, Japan), magnesium carbonate (MgCO3, 99.9%, High Purity Chemical, Japan), and diammonium hydrogen phosphate ((NH4)2HPO4, 99.0%, Junsei Chemical Co., Japan). Each sample was prepared according to its molar ratios and mixed with 1% dispersant in an ethanol solution. The weight ratio between ethanol and the whole powders was 1 to 1. After all the samples were ball milled for 48 h, the green powders were sintered at 1100 °C for 2 h.",
+                "precursors": ["CaCO3", "(NH4)2HPO4"],
+                "target": "Ca3(PO4)2",
+                "is_right_located": true
+            },
+            {
+                "text": "WH was synthesized using a precipitation method with calcium hydroxide (Ca(OH)2, 99.0%, High Purity Chemical, Japan), magnesium hydroxide (Mg(OH)2, 95.0%, Junsei Chemical Co., Japan), and phosphoric acid (H3PO4, 85.0%, Junsei Chemical Co., Japan) in a water-based system. Initially, Ca(OH)2 and Mg(OH)2 were mixed at the suggested ratios in Figures 1 and 5a, and heat was applied between 60 and 90 °C to achieve a fast kinetic reaction. Then, according to Figures 1 and 5a, an appropriate amount of H3PO4 was added dropwise at a rate of 12.5 mL/min into the Ca(OH)2 and Mg(OH)2 mixed solution using a digital buret (Metrohm 876, Dosimat Plus) while vigorously stirring. The precipitates were aged for more than 9 h and then filter-pressed and dried using a lyophilizer. HAP was also synthesized using a similar precipitation method with identical starting materials. First, 500 mL of a 0.5 M Ca(OH)2 aqueous solution and 500 mL of a 0.3 M H3PO4 aqueous solution were prepared. Then, the H3PO4 solution was added dropwise at a rate of 12.5 mL/min to the Ca(OH)2 aqueous solution while continuously stirring. After 24 h, the precipitants were filter-pressed to be collected and freeze-dried. TCP (Ca3(PO4)2) and TCMP (Ca2.86Mg0.14(PO4)2) were synthesized using a general solid-state method with calcium carbonate (CaCO3, 99.99%, High Purity Chemical, Japan), magnesium carbonate (MgCO3, 99.9%, High Purity Chemical, Japan), and diammonium hydrogen phosphate ((NH4)2HPO4, 99.0%, Junsei Chemical Co., Japan). Each sample was prepared according to its molar ratios and mixed with 1% dispersant in an ethanol solution. The weight ratio between ethanol and the whole powders was 1 to 1. After all the samples were ball milled for 48 h, the green powders were sintered at 1100 °C for 2 h.",
+                "precursors": ["CaCO3", "MgCO3", "(NH4)2HPO4"],
+                "target": "Ca2.86Mg0.14(PO4)2",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cg500293w",
+        "reactions": [
+            {
+                "text": "The compounds with the BiSeO3Cl composition have already been reported in the literature as three different polymorphic modifications, α, β, and γ (Figure 1). The γ-form (space group Pna21, a = 11.707(2), b = 7.047(1), c = 5.315(1) Å) was prepared in evacuated (10–2 Pa) silica tubes from the 3:2 mixtures of BiOCl and SeO2 by Ibragimov et al. (11) The mixtures were placed in the tubes in a dry chamber under a nitrogen atmosphere. The phase composition of the reaction products was determined by X-ray diffraction. Solid-state reactions were run at 200 °C, 250 °C, 300 °C, and 350 °C for 240 h, followed by a furnace-cooling or quenching in ice water. Using a starting mixture enriched in BiOCl, the product was systematically the γ-form. Single crystals of the α-BiSeO3Cl (space group P212121, a = 6.353(2), b = 7.978(3), c = 8.651(4) Å) was obtained by Berdonosov et al. (12) by heating of the evacuated quartz tube with BiOCl and SeO2 in 2:1 ratio at 300 °C for 240 h. According to them, if the starting mixture was enriched in BiOCl, the reaction products occasionally contained yellow BiOCl platelets and colorless parallelepipedal crystals of γ-BiSeO3Cl. Oppermann et al. (20) reported the sequence of phase transitions occurring with temperature starting from the α-form as follows: α → β at 400 °C/2 °C and β → γ at 410 °C/2 °C and going until melting point at 417 °C/2 °C. This was deduced from differential thermal analysis performed by Oppermann et al. ",
+                "precursors": ["BiOCl", "SeO2"],
+                "target": "γ-BiSeO3Cl",
+                "is_right_located": true
+            },
+            {
+                "text": "The compounds with the BiSeO3Cl composition have already been reported in the literature as three different polymorphic modifications, α, β, and γ (Figure 1). The γ-form (space group Pna21, a = 11.707(2), b = 7.047(1), c = 5.315(1) Å) was prepared in evacuated (10–2 Pa) silica tubes from the 3:2 mixtures of BiOCl and SeO2 by Ibragimov et al. (11) The mixtures were placed in the tubes in a dry chamber under a nitrogen atmosphere. The phase composition of the reaction products was determined by X-ray diffraction. Solid-state reactions were run at 200 °C, 250 °C, 300 °C, and 350 °C for 240 h, followed by a furnace-cooling or quenching in ice water. Using a starting mixture enriched in BiOCl, the product was systematically the γ-form. Single crystals of the α-BiSeO3Cl (space group P212121, a = 6.353(2), b = 7.978(3), c = 8.651(4) Å) was obtained by Berdonosov et al. (12) by heating of the evacuated quartz tube with BiOCl and SeO2 in 2:1 ratio at 300 °C for 240 h. According to them, if the starting mixture was enriched in BiOCl, the reaction products occasionally contained yellow BiOCl platelets and colorless parallelepipedal crystals of γ-BiSeO3Cl. Oppermann et al. (20) reported the sequence of phase transitions occurring with temperature starting from the α-form as follows: α → β at 400 °C/2 °C and β → γ at 410 °C/2 °C and going until melting point at 417 °C/2 °C. This was deduced from differential thermal analysis performed by Oppermann et al. ",
+                "precursors": ["BiOCl", "SeO2"],
+                "target": "α-BiSeO3Cl",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/chem.201503839",
+        "reactions": [
+            {
+                "text": "Single crystals of monoclinic ThMo2O8 were obtained by means of a solid-state synthesis method. The starting mixture contained Th(NO3)⋅5 H2O (0.100 g, Merck) and MoO3 (0.175 g, Alfa-Aesar) of analytical grade. After being fully ground, the mixture was put into a programmable furnace (CARBOLITE CWF 1300), which was kept at 1273 K for 6 h to get a homogeneous melt. After this, the temperature was lowered at a rate of 5 K h−1 until 673 K, before quenching. The products were washed with water and acetone to remove excess MoO3. Colorless crystals in the form of prisms were collected and single-crystal crystallographic investigations showed that monoclinic ThMo2O8 could be found as a minor product. Owing to the indistinguishable morphologies of the colorless crystals and broken glass pieces, it is impossible to obtain a yield for monoclinic ThMo2O8.",
+                "precursors": ["Th(NO3)⋅5 H2O", "MoO3"],
+                "target": "monoclinic ThMo2O8",
+                "is_right_located": true
+            },
+            {
+                "text": "The polycrystalline samples of each ThMo2O8 polymorph were prepared by heating a thoroughly ground mixture of Th(NO3)4⋅5 H2O and MoO3 in the molar ratio 1:2. Three different sintered alumina boats were used and initially heated at 673 K for 15 h. Thereafter, powder X-ray diffraction experiments were carried out to check the purity of each mixture. For each polycrystalline sample, if the experimental X-ray diffraction pattern could not be matched to the theoretical one obtained from the single-crystal structure, then the mixture was withdrawn, ground, and reheated at an increased temperature (increased by 50 K each time). The above procedure was repeated several times until the experimental X-ray diffraction pattern agreed with the theoretical pattern. The phase formation temperature for all three ambient ThMo2O8 samples is shown in Figure 1. Owing to the overlapping formation temperature of monoclinic and hexagonal ThMo2O8, these phases could not be separated. Finally, only the orthorhombic ThMo2O8 polymorph could be obtained as a pure phase at temperatures above 870 K. A mixture of monoclinic and hexagonal ThMo2O8 in a ratio of 7:3 can be synthesized at 800 K.",
+                "precursors": ["Th(NO3)4⋅5 H2O", "MoO3"],
+                "target": "orthorhombic ThMo2O8",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cg1006204",
+        "reactions": [
+            {
+                "text": "The colloidal suspension of unilamellar Ca2Nb3O10 nanosheet was synthesized from layered KCa2Nb3O10 via soft-chemical delamination. The host material of KCa2Nb3O10 was prepared by the solid-state reaction of a mixture of K2CO3, CaCO3, and Nb2O5 at 1200 °C for 12 h. The sample was acid-exchanged using 5 M HCl solution to produce a protonic oxide of HCa2Nb3O10·1.5H2O, which was subsequently treated with tetrabutylammonium hydroxide (TBA) solution for delamination under the conditions previously described.",
+                "precursors": ["K2CO3", "CaCO3", "Nb2O5"],
+                "target": "KCa2Nb3O10",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/adfm.201303492",
+        "reactions": [
+            {
+                "text": "Pb(Fe0.5Ta0.5)0.4(Zr0.53Ti0.47)0.6O3 ceramic samples were synthesized by conventional solid state reaction route in two steps. In the first step analytically-pure oxides, PbO, ZrO2, TiO2, Fe2O3, Ta2O5, and Nb2O5 (Alfa Aesar) with purity of 99–99.9%, were used as starting materials. The powders of the respective metal oxides were homogeneously mixed using a planetary high energy ball mill with tungsten carbide media under isopropanol at a speed of 600 rpm for a period of 16 h, then from the resulting slurry the solvent was slowly evaporated until a mixed powder was obtained. For phase formation the resultant powders were calcined at 850 °C for 10 h in a closed alumina crucible. 10% excess of PbO was to compensate Pb deficiency during the high temperature processing. In the second step, the calcined powder was mixed with a 1% poly vinyl alcohol (PVA) solution as a binder and the dried powders were granulated by passing them through a 150 μm-mesh sieve. They were then pressed using a hydrostatic press (3.46 × 108 Pa) into 2 mm thick disk with a diameter of 10 mm. The pressed pellets were heat treated at 600 °C for 2 h for the removal of organic binder, followed by sintering at 1250 °C for 4 h. All heat treatments were performed in air. In order to prevent the PbO loss during high temperature sintering and to maintain the desired stoichiometry, an equilibrium PbO vapor pressure was established by placing PbZrO3 along with the samples in a covered alumina crucible. The final samples employed were, in fact, the same ones as in Sanchez et al.14 to assure that all data were from the same specimens. In what follows, we have abbreviated Pb(Fe0.5Ta0.5)0.4(Zr0.53Ti0.47)0.6O3 as PZTFT4.",
+                "precursors": ["PbO", "ZrO2", "TiO2", "Fe2O3", "Ta2O5", "Nb2O5"],
+                "target": "Pb(Fe0.5Ta0.5)0.4(Zr0.53Ti0.47)0.6O3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/adfm.201101123",
+        "reactions": [
+            {
+                "text": "Synthesis of Mesoporous LTO: Poly(isoprene) -b-poly(ethylene oxide) block copolymer (PI-b-PEO) was synthesized by anionic polymerization. The Mn value and PEO fraction of PI-b-PEO used were found to be 30,000 g mol−1 and 0.06, respectively. PI-b-PEO has narrow weight distributions with a polydispersity index of 1.13. This PI-b-PEO block copolymer was used both as a structure directing agent as well as carbon source. Initially, 0.2 g of PI-b-PEO was dissolved in a mixture of 4 ml of THF. The inorganic precursor solution was prepared by mixing 1.287 ml of TTIP (titanium tetraisopropoxide) and 0.181g of lithium ethoxide (3.48 mL of 1 M LiOC2H5 in THF stock solution). 0.39 g of Oxalic acid was then added to the inorganic precursor solution. Block copolymer solution and inorganic precursor were mixed and stirred for 2 h. Films were cast by evaporation of the solvents on a hot plate at 50 °C, and further dried at 130 °C in a vacuum oven for 1 h. The as-synthesized films were heat-treated to 700 °C under N2 and held for 2 h. To prepare bulk the LTO sample, a typical solid-state method was employed using a stoichiometric amount of TiO2 (anatase) and Li2CO3. The mixture powder was heat-treated at 800 °C for 20 h under atmosphere. (Supporting Information, Figure S2: XRD pattern of bulk LTO, Figure S3: SEM of bulk LTO)",
+                "precursors": ["TiO2", "Li2CO3"],
+                "target": "Li4Ti5O12",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c6cy01666a",
+        "reactions": [
+            {
+                "text": "Tin antimony oxide is an interesting combination for a visible light-responsive photocatalyst that has been the target of many research works.48,122 However, the synthesis of this mixed oxide is challenging because Sb5+ may be reduced into Sb3+, forming Sb2O3 as a favorable product at high temperatures. The solid-state synthesis of the Sn and Sb mixed oxide resulted in antimony-doped tin oxide as a major product, Sn1−xSbxO2.8,9 However, tin(ii) antimonate was successfully synthesized by Uma et al. in 2009 using the ion-exchange synthesis method. They started from antimonic acid (H2Sb2O6·3.0H2O) as an ion-exchange precursor in SnCl2 solution at room temperature for 12 h. They obtained a non-stoichiometric compound with a chemical formula of Sn0.92Sb2O6·2.0H2O. The obtained compound showed an extended absorption into the visible region with an absorption edge at approximately 650 nm. Furthermore, the Sn0.92Sb2O6·2.0H2O showed visible-light-driven organic (methyl orange) decomposition photocatalytic activity for the degradation of RhB.",
+                "precursors": ["Sn", "Sb"],
+                "target": "Sn1-xSbxO2",
+                "is_right_located": false
+            },
+            {
+                "text": "Later, using solid-state microwave-assisted synthesis, Ohara et al. successfully reported Sn2+ and deduced its crystal structure.52 In this study, the target compound was successfully synthesized within a short period of time (1 min) by a simple solid-state reaction (2SnO + TiO2) under microwave irradiation. The two starting reactants respond differently to microwave irradiation, where SnO strongly couples under microwave energy while TiO2 does not. The reaction mechanism is suggested to proceed with the diffusion of the hot Sn2+ species toward TiO2 to form Sn2TiO4. The authors reported that a drastic enhancement of the reaction kinetics could be achieved under thermal non-equilibrium conditions induced by the strong coupling of SnO with microwave energy.52 This was shown to be advantageous to synthesize Sn2+ compounds, avoiding the disproportionation reaction. Although the photocatalytic properties of Sn2TiO4 have not yet been reported, many theoretical works have predicted its good intrinsic properties that would enable it to act as a visible light-responsive material. The electronic structure of Sn2TiO4 is calculated by using DFT with the PBE functional and a plane wave basis set, employing the VASP code.130,131 At this level of theory, the band gap is underestimated at 1.16 eV, but using the more accurate HSE06 functional, a separation of 2.09 eV is predicted between the valence and conduction bands",
+                "precursors": ["SnO", "TiO2"],
+                "target": "Sn2TiO4",
+                "is_right_located": false
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/adfm.201201684",
+        "reactions": [
+            {
+                "text": "Materials Preparation: Li4Ti5O12 was synthesized by a solid state reaction using TiO2 (Sigma Aldrich, anatase, ≥99%) and Li2CO3 (Sigma Aldrich, 99%). 5 mole% excess TiO2 and Li2CO3 were well mixed and then heated at 850 °C for 5 h with a heating and cooling rate of 5 °C/min.",
+                "precursors": ["TiO2", "Li2CO3"],
+                "target": "Li4Ti5O12",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c3cy00014a",
+        "reactions": [
+            {
+                "text": "Flux treatment using various kinds of molten salts was performed for SrTiO3 powder prepared by a polymerized complex method.21,22Titanium tetrabutoxide (50 mmol, Kanto Chemical) was dissolved into 150 ml of methanol, then 0.4 mol of anhydrous citric acid (CA, Wako Pure Chemical) was added to the solution. SrCO3 (50 mmol, Kanto Chemical) and propylene glycol (1.2 mol, Kanto Chemical) were added into the Ti–CA methanol solution. The mixed solution was heated with stirring on a heating plate operating at 353 K until a transparent solution was obtained, then it was heated at 473 K with stirring to promote condensation and esterification. A transparent polyester resin was eventually formed. The obtained resin was subjected to heating in air at 723 K, then at 823 K for 2 h in order to remove organic contents. The precursor thus obtained was mixed with 20 wt% of flux reagents, such as LiCl, NaCl, KCl, and SrCl2, and then the mixture was heated in air at 1273 K for 5 h using an alumina crucible. This temperature was sufficient for the flux treatment using these salts because their melting points are 878, 1074, 1043, and 1148 K, respectively. The volume proportion of SrTiO3 to the flux reagents was estimated from densities of materials being about 1 : 1 for all cases. All samples obtained were washed with water several times to remove the flux reagents. SrTiO3 doped with 5 atom% of Na was also prepared by a solid state reaction. SrCO3, Na2CO3, and TiO2 were mixed in a molar ratio 0.95 : 0.025 : 1.0, then the mixture was calcined in air at 1173 K for 1 h followed by 1273 K for 20 h with intermediate grinding.",
+                "precursors": ["SrCO3", "TiO2", "Na2CO3"],
+                "target": "SrTiO3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/nn101453v",
+        "reactions": null
+    },
+    {
+        "doi": "10.1016/j.jpcs.2005.02.003",
+        "reactions": [
+            {
+                "text": "Polycrystalline BaGa2S4:Eu2+ sample were synthesised from BaS and Ga2S3 sulphide powders mixed in stoichiometric composition and annealed at 900 °C under a stream of H2S+Ar for 4 h. The doping ions were introduced in the form of EuF3. This preparation method is different from that reported by Peters et al. [11] and Davolos et al. [13] who had used barium carbonate (BaCO3), gallium oxide (Ga2O3) and europium oxide (Eu2O3) as starting materials and H2S gas as sulphuring agent. A third preparation method presented by Donohue et al. was based on solid-state reactions between Ba and Ga in elemental form and europium sulphide EuS [14]. The method presented here provides powder samples with good crystalline properties as shown by X-ray diffraction measurements. Powder samples with varying Eu2+ concentrations (1, 5 and 10%) were studied. The samples exhibit a brownish yellow colour.",
+                "precursors": ["BaS", "Ga2S3", "EuF3"],
+                "target": "BaGa2S4:Eu2+",
+                "is_right_located": true
+            },
+            {
+                "text": "Polycrystalline BaGa2S4:Eu2+ sample were synthesised from BaS and Ga2S3 sulphide powders mixed in stoichiometric composition and annealed at 900 °C under a stream of H2S+Ar for 4 h. The doping ions were introduced in the form of EuF3. This preparation method is different from that reported by Peters et al. [11] and Davolos et al. [13] who had used barium carbonate (BaCO3), gallium oxide (Ga2O3) and europium oxide (Eu2O3) as starting materials and H2S gas as sulphuring agent. A third preparation method presented by Donohue et al. was based on solid-state reactions between Ba and Ga in elemental form and europium sulphide EuS [14]. The method presented here provides powder samples with good crystalline properties as shown by X-ray diffraction measurements. Powder samples with varying Eu2+ concentrations (1, 5 and 10%) were studied. The samples exhibit a brownish yellow colour.",
+                "precursors": ["BaCO3", "Ga2O3", "Eu2O3", "H2S"],
+                "target": "BaGa2S4:Eu2+",
+                "is_right_located": true
+            },
+            {
+                "text": "Polycrystalline BaGa2S4:Eu2+ sample were synthesised from BaS and Ga2S3 sulphide powders mixed in stoichiometric composition and annealed at 900 °C under a stream of H2S+Ar for 4 h. The doping ions were introduced in the form of EuF3. This preparation method is different from that reported by Peters et al. [11] and Davolos et al. [13] who had used barium carbonate (BaCO3), gallium oxide (Ga2O3) and europium oxide (Eu2O3) as starting materials and H2S gas as sulphuring agent. A third preparation method presented by Donohue et al. was based on solid-state reactions between Ba and Ga in elemental form and europium sulphide EuS [14]. The method presented here provides powder samples with good crystalline properties as shown by X-ray diffraction measurements. Powder samples with varying Eu2+ concentrations (1, 5 and 10%) were studied. The samples exhibit a brownish yellow colour.",
+                "precursors": ["Ba", "Ga", "EuS"],
+                "target": "BaGa2S4:Eu2+",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/aenm.201200833",
+        "reactions": [
+            {
+                "text": "Li3VO4 was prepared by a solid-state method. Appropriate ratios of dried V2O5 and Li2CO3 powders (Li:V = 3:1 in mol/mol) were mixed thoroughly using an agate mortar, then the mixture were annealed at 600 °C for 5 h followed by 900 °C for 3 h in air in an temperature-controlled furnaces. The obtained powder was grounded for use as an active electrode material for battery tests.",
+                "precursors": ["V2O5", "Li2CO3"],
+                "target": "Li3VO4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c5cy00979k",
+        "reactions": [
+            {
+                "text": "The particles of SrTiO3:Rh(2%) were prepared via the water-based hetero-chelate method (WH-method), which was recently developed by our group,28 using a stable titania sol27 as a precursor. The aqueous titania sol (AA-sol) was prepared by mixing TIPT, an aqueous solution of acac, and an aqueous solution of AcOH.27 The AA-sol was mixed with an aqueous solution containing both Sr(OAc)2 (1.08 mol L−1) and lactic acid (2.16 mol L−1) and an aqueous solution of RhCl3 (0.24 mol L−1) at a ratio of Sr : Ti : Rh = 1.02 : 0.98 : 0.02, and stirred for 1 hour at room temperature, yielding an orange transparent sol. To the sol was added an acrylic emulsion and it was stirred for 15 minutes at room temperature, then dried at 80 °C for 3 hours, and finally calcined at 1000 °C for 10 hours, yielding SrTiO3:Rh (Rh: 2%) powdered samples (these samples are denoted as WH-particles). For comparison, SrTiO3:Rh(2%) particles were also prepared via the solid state reaction method (SS-method) using TiO2, SrCO3 and Rh2O3 as raw materials, and calcination at 1000 °C for 10 hours (these samples will be denoted by SS-particles) followed. Although some reports have suggested that the addition of excess Sr in the preparation of SrTiO3-based particles via the SS-method is effective to obtain more active photocatalyst samples, we confirmed that the SrTiO3:Rh particles prepared via the SS-method with excess amount of Sr (Sr/(Ti + Rh) = 1.03, for example) showed almost same rate of H2 evolution as that on the sample prepared with the stoichiometric ratio.28 Thus, in the present study, the SrTiO3:Rh particles prepared via the SS-method with stoichiometric ratio (Sr:(Ti + Rh) = 1) was employed as the almost best SS-sample for fabricating SrTiO3:Rh films for comparison. As an effective cocatalyst for water reduction, small amount (0.5 wt%) of platinum particles were loaded on all the samples by means of in situ photodeposition method.",
+                "precursors": ["SrCO3", "Rh2O3", "TiO2"],
+                "target": "SrTiO3:Rh",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/cg3001587",
+        "reactions": [
+            {
+                "text": "Polycrystalline LiFeP2O7 was synthesized by solid-state methods. Stoichiometric amounts of LiH2PO4 (Alfa Aesar, 97%), Fe2O3 (Fisher Scientific, Certified), and NH4H2PO4 (Alfa Aesar, 98.0%) were ground thoroughly, packed tightly in a platinum crucible, and heated to 200 °C for 10 h to decompose ammonium dihydrogen phosphate, and then 600 °C for 20 h and 850 °C for 20 h with intermittent regrindings. The purity of polycrystalline LiFeP2O7 was confirmed by powder XRD",
+                "precursors": ["LiH2PO4", "Fe2O3", "NH4H2PO4"],
+                "target": "LiFeP2O7",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c4nj01421a",
+        "reactions": [
+            {
+                "text": "Single crystals of Cd4YbO(BO3)3 were grown through high-temperature solid state reactions. A mixture of CdCO3 (8.0 mmol), H3BO3 (6.0 mmol) and Yb2O3 (1.0 mmol) in the molar ratio of 8 : 6 : 1 was ground and loaded into a platinum crucible. The synthesis was performed in four steps. First, the mixture was heated at 500 °C for one day in order to decompose H3BO3 and CdCO3. Second, the resulting mixture was further heated for one day at 1200 °C until a transparent and clear melt was formed. Third, the melt was allowed to cool slowly (3 °C h−1) to the final crystallization temperature (1100 °C). Finally, the obtained mixture was quenched to room temperature. Colorless, transparent crystals were obtained for structure determination. After proper structural analysis, pure powder samples of Cd4YbO(BO3)3 were obtained in quantitative yield through the solid-state reactions from a stoichiometric mixture of CdCO3, H3BO3 and Yb2O3 at 950 °C for 5 days.",
+                "precursors": ["CdCO3", "H3BO3", "Yb2O3"],
+                "target": "Cd4YbO(BO3)3",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1039/c5cy00128e",
+        "reactions": [
+            {
+                "text": "Particles of KCa2Nb3O10 were prepared by calcining a mixture of K2CO3, CaCO3 and Nb2O5 (K : Ca : Nb = 1.1 : 2 : 3) at 1473 K for 12 h. The obtained KCa2Nb3O10 powder was stirred into 5 M HNO3 aqueous solution for 72 h to replace K+ with H+, washed with distilled water, and then dried in air at room temperature. The proton-exchanged particles will be denoted as H+/KCa2Nb3O10 hereafter. The H+/KCa2Nb3O10 particles (0.4 g) were suspended in 100 mL of aqueous solution, in which an equimolar amount of tetrabutylammonium hydroxide (TBAOH) molecules to that of H+/KCa2Nb3O10 (ca. 0.73 mmol, calculated as HCa2Nb3O10·1.5H2O) was added as an initiator of exfoliation. The suspension was continuously shaken at room temperature for 7 days until the H+/KCa2Nb3O10 exfoliates into nanosheets.38 The resulting colloidal suspension was added dropwise into 2 M KOH aqueous solution, immediately producing a white precipitate. The precipitate was thoroughly washed with water several times and dried in air at room temperature; the obtained sample will be denoted as ex-Ca2Nb3O10/K+ hereafter. The TEM images of the exfoliated nanosheets and the ex-Ca2Nb3O10/K+ are shown in Fig. S1 in the ESI.† Modification of ex-Ca2Nb3O10/K+ with cocatalysts was carried out by impregnation of an aqueous solution containing one of the ammine complexes of metals such as [Pt(NH3)4](OH)2, [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6, [Ir(NH3)6]Cl3, [Rh(NH3)6]Cl3 and [Co(NH3)6]Cl3, followed by heating in air at 773 K for 1 h. Since the dominant valence states of these metal species after the loading procedure were confirmed to be Pt2+, Ru4+, Ir4+, and Rh3+ by X-ray photoabsorption spectroscopy (XPS, ULVAC Phai MT-5500), the samples loaded with the cocatalysts will be denoted as PtO, RuO2, IrO2 and Rh2O3-loaded one, respectively. On the other hand, the samples loaded with Co species were confirmed to contain both Co2+ and Co3+ states, therefore will be denoted as CoOx-loaded one for simplification. The products will be denoted as MOy/ex-Ca2Nb3O10/K+ (MOy = PtO, RuO2, IrO2, Rh2O3 and CoOx). When the protonated forms of these samples are required, the K+ cations existing in the MOy/ex-Ca2Nb3O10/K+ samples were replaced with H+ by stirring in an aqueous HNO3 solution (1 M) at room temperature for 24 h (referred to as MOy/ex-Ca2Nb3O10/K+/H+).",
+                "precursors": ["K2CO3", "CaCO3", "Nb2O5"],
+                "target": "KCa2Nb3O10",
+                "is_right_located": true
+            },
+            {
+                "text": "Strontium titanate doped with rhodium species (SrTiO3:Rh)36 was prepared by solid state reaction. A mixture of SrCO3, TiO2 and Rh2O3 (Sr : Ti : Rh = 1 : 0.99 : 0.01 to form the ideal formula of SrTi0.99Rh0.01O3−δ) was calcined in air at 873 K for 2 h and subsequently at 1273 K for 10 h. A Pt cocatalyst was loaded onto SrTiO3:Rh by impregnation using H2PtCl6·6H2O and subsequent heating under a H2 flow at 573 K for 2 h. In the case of a Ru cocatalyst, Ru species were loaded on SrTiO3:Rh by means of a photodeposition method using RuCl3·nH2O as a Ru source, according to the method reported previously.",
+                "precursors": ["SrCO3", "TiO2", "Rh2O3"],
+                "target": "SrTi0.99Rh0.01O3−δ",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/aenm.201500440",
+        "reactions": [
+            {
+                "text": "Fabrication of Materials: Stoichiometric LiMn2O4 (BLMO) was synthesized by conventional solid-state reaction using stoichiometric amounts of Mn3O4 and Li2CO3 at 770 °C for 15 h, and then after thorough mixing, for 15 further hours at 750 °C, both steps under oxygen atmosphere. The coating solution of Li1.15Co0.32Mn1.53O4, with an Mn oxidation state of +3.85 was prepared by dissolving stoichiometric amounts of Li(CH3COO)·2H2O, Mn(CH3COO)2·4H2O, and Co(CH3COO)2 in a 1:2 (v:v) mixture of distilled water and ethanol. The as-prepared LiMn2O4 powder was stirred into this solution at 50 °C for 30 min. The resulting suspension was spray dried with inlet and outlet temperatures maintained at 200 and 110 °C, respectively. The dried powders were fired at 750 °C for 2 h in an oxygen atmosphere. The coating accounted for 5 wt% of the resultant material, denoted CoLMO. For pellet density calculations, 2 g of active material was added to a stainless steel cylinder and subjected to a pressure of 200 bar.",
+                "precursors": ["Mn3O4", "Li2CO3"],
+                "target": "LiMn2O4",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1021/acs.cgd.5b01649",
+        "reactions": [
+            {
+                "text": "Polycrystalline Na6Te4W6O29 was synthesized by standard solid-state methods. Stoichiometric amounts of Na2CO3 (Aldrich Chemical Co. Inc., 98%), TeO2 (Assay, 99.0%), and WO3 (Alfa Aesar, 99.8%) were ground thoroughly, packed tightly in a platinum crucible, and heated to 400 °C for 20 h. The temperature was increased to 600 °C and held for 72 h, with several intermittent grindings. Pure and polycrystalline Na6Te4W6O29 was confirmed by powder X-ray diffraction",
+                "precursors": ["Na2CO3", "TeO2", "WO3"],
+                "target": "Na6Te4W6O29",
+                "is_right_located": true
+            }
+        ]
+    },
+    {
+        "doi": "10.1002/adfm.201300663",
+        "reactions": [
+            {
+                "text": "The high purity of samples were fabricated by a time-efficient method combining levitation melting and spark plasma sintering (SPS).31, 44 Alloys with nominal composition Hf0.65Zr0.35Ni1-zPtzSn0.98Sb0.02 (z = 0, 0.05, 0.1, 0.15) were first prepared by levitation melting of stoichiometric amounts of Hf (piece, 99.99%), Zr (piece, 99.99%), Ni (block, 99.999%), Pt (particles, 99.999%), Sn (particles, 99.999%), and Sb (block, 99.99%) under an argon atmosphere for 2 min, and the melt was quenched in a water-cooled copper crucible. The ingots were remelted twice to ensure homogeneity. Mechanical milling was carried out with normal butane protection at 200 rpm for 4 h. The powders were then sintered by SPS (SPS-1050, Sumitomo Coal Mining Co.) at 1175 K under 65 MPa in vacuum for 10 min. The as-sintered samples, of which the relative density was found to be ≈95%, were used for measurements of thermal conductivity and Hall data, and then cut into rectangular bars for Seebeck coefficient and electrical conductivity measurements.",
+                "precursors": ["Hf", "Zr", "Ni", "Pt", "Sn", "Sb"],
+                "target": "Hf0.65Zr0.35Ni1-zPtzSn0.98Sb0.02 (z = 0, 0.05, 0.1, 0.15)",
+                "is_right_located": true
+            }
+        ]
+    }
+]}

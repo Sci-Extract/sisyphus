@@ -22,6 +22,9 @@ reproduce_inorganic/*
 data_articles_inorganic/*
 data_articles_pan/*
 pvc/*
+inorganic_recipe_result/*
+optimize/*
+playground_valuable/*
 
 
 **/.DS_Store

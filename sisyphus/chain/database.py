@@ -212,9 +212,15 @@ class ResultDB(DB):
         )
         return result_model
     
-    def load_as_json(self, with_doi: bool = False, limit: Optional[int] = None) -> list[dict]:
+    def load_as_json(self, model_name: str, instruction: str, db_name: str, with_doi: bool = False, limit: Optional[int] = None) -> list[dict]:
         """load result as defined pydantic model in dict format"""
         datas = []
+        meta_dict = {
+            "model_name" : model_name,
+            "instruction" : instruction,
+            "db_name" : db_name
+        } # used to store meta information
+        datas.append(meta_dict)
         with Session(self.engine) as session, session.begin():
             stmt = select(self.Result, self.Document).join(self.Document).limit(limit)
             results = session.exec(stmt)

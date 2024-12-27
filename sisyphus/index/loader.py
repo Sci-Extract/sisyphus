@@ -30,9 +30,18 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 encoding = tiktoken.get_encoding('cl100k_base')
 HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 
-# gpt-4o gen table parser
+# gpt-4o gen table parser with small modification
 from bs4 import BeautifulSoup
 import json
+
+class Table(BaseModel):
+    caption: Optional[str]
+    data: list[dict[str, str]]
+    footnotes: list[str]
+
+from bs4 import BeautifulSoup
+
+from bs4 import BeautifulSoup
 
 def parse_html_table_to_json(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -41,6 +50,9 @@ def parse_html_table_to_json(html):
     table = soup.find('table')
     caption = table.find('caption').get_text(strip=True) if table.find('caption') else None
 
+    # Prepare to track active rowspan cells
+    active_rowspan_cells = {}
+
     # Extract rows from the table body
     rows = table.find('tbody').find_all('tr')
 
@@ -48,16 +60,46 @@ def parse_html_table_to_json(html):
     headers = []
     data = []
 
-    # Iterate through rows and extract cells
     for i, row in enumerate(rows):
         cells = row.find_all(['td', 'th'])
-        cell_text = [cell.get_text(strip=True) for cell in cells]
+        row_data = []
+        col_index = 0
 
+        # Process each column
+        for cell in cells:
+            # Fill in values from rowspan cells if needed
+            while col_index in active_rowspan_cells:
+                row_data.append(active_rowspan_cells[col_index]['value'])
+                active_rowspan_cells[col_index]['remaining'] -= 1
+                if active_rowspan_cells[col_index]['remaining'] == 0:
+                    del active_rowspan_cells[col_index]
+                col_index += 1
+
+            # Add the current cell's value
+            value = cell.get_text(strip=True)
+            rowspan = int(cell.get('rowspan', 1))
+            row_data.append(value)
+
+            # Track rowspan if present
+            if rowspan > 1:
+                active_rowspan_cells[col_index] = {'value': value, 'remaining': rowspan - 1}
+            
+            col_index += 1
+
+        # Fill in remaining values from rowspan cells
+        while col_index in active_rowspan_cells:
+            row_data.append(active_rowspan_cells[col_index]['value'])
+            active_rowspan_cells[col_index]['remaining'] -= 1
+            if active_rowspan_cells[col_index]['remaining'] == 0:
+                del active_rowspan_cells[col_index]
+            col_index += 1
+
+        # Set headers from the first row or populate data
         if i == 0:  # First row as headers
-            headers = cell_text
-        else:  # Other rows as data
+            headers = row_data
+        else:
             entry = {}
-            for idx, value in enumerate(cell_text):
+            for idx, value in enumerate(row_data):
                 header = headers[idx] if idx < len(headers) else f'Column {idx + 1}'
                 entry[header] = value
             data.append(entry)
@@ -77,7 +119,9 @@ def parse_html_table_to_json(html):
     }
     return result
 
+
 # region loader
+TB = 'table'
 class Loader(BaseLoader):
     """base loader"""
     def __init__(self, file_path: str):
@@ -142,6 +186,12 @@ class ArticleLoader(Loader):
                         page_content=chunk,
                         metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles=sub_titles, title=title))
                     )
+            elif child.name == 'table':
+                table_json = parse_html_table_to_json(str(child))
+                yield Document(
+                    page_content=json.dumps(table_json, indent=2, ensure_ascii=False),
+                    metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles=TB, title=title))
+                )
 
 
     def chunk_text(self, text) -> list[str]:
@@ -199,11 +249,11 @@ class FullTextLoader(Loader):
         doi = soup.head.p.a.text.strip('\n ')
 
         if self.include_table:
-            for tag in soup.find_all('table'):
-                table_json = parse_html_table_to_json(str(tag))
-                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='table')))
+            for tag in soup.find_all(TB):
+                table_json = parse_html_table_to_json(str(tag))                
+                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
 
-        tags = soup.find_all('table')
+        tags = soup.find_all(TB)
         if tags:
             for tag in tags:
                 tag.decompose()
@@ -222,11 +272,11 @@ class FullTextLoader(Loader):
         doi = soup.head.p.a.text.strip('\n ')
 
         if self.include_table:
-            for tag in soup.find_all('table'):
+            for tag in soup.find_all(TB):
                 table_json = parse_html_table_to_json(str(tag))
-                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_='table')))
+                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
 
-        tags = soup.find_all('table')
+        tags = soup.find_all(TB)
         if tags:
             for tag in tags:
                 tag.decompose()

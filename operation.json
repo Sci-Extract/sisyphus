@@ -1,0 +1,24 @@
+{
+    "operations": [       
+        {
+            "type": "milled",
+            "material": ["Ti", "Ni", "C", "V"],
+            "parameters": {
+                "speed": "250 r/min",
+                "time": "8 h"
+            },
+            "products": ""
+        },
+        {
+            "type": ""
+        },
+        {
+            "alloy": "",
+            "property": "",
+            "property_value": "",
+            "synthesis_method": "",
+            "post_processing": ""
+        }
+    ]
+
+}
