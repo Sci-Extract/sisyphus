@@ -31,6 +31,18 @@
                 "precursors": ["Li2CO3", "TiO2"],
                 "target": "Li2TiO3",
                 "is_right_located": true
+            },
+            {
+                "text": "LMT has been recognized as one of the primary candidates for tritium breeding materials. Additions of H2 to the purge gas were proposed for enhancing the release of the generated tritium from the breeder material. However, LMT is reduced in a H2 atmosphere at an operating temperature above 873K, which will lead to degradation of the tritium release characteristics. The reduction of Ti from Ti4+ to Ti3+ is accompanied by a mass decrease due to a decrease in the oxygen content [1]. Thus in Japan, the development of LMT with additional Li was attempted to improve its resistance to deoxidization at high temperatures. However, it turned out that an excess of lithium in LMT is difficult to realize by solid state reactions [2] as well as by using lithium and titanium alkoxides as raw materials [3], as prevalently Li4TiO4 is formed as an impurity. Hence, LMT with additional Li was synthesized from LiOH H2O and H2TiO3 with a Li/Ti ratio of 2.2. Mixtures of the starting powders were continuously rotated for 48h and gradually turned into a gel by solid phase reaction at room temperature [4]. After drying, the gel is first calcined in air, and then sintered at 1473K for 1h in N2. For the mixing of powder and binder, a jet grinding method turned out to be favorable in terms of dispersion compared to dry mixing. The sol-gel method was selected for the pebble fabrication technique of advanced tritium breeders [5]. The gel-spheres were calcined at 973K for 6h in air, and sintered at 1373K for 1h in Ar. The diameter of the LMT pebbles with additional Li is about 1.2mm, the sphericity is 1.04, and the density of the pebbles is ⩾89% TD (theoretical density).",
+                "precursors": ["LiOH H2O", "H2TiO3"],
+                "target": "Li2TiO3",
+                "is_right_located": true
+            },
+            {
+                "text": "China developed a laboratory fabrication process for LOS pebbles in the past several years that allows a production of 100kg/year. To save on experimental cost, zirconia crucibles are used as melting crucibles. The crucible holds lithium carbonate and silica as raw materials, which react and melt, when heated by an electric furnace, to form liquid LOS. The pebbles are fabricated by quenching droplets to room temperature. They are subsequently annealed at 1273K for 2h to heal microcracks and to relieve internal stress. Due to the rapid cooling, the pebbles exhibit a dendritic microstructure on the surface (Fig. 2 ) and in cross-sections. After annealing, Li4SiO4 was observed as the main phase and Li2SiO3 as the minor phase by XRD. The second phase is due to the evaporation of lithium at high temperature, as the ratio of lithium to silicon is difficult to control [15]. A mean value of 7N was obtained for the crush load in experiments of 40 single pebbles with a diameter of 1mm. To improve the mechanical properties, a series of tests with pebbles of different compositions treated in an optimized annealing process will be investigated in the future.",
+                "precursors": ["lithium carbonate", "silica"],
+                "target": "Li4SiO4",
+                "is_right_located": true
             }
         ]
     },
@@ -75,7 +87,14 @@
     },
     {
         "doi": "10.1039/c5ce02461g",
-        "reactions": null
+        "reactions": [
+            {
+                "text": "Solutions of zinc nitrate hexahydrate and ferric nitrate nonahydrate in stoichiometric proportion were mixed into citric acid solution by keeping the ratio of cations to citric acid to be 1:3. The mixture was kept magnetically stirred at 90 °C for 2 h to get a viscous solution. The viscous solution was dried for almost 6 h by heating between 100 and 200 °C on a hot plate to obtain precursor (ZF000). Precursor was subsequently annealed at different temperatures ranging from 300 to 1200 °C in order to obtain nano-sized ZnFe2O4.28 These materials are coded as ZF300, ZF400, ZF500, ZF600, ZF800, ZF1000, and ZF1200. To get micro-sized zinc ferrite particles, these nanoparticles were given thermal treatment analogous to the solid-state reaction method. These nanoparticles were annealed at 1200 °C for 12 h.37,38 The treatment hereafter is known as bulk treatment (BT). Materials synthesized after bulk treatment are coded as ZF-BT, ZF300-BT, ZF400-BT, ZF500-BT, ZF600-BT, ZF800-BT, ZF1000-BT, and ZF1200-BT. The detailed procedure is shown in Fig. 1.",
+                "precursors": ["Zn(NO3)2·6H2O", "Fe(NO3)3·9H2O"],
+                "target": "ZnFe2O4",
+                "is_right_located": true
+            }
+        ]
     },
     {
         "doi": "10.1021/acs.cgd.6b00081",
@@ -195,7 +214,7 @@
             {
                 "text": "Sol–gel synthesis based on EDTA-citrate complexing process was used to examine the products of LBMM and SDC. La(NO3)3, Ba(NO3)2, Mn(NO3)2, Mg(NO3)2, Sm(NO3)3 and Ce(NO3)3 according to the stoichiometry of LBMM + SDC (80:20 in weight ratio) were mixed in the solution and further calcined at 1100 °C for 8 h. The obtained products reflect the most stable production of the solid–state reaction between LBMM and SDC. It is well known that Sm and Ce can both dope into the A-site and B-site of the perovskite. However, Sm3+(0.958 Å),Ce3+ (1.01 Å) and Ce4+(0.87 Å) have smaller ionic radii than La3+ (1.36 Å) and Ba2+ (1.61 Å), and the doping into A-site of LBMM would result in the shrinking of the lattice, but they have larger ionic radii than Mn2+ (HS-0.83 Å), Mn3+ (HS-0.645 Å), Mn4+ (HS-0.53 Å) and Mg2+(0.72 Å). The doping of Ce or Sm into B-site would result in the expansion of the lattice. Therefore, Sm and Ce were likely incorporated into the A-site of LBMM. However, there is a strong peak of CeO2 from the XRD of (La0.4Ba0.6)0.8Ce0.2Mn0.8Mg0.2O3–δ and (La0.4Ba0.6)0.8(Sm0.2Ce0.8)0.2Mn0.8Mg0.2O3–δ in Fig. 4. Its means Ce cannot be doping in LBMM at the 1100 °C. It's demonstrated that the phase reaction between LBMM and SDC was closely related with the firing temperatures.",
                 "precursors": ["La(NO3)3", "Ba(NO3)2", "Mn(NO3)2", "Mg(NO3)2", "Sm(NO3)3", "Ce(NO3)3"],
-                "target": "La0.4Ba0.6Mn0.8Mg0.2O3–δ, Sm0.2Ce0.8O1.9",
+                "target": "(La0.4Ba0.6)0.8(Sm0.2Ce0.8)0.2Mn0.8Mg0.2O3–δ",
                 "is_right_located": false
             }
         ]
@@ -274,6 +293,12 @@
             {
                 "text": "The reduction process of CuFe2O4-based spinel was schematically shown in Fig. 17 . As previously reported [7,13,17], the sample pre-calcined in air below 900°C was less active for methanol steam reforming step (1) in DME SR than those heated at 900°C and 1000°C. The BET surface area after heating at or higher than 900°C was very small (ca. 1m2 g-1). The particles are grown in size during complete solid state reaction between copper oxide and iron oxide to form CuFe2O4 spinel. During the calcination in air at elevated temperatures, the Cu and Fe atoms are accommodated to respective cationic sites in the spinel structure; i.e.. atomic dispersion was achieved at this stage. The oxidation states of copper and iron are di- and tri-valent, respectively. After reduction with hydrogen at 250°C or 350°C, however, these oxidation states are no longer stable. Copper is readily reduced to metallic state and iron oxide to Fe3O4 with inverse spinel structure. Metallic iron was also observed for the sample reduced at 350°C, though the fraction was small. Formation of these phases accompanies separation of two components and volume shrinkage. The large extent of textural modification and the pore formation were observed by TEM. The comparison of the reduced samples at 250°C and 350°C clearly indicated that, upon reduction, the phase separation and pore formation were progressed. This microstructural change agreed with that of surface area upon reduction. Deposited Cu grains should be small in size at the initial stage of the reduction, but grown in size with a further progress of reduction. However, strong chemical interaction of deposited Cu and the host spinel oxide could be expected from this study. Thus, the Cu deposits remain small in size as compared with the Cu catalysts prepared by impregnation on an inert support. The growth of the Cu particles is one of the main causes of the degradation in Cu-based catalysts for DME reforming. The main factors for deactivation of CuFe2O4 +γ-alumina are deposition of carbonaceous species and sintering of Cu. Especially, in the reaction at or higher than 350°C, thermal degradation with sintering is dominated. Therefore, the preparation of Cu catalyst from the spinel oxide via phase separation should be effective in maintaining the fine metallic state of Cu, though the overall BET surface area is small.",
                 "precursors": ["CuO", "Fe2O3"],
+                "target": "CuFe2O4",
+                "is_right_located": true
+            },
+            {
+                "text": "The spinel-type oxide catalyst, CuFe2O4, was prepared from corresponding nitrate mixture and subsequent solid state reaction with the citrate process. The atomic ratio of Cu to Fe was fixed at 1:2 which is stoichiometric for the formation of spinel-type oxide. An aqueous solution of Cu(NO3)2 and Fe(NO3)3 (Nacalai Tesque, Analytical Grade) was stirred at 60°C for 1h and heated to 90°C to evaporate H2O. The precipitate was heated to 140-200°C to decompose citric acid until fine oxide powders were obtained. The obtained powders were calcined in air at 900°C for 10h for Cu-based spinel-oxide type catalysts. The heat treatment at high temperature and complete formation of spinel phase was indispensable in deriving high activity for water gas shift reaction [21] as well as DME reforming [17]. Reduction treatment of catalyst was carried out at 250°C or 350°C for 1h in 10% H2/N2 in a flow system.",
+                "precursors": ["Cu(NO3)2", "Fe(NO3)3"],
                 "target": "CuFe2O4",
                 "is_right_located": true
             }
@@ -360,6 +385,12 @@
                 "precursors": ["TiO2", "Li2CO3"],
                 "target": "Li4Ti5O12",
                 "is_right_located": true
+            },
+            {
+                "text": "Synthesis of Mesoporous LTO: Poly(isoprene) -b-poly(ethylene oxide) block copolymer (PI-b-PEO) was synthesized by anionic polymerization. The Mn value and PEO fraction of PI-b-PEO used were found to be 30,000 g mol−1 and 0.06, respectively. PI-b-PEO has narrow weight distributions with a polydispersity index of 1.13. This PI-b-PEO block copolymer was used both as a structure directing agent as well as carbon source. Initially, 0.2 g of PI-b-PEO was dissolved in a mixture of 4 ml of THF. The inorganic precursor solution was prepared by mixing 1.287 ml of TTIP (titanium tetraisopropoxide) and 0.181g of lithium ethoxide (3.48 mL of 1 M LiOC2H5 in THF stock solution). 0.39 g of Oxalic acid was then added to the inorganic precursor solution. Block copolymer solution and inorganic precursor were mixed and stirred for 2 h. Films were cast by evaporation of the solvents on a hot plate at 50 °C, and further dried at 130 °C in a vacuum oven for 1 h. The as-synthesized films were heat-treated to 700 °C under N2 and held for 2 h. To prepare bulk the LTO sample, a typical solid-state method was employed using a stoichiometric amount of TiO2 (anatase) and Li2CO3. The mixture powder was heat-treated at 800 °C for 20 h under atmosphere. (Supporting Information, Figure S2: XRD pattern of bulk LTO, Figure S3: SEM of bulk LTO)",
+                "precursors": ["titanium tetraisopropoxide", "lithium ethoxide", "Oxalic acid"],
+                "target": "Li4Ti5O12",
+                "is_right_located": true
             }
         ]
     },
@@ -377,6 +408,12 @@
                 "precursors": ["SnO", "TiO2"],
                 "target": "Sn2TiO4",
                 "is_right_located": false
+            },
+            {
+                "text": "Fig. 6. SEM images of SnNb2O6 prepared by solid-state synthesis at 800 °C (800-SS) and by flux-assisted synthesis with different reactant (SnO + Nb2O5) to flux (SnCl2; denoted as F) molar ratios: 1:1-14.80 Adapted from ref. 80 with permission from the PCCP Owner Societies.",
+                "precursors": ["SnO", "Nb2O5"],
+                "target": "SnNb2O6",
+                "is_right_located": true
             }
         ]
     },
@@ -397,7 +434,7 @@
             {
                 "text": "Flux treatment using various kinds of molten salts was performed for SrTiO3 powder prepared by a polymerized complex method.21,22Titanium tetrabutoxide (50 mmol, Kanto Chemical) was dissolved into 150 ml of methanol, then 0.4 mol of anhydrous citric acid (CA, Wako Pure Chemical) was added to the solution. SrCO3 (50 mmol, Kanto Chemical) and propylene glycol (1.2 mol, Kanto Chemical) were added into the Ti–CA methanol solution. The mixed solution was heated with stirring on a heating plate operating at 353 K until a transparent solution was obtained, then it was heated at 473 K with stirring to promote condensation and esterification. A transparent polyester resin was eventually formed. The obtained resin was subjected to heating in air at 723 K, then at 823 K for 2 h in order to remove organic contents. The precursor thus obtained was mixed with 20 wt% of flux reagents, such as LiCl, NaCl, KCl, and SrCl2, and then the mixture was heated in air at 1273 K for 5 h using an alumina crucible. This temperature was sufficient for the flux treatment using these salts because their melting points are 878, 1074, 1043, and 1148 K, respectively. The volume proportion of SrTiO3 to the flux reagents was estimated from densities of materials being about 1 : 1 for all cases. All samples obtained were washed with water several times to remove the flux reagents. SrTiO3 doped with 5 atom% of Na was also prepared by a solid state reaction. SrCO3, Na2CO3, and TiO2 were mixed in a molar ratio 0.95 : 0.025 : 1.0, then the mixture was calcined in air at 1173 K for 1 h followed by 1273 K for 20 h with intermediate grinding.",
                 "precursors": ["SrCO3", "TiO2", "Na2CO3"],
-                "target": "SrTiO3",
+                "target": "Na0.05Sr0.95TiO3",
                 "is_right_located": true
             }
         ]
@@ -487,6 +524,30 @@
                 "precursors": ["SrCO3", "TiO2", "Rh2O3"],
                 "target": "SrTi0.99Rh0.01O3−δ",
                 "is_right_located": true
+            },
+            {
+                "text": "Particles of KCa2Nb3O10 were prepared by calcining a mixture of K2CO3, CaCO3 and Nb2O5 (K:Ca:Nb = 1.1:2:3) at 1473 K for 12 h. The obtained KCa2Nb3O10 powder was stirred into 5 M HNO3 aqueous solution for 72 h to replace K+ with H+, washed with distilled water, and then dried in air at room temperature. The proton-exchanged particles will be denoted as H+/KCa2Nb3O10 hereafter. The H+/KCa2Nb3O10 particles (0.4 g) were suspended in 100 mL of aqueous solution, in which an equimolar amount of tetrabutylammonium hydroxide (TBAOH) molecules to that of H+/KCa2Nb3O10 (ca. 0.73 mmol, calculated as HCa2Nb3O10 1.5H2O) was added as an initiator of exfoliation. The suspension was continuously shaken at room temperature for 7 days until the H+/KCa2Nb3O10 exfoliates into nanosheets.38 The resulting colloidal suspension was added dropwise into 2 M KOH aqueous solution, immediately producing a white precipitate. The precipitate was thoroughly washed with water several times and dried in air at room temperature; the obtained sample will be denoted as ex-Ca2Nb3O10/K+ hereafter. The TEM images of the exfoliated nanosheets and the ex-Ca2Nb3O10/K+ are shown in Fig. S1 in the ESI.† Modification of ex-Ca2Nb3O10/K+ with cocatalysts was carried out by impregnation of an aqueous solution containing one of the ammine complexes of metals such as [Pt(NH3)4](OH)2, [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6, [Ir(NH3)6]Cl3, [Rh(NH3)6]Cl3 and [Co(NH3)6]Cl3, followed by heating in air at 773 K for 1 h. Since the dominant valence states of these metal species after the loading procedure were confirmed to be Pt2+, Ru4+, Ir4+, and Rh3+ by X-ray photoabsorption spectroscopy (XPS, ULVAC Phai MT-5500), the samples loaded with the cocatalysts will be denoted as PtO, RuO2, IrO2 and Rh2O3-loaded one, respectively. On the other hand, the samples loaded with Co species were confirmed to contain both Co2+ and Co3+ states, therefore will be denoted as CoOx-loaded one for simplification. The products will be denoted as MOy/ex-Ca2Nb3O10/K+ (MOy = PtO, RuO2, IrO2, Rh2O3 and CoOx). When the protonated forms of these samples are required, the K+ cations existing in the MOy/ex-Ca2Nb3O10/K+ samples were replaced with H+ by stirring in an aqueous HNO3 solution (1 M) at room temperature for 24 h (referred to as MOy/ex-Ca2Nb3O10/K+/H+).",
+                "precursors": ["Pt(NH3)4(OH)2"],
+                "target": "PtO",
+                "is_right_located": true
+            },
+            {
+                "text": "Particles of KCa2Nb3O10 were prepared by calcining a mixture of K2CO3, CaCO3 and Nb2O5 (K:Ca:Nb = 1.1:2:3) at 1473 K for 12 h. The obtained KCa2Nb3O10 powder was stirred into 5 M HNO3 aqueous solution for 72 h to replace K+ with H+, washed with distilled water, and then dried in air at room temperature. The proton-exchanged particles will be denoted as H+/KCa2Nb3O10 hereafter. The H+/KCa2Nb3O10 particles (0.4 g) were suspended in 100 mL of aqueous solution, in which an equimolar amount of tetrabutylammonium hydroxide (TBAOH) molecules to that of H+/KCa2Nb3O10 (ca. 0.73 mmol, calculated as HCa2Nb3O10 1.5H2O) was added as an initiator of exfoliation. The suspension was continuously shaken at room temperature for 7 days until the H+/KCa2Nb3O10 exfoliates into nanosheets.38 The resulting colloidal suspension was added dropwise into 2 M KOH aqueous solution, immediately producing a white precipitate. The precipitate was thoroughly washed with water several times and dried in air at room temperature; the obtained sample will be denoted as ex-Ca2Nb3O10/K+ hereafter. The TEM images of the exfoliated nanosheets and the ex-Ca2Nb3O10/K+ are shown in Fig. S1 in the ESI.† Modification of ex-Ca2Nb3O10/K+ with cocatalysts was carried out by impregnation of an aqueous solution containing one of the ammine complexes of metals such as [Pt(NH3)4](OH)2, [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6, [Ir(NH3)6]Cl3, [Rh(NH3)6]Cl3 and [Co(NH3)6]Cl3, followed by heating in air at 773 K for 1 h. Since the dominant valence states of these metal species after the loading procedure were confirmed to be Pt2+, Ru4+, Ir4+, and Rh3+ by X-ray photoabsorption spectroscopy (XPS, ULVAC Phai MT-5500), the samples loaded with the cocatalysts will be denoted as PtO, RuO2, IrO2 and Rh2O3-loaded one, respectively. On the other hand, the samples loaded with Co species were confirmed to contain both Co2+ and Co3+ states, therefore will be denoted as CoOx-loaded one for simplification. The products will be denoted as MOy/ex-Ca2Nb3O10/K+ (MOy = PtO, RuO2, IrO2, Rh2O3 and CoOx). When the protonated forms of these samples are required, the K+ cations existing in the MOy/ex-Ca2Nb3O10/K+ samples were replaced with H+ by stirring in an aqueous HNO3 solution (1 M) at room temperature for 24 h (referred to as MOy/ex-Ca2Nb3O10/K+/H+).",
+                "precursors": ["[(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6"],
+                "target": "RuO2",
+                "is_right_located": true
+            },
+            {
+                "text": "Particles of KCa2Nb3O10 were prepared by calcining a mixture of K2CO3, CaCO3 and Nb2O5 (K:Ca:Nb = 1.1:2:3) at 1473 K for 12 h. The obtained KCa2Nb3O10 powder was stirred into 5 M HNO3 aqueous solution for 72 h to replace K+ with H+, washed with distilled water, and then dried in air at room temperature. The proton-exchanged particles will be denoted as H+/KCa2Nb3O10 hereafter. The H+/KCa2Nb3O10 particles (0.4 g) were suspended in 100 mL of aqueous solution, in which an equimolar amount of tetrabutylammonium hydroxide (TBAOH) molecules to that of H+/KCa2Nb3O10 (ca. 0.73 mmol, calculated as HCa2Nb3O10 1.5H2O) was added as an initiator of exfoliation. The suspension was continuously shaken at room temperature for 7 days until the H+/KCa2Nb3O10 exfoliates into nanosheets.38 The resulting colloidal suspension was added dropwise into 2 M KOH aqueous solution, immediately producing a white precipitate. The precipitate was thoroughly washed with water several times and dried in air at room temperature; the obtained sample will be denoted as ex-Ca2Nb3O10/K+ hereafter. The TEM images of the exfoliated nanosheets and the ex-Ca2Nb3O10/K+ are shown in Fig. S1 in the ESI.† Modification of ex-Ca2Nb3O10/K+ with cocatalysts was carried out by impregnation of an aqueous solution containing one of the ammine complexes of metals such as [Pt(NH3)4](OH)2, [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6, [Ir(NH3)6]Cl3, [Rh(NH3)6]Cl3 and [Co(NH3)6]Cl3, followed by heating in air at 773 K for 1 h. Since the dominant valence states of these metal species after the loading procedure were confirmed to be Pt2+, Ru4+, Ir4+, and Rh3+ by X-ray photoabsorption spectroscopy (XPS, ULVAC Phai MT-5500), the samples loaded with the cocatalysts will be denoted as PtO, RuO2, IrO2 and Rh2O3-loaded one, respectively. On the other hand, the samples loaded with Co species were confirmed to contain both Co2+ and Co3+ states, therefore will be denoted as CoOx-loaded one for simplification. The products will be denoted as MOy/ex-Ca2Nb3O10/K+ (MOy = PtO, RuO2, IrO2, Rh2O3 and CoOx). When the protonated forms of these samples are required, the K+ cations existing in the MOy/ex-Ca2Nb3O10/K+ samples were replaced with H+ by stirring in an aqueous HNO3 solution (1 M) at room temperature for 24 h (referred to as MOy/ex-Ca2Nb3O10/K+/H+).",
+                "precursors": ["[Ir(NH3)6]Cl3"],
+                "target": "IrO2",
+                "is_right_located": true
+            },
+            {
+                "text": "Particles of KCa2Nb3O10 were prepared by calcining a mixture of K2CO3, CaCO3 and Nb2O5 (K:Ca:Nb = 1.1:2:3) at 1473 K for 12 h. The obtained KCa2Nb3O10 powder was stirred into 5 M HNO3 aqueous solution for 72 h to replace K+ with H+, washed with distilled water, and then dried in air at room temperature. The proton-exchanged particles will be denoted as H+/KCa2Nb3O10 hereafter. The H+/KCa2Nb3O10 particles (0.4 g) were suspended in 100 mL of aqueous solution, in which an equimolar amount of tetrabutylammonium hydroxide (TBAOH) molecules to that of H+/KCa2Nb3O10 (ca. 0.73 mmol, calculated as HCa2Nb3O10 1.5H2O) was added as an initiator of exfoliation. The suspension was continuously shaken at room temperature for 7 days until the H+/KCa2Nb3O10 exfoliates into nanosheets.38 The resulting colloidal suspension was added dropwise into 2 M KOH aqueous solution, immediately producing a white precipitate. The precipitate was thoroughly washed with water several times and dried in air at room temperature; the obtained sample will be denoted as ex-Ca2Nb3O10/K+ hereafter. The TEM images of the exfoliated nanosheets and the ex-Ca2Nb3O10/K+ are shown in Fig. S1 in the ESI.† Modification of ex-Ca2Nb3O10/K+ with cocatalysts was carried out by impregnation of an aqueous solution containing one of the ammine complexes of metals such as [Pt(NH3)4](OH)2, [(NH3)Ru-O-Ru(NH3)4-O-Ru(NH3)5]Cl6, [Ir(NH3)6]Cl3, [Rh(NH3)6]Cl3 and [Co(NH3)6]Cl3, followed by heating in air at 773 K for 1 h. Since the dominant valence states of these metal species after the loading procedure were confirmed to be Pt2+, Ru4+, Ir4+, and Rh3+ by X-ray photoabsorption spectroscopy (XPS, ULVAC Phai MT-5500), the samples loaded with the cocatalysts will be denoted as PtO, RuO2, IrO2 and Rh2O3-loaded one, respectively. On the other hand, the samples loaded with Co species were confirmed to contain both Co2+ and Co3+ states, therefore will be denoted as CoOx-loaded one for simplification. The products will be denoted as MOy/ex-Ca2Nb3O10/K+ (MOy = PtO, RuO2, IrO2, Rh2O3 and CoOx). When the protonated forms of these samples are required, the K+ cations existing in the MOy/ex-Ca2Nb3O10/K+ samples were replaced with H+ by stirring in an aqueous HNO3 solution (1 M) at room temperature for 24 h (referred to as MOy/ex-Ca2Nb3O10/K+/H+).",
+                "precursors": ["[Rh(NH3)6]Cl3"],
+                "target": "Rh2O3",
+                "is_right_located": true
             }
         ]
     },
@@ -497,6 +558,12 @@
                 "text": "Fabrication of Materials: Stoichiometric LiMn2O4 (BLMO) was synthesized by conventional solid-state reaction using stoichiometric amounts of Mn3O4 and Li2CO3 at 770 °C for 15 h, and then after thorough mixing, for 15 further hours at 750 °C, both steps under oxygen atmosphere. The coating solution of Li1.15Co0.32Mn1.53O4, with an Mn oxidation state of +3.85 was prepared by dissolving stoichiometric amounts of Li(CH3COO)·2H2O, Mn(CH3COO)2·4H2O, and Co(CH3COO)2 in a 1:2 (v:v) mixture of distilled water and ethanol. The as-prepared LiMn2O4 powder was stirred into this solution at 50 °C for 30 min. The resulting suspension was spray dried with inlet and outlet temperatures maintained at 200 and 110 °C, respectively. The dried powders were fired at 750 °C for 2 h in an oxygen atmosphere. The coating accounted for 5 wt% of the resultant material, denoted CoLMO. For pellet density calculations, 2 g of active material was added to a stainless steel cylinder and subjected to a pressure of 200 bar.",
                 "precursors": ["Mn3O4", "Li2CO3"],
                 "target": "LiMn2O4",
+                "is_right_located": true
+            },
+            {
+                "text": "Fabrication of Materials: Stoichiometric LiMn2O4 (BLMO) was synthesized by conventional solid-state reaction using stoichiometric amounts of Mn3O4 and Li2CO3 at 770 °C for 15 h, and then after thorough mixing, for 15 further hours at 750 °C, both steps under oxygen atmosphere. The coating solution of Li1.15Co0.32Mn1.53O4, with an Mn oxidation state of +3.85 was prepared by dissolving stoichiometric amounts of Li(CH3COO) 2H2O, Mn(CH3COO)2 4H2O, and Co(CH3COO)2 in a 1:2 (v:v) mixture of distilled water and ethanol. The as-prepared LiMn2O4 powder was stirred into this solution at 50 °C for 30 min. The resulting suspension was spray dried with inlet and outlet temperatures maintained at 200 and 110 °C, respectively. The dried powders were fired at 750 °C for 2 h in an oxygen atmosphere. The coating accounted for 5 wt% of the resultant material, denoted CoLMO. For pellet density calculations, 2 g of active material was added to a stainless steel cylinder and subjected to a pressure of 200 bar.",
+                "precursors": ["Li1.15Co0.32Mn1.53O4", "LiMn2O4"],
+                "target": "CoLMO",
                 "is_right_located": true
             }
         ]

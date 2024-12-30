@@ -36,7 +36,6 @@ seqeval = "1.2.2"
 langchain-community = "^0.3.1"
 dspy = "^2.5.22"
 openpyxl = "^3.1.5"
-langfuse = "^2.57.1"
 
 
 [tool.poetry.group.dev.dependencies]
