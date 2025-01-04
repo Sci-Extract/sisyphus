@@ -473,7 +473,7 @@ class ArticleFunctions:
         abs_element = None
         for abs_ele in abs_elements:
             try:
-                if abs_ele.attrib['class'] in ['author', 'graphical']:
+                if abs_ele.attrib['class']  == 'author':
                     abs_element = abs_ele
             except KeyError:
                 # print('[ERROR] keyword "class" does not exist!')

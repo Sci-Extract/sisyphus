@@ -34,14 +34,6 @@ HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 from bs4 import BeautifulSoup
 import json
 
-class Table(BaseModel):
-    caption: Optional[str]
-    data: list[dict[str, str]]
-    footnotes: list[str]
-
-from bs4 import BeautifulSoup
-
-from bs4 import BeautifulSoup
 
 def parse_html_table_to_json(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -50,74 +42,42 @@ def parse_html_table_to_json(html):
     table = soup.find('table')
     caption = table.find('caption').get_text(strip=True) if table.find('caption') else None
 
-    # Prepare to track active rowspan cells
-    active_rowspan_cells = {}
+    # Prepare a 2D grid for the table
+    rows = table.find_all('tr')
+    grid = []
 
-    # Extract rows from the table body
-    rows = table.find('tbody').find_all('tr')
+    for _ in range(len(rows)):
+        grid.append([])
 
-    # Initialize storage for headers and data
-    headers = []
-    data = []
-
-    for i, row in enumerate(rows):
-        cells = row.find_all(['td', 'th'])
-        row_data = []
+    # Fill the grid
+    for row_index, row in enumerate(rows):
+        cols = row.find_all(['td', 'th'])
         col_index = 0
-
-        # Process each column
-        for cell in cells:
-            # Fill in values from rowspan cells if needed
-            while col_index in active_rowspan_cells:
-                row_data.append(active_rowspan_cells[col_index]['value'])
-                active_rowspan_cells[col_index]['remaining'] -= 1
-                if active_rowspan_cells[col_index]['remaining'] == 0:
-                    del active_rowspan_cells[col_index]
+        for col in cols:
+            while col_index < len(grid[row_index]) and grid[row_index][col_index] is not None:
                 col_index += 1
 
-            # Add the current cell's value
-            value = cell.get_text(strip=True)
-            rowspan = int(cell.get('rowspan', 1))
-            row_data.append(value)
+            rowspan = int(col.get('rowspan', 1))
+            colspan = int(col.get('colspan', 1))
+            cell_content = col.get_text(strip=True)
 
-            # Track rowspan if present
-            if rowspan > 1:
-                active_rowspan_cells[col_index] = {'value': value, 'remaining': rowspan - 1}
-            
-            col_index += 1
+            for r in range(rowspan):
+                while len(grid[row_index + r]) < col_index + colspan:
+                    grid[row_index + r].append(None)
+                for c in range(colspan):
+                    if r == 0 and c == 0:
+                        grid[row_index + r][col_index + c] = cell_content
+                    else:
+                        grid[row_index + r][col_index + c] = ''
 
-        # Fill in remaining values from rowspan cells
-        while col_index in active_rowspan_cells:
-            row_data.append(active_rowspan_cells[col_index]['value'])
-            active_rowspan_cells[col_index]['remaining'] -= 1
-            if active_rowspan_cells[col_index]['remaining'] == 0:
-                del active_rowspan_cells[col_index]
-            col_index += 1
+            col_index += colspan
 
-        # Set headers from the first row or populate data
-        if i == 0:  # First row as headers
-            headers = row_data
-        else:
-            entry = {}
-            for idx, value in enumerate(row_data):
-                header = headers[idx] if idx < len(headers) else f'Column {idx + 1}'
-                entry[header] = value
-            data.append(entry)
-
-    # Extract table footnotes (if present)
-    footnotes = []
-    tfoot = table.find('tfoot')
-    if tfoot:
-        for row in tfoot.find_all('tr'):
-            footnotes.append(' '.join(cell.get_text(strip=True) for cell in row.find_all(['td', 'th'])))
-
+    # Write to CSV
+    body = [','.join(row) for row in grid]
+    with_caption = [caption] + body if caption else body
+    csv_content = '\n'.join(with_caption)
     # Create the JSON structure
-    result = {
-        'caption': caption,
-        'data': data,
-        'footnotes': footnotes
-    }
-    return result
+    return csv_content
 
 
 # region loader
@@ -187,9 +147,9 @@ class ArticleLoader(Loader):
                         metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles=sub_titles, title=title))
                     )
             elif child.name == 'table':
-                table_json = parse_html_table_to_json(str(child))
+                table_content = parse_html_table_to_json(str(child))
                 yield Document(
-                    page_content=json.dumps(table_json, indent=2, ensure_ascii=False),
+                    page_content=table_content,
                     metadata=dict(self.metadata(source=self.file_name, doi=doi, sub_titles=TB, title=title))
                 )
 
@@ -250,8 +210,8 @@ class FullTextLoader(Loader):
 
         if self.include_table:
             for tag in soup.find_all(TB):
-                table_json = parse_html_table_to_json(str(tag))                
-                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
+                table_content = parse_html_table_to_json(str(tag))                
+                yield Document(page_content=table_content, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
 
         tags = soup.find_all(TB)
         if tags:
@@ -273,8 +233,8 @@ class FullTextLoader(Loader):
 
         if self.include_table:
             for tag in soup.find_all(TB):
-                table_json = parse_html_table_to_json(str(tag))
-                yield Document(page_content=json.dumps(table_json, indent=2, ensure_ascii=False), metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
+                table_content = parse_html_table_to_json(str(tag))
+                yield Document(page_content=table_content, metadata=dict(self.metadata(source=self.file_name, doi=doi, title=title, type_=TB)))
 
         tags = soup.find_all(TB)
         if tags:
