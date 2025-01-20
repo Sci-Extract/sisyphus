@@ -6,4 +6,4 @@ This project is a modified version of Yinghao-Li's chemical html paper parser. [
 
 ### TODO
 - Elsevier paper reference tag removing (support ACS, RSC, Wiley presently)
-- Support more publishers (support ACS, RSC, Wiley, Elsevier presently)
+- Support more publishers (support ACS, RSC, Wiley, Elsevier, Springer, Nature presently)

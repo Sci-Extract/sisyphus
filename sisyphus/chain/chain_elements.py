@@ -452,16 +452,17 @@ async def asupervisor(chain: Chain, directory: str, batch_size: int):
 
 
 async def run_chains_with_extraction_history(
-    chain: Chain, directory: str, batch_size: int, namespace: str, extract_nums: Optional[int] = None
+    chain: Chain, directory: Optional[str], batch_size: int, namespace: str, extract_nums: Optional[int] = None, file_names: list[str] = None
 ):
     """run multiple chains asynchronously with extraction history.
     Args:
         namespace: Give a name to current task. For example 'nlo/band_gap' is a good name for extracting band gap from NLO papers.
     """
-    file_name_full = glob.glob(os.path.join(directory, '*.html'))
-    file_names = [name.split(os.sep)[-1] for name in file_name_full]
-    if extract_nums:
-        file_names = file_names[:extract_nums]
+    if not file_names:
+        file_name_full = glob.glob(os.path.join(directory, '*.html'))
+        file_names = [name.split(os.sep)[-1] for name in file_name_full]
+        if extract_nums:
+            file_names = file_names[:extract_nums]
 
     # skip extracted ones
     manager = ExtractManager(
@@ -487,13 +488,14 @@ async def run_chains_with_extraction_history(
     )
 
 def run_chains_with_extarction_history_multi_threads(
-    chain: Chain, directory: str, batch_size: int, namespace: str, extract_nums: Optional[int] = None
+    chain: Chain, directory: Optional[str], batch_size: int, namespace: str, extract_nums: Optional[int] = None, file_names: list[str] = None
 ):
     """run multiple chains with extraction history in multi-threads"""
-    file_name_full = glob.glob(os.path.join(directory, '*.html'))
-    file_names = [name.split(os.sep)[-1] for name in file_name_full]
-    if extract_nums:
-        file_names = file_names[:extract_nums]
+    if not file_names:
+        file_name_full = glob.glob(os.path.join(directory, '*.html'))
+        file_names = [name.split(os.sep)[-1] for name in file_name_full]
+        if extract_nums:
+            file_names = file_names[:extract_nums]
         
     # skip extracted ones
     manager = ExtractManager(

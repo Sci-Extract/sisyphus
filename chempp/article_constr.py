@@ -233,6 +233,12 @@ class ArticleFunctions:
             else:
                 class_element = []
             is_abs = False
+
+            # when there is no section in this paper
+            divs = section.find_all('div', id='Abs1-section')
+            if divs:
+                is_abs = True
+
             for ele in data_title + class_element:
                 if 'abstract' in ele or 'summary' in ele:
                     is_abs = True
@@ -256,10 +262,13 @@ class ArticleFunctions:
 
         # --- get sections ---
         sections = body.find('div', class_='main-content').find_all('section') # main-content, dereference
+        if not sections: # when springer article which do not contain any sub-titles, they use div.
+            sections = body.find('div', class_='main-content').find_all('div')
         content_sections = list()
         for i, section in enumerate(sections):
             try:
-                if i != abstract_idx and not section.find_parent('section'):
+                # if i != abstract_idx and not section.find_parent('section'):
+                if not section.find_parent('section'):
                     content_sections.append(section)
             except KeyError:
                 pass
