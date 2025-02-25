@@ -41,6 +41,7 @@ langchain-chroma = "^0.1.4"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.4"
+label-studio = "^1.15.0"
 
 [build-system]
 requires = ["poetry-core"]

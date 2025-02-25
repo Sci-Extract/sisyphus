@@ -54,9 +54,13 @@ RECORD_LOCATION = 'record'
 RECORD_NAME = 'extract_record.sqlite'
 
 
-class DocInfo(NamedTuple):
-    doc: Document
-    info: list[BaseModel]
+class DocInfo():
+    def __init__(self, doc, info):
+        self.doc = doc
+        self.info = info
+
+    def __repr__(self):
+        return f"DocInfo(doc={repr(self.doc)}, info={repr(self.info)})"
 
 
 def coercion_to_lambda(func):
@@ -67,10 +71,10 @@ class BaseElement(object):
     def __repr__(self):
         return self.__class__.__name__
 
-    def invoke(self):
+    def invoke(self, input_):
         pass
 
-    async def ainvoke(self) -> Any:
+    async def ainvoke(self, input_) -> Any:
         pass
 
     def __add__(self, other):

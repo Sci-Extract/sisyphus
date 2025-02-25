@@ -15,13 +15,13 @@ from sisyphus.utils.helper_functions import get_plain_articledb, get_create_resu
 from sisyphus.chain.chain_elements import Filter, Writer, DocInfo, run_chains_with_extarction_history_multi_threads
 
 
-PAPER_DB = 'heas_764'
+PAPER_DB = 'heas_817'
 K = 3
 QUERY_SYN = """Experimental procedures describing the synthesis and processing of HEAs materials, including methods such as melting, casting, rolling, annealing, heat treatment, or other fabrication techniques. Details often include specific temperatures (e.g., °C), durations (e.g., hours, minutes), atmospheric conditions (e.g., argon, vacuum), mechanical deformation (e.g., rolling reduction)."""
 QUERY_MECHANICAL = "The stress-strain curve of alloy, describes yield strength (ys), tensile strength (uts) and elogation properties, for example, CoCuFeMnNi shows tensile strength of 1300 MPa and total elongation of 20%"
 QUERY_PHASE = """Microstructure characterization of alloys (common phases include FCC, BCC, HCP, L12, B2 etc.), usually througth technique like XRD or TEM. Describe about phase and grain size and bouondaries"""
 SYSTEM_MESSAGE = """You are an expert at structured data extraction from HEAs (high entropy alloys) domain. You will be given unstructured text from a research paper and should convert it into the given structure"""
-INSTRUCTION =  """Extract all HEAs tensile and compressive properties and their synthesis methods from text, including HEAs refered in the paper.
+INSTRUCTION =  """Extract all HEAs tensile and compressive properties and their synthesis methods from text.
 Note:
 For HEAs composition
 - HEAs composition should be strictly comply with standard naming convention in at.%, e.g Hf0.5Mo0.5NbTiZrC0.3. If the alloy is doped or added with other element and the author did not provide a nominal composition, you should give name such as W-CoCrFeMnNi. Acronym such as HEA-1 is prohibited.
@@ -48,6 +48,7 @@ class AlloyRecord(BaseModel):
     test_temperature: str = Field(description='The temperature at which the mechanical properties were tested, e.g. 25 °C. If the temperature is given in Kelvin, convert it to Celsius by subtracting 273. If not mentioned in the text, record it as 25 °C.')
 
 class Records(BaseModel):
+    reasoning: str = Field(description='Resoning about the finding the correponding alloy synthesis and mechanical properties.')
     records: Optional[List[AlloyRecord]] = Field(description='The records of the alloy properties')
 
 
@@ -242,11 +243,11 @@ def return_valid(t):
 
 docs_getter = Filter(article_db)
 # result_db = get_create_resultdb('heas_764_dist', AlloyRecord)
-result_db = get_create_resultdb('my_test', Records)
+result_db = get_create_resultdb('heas_764_dist')
 chain = docs_getter + distill_extract + return_valid + Writer(result_db)
 # inspect_chain = docs_getter + distill_extract
 
-# def inspect_articles(articles):
+# def inspect_articles(articles):AIBIIISe2 (AI = Li, Na, K, Rb, Cs; BIII = Al, Ga)
 #     with ThreadPoolExecutor(10) as worker:
 #         futures = [worker.submit(inspect_chain.compose, article) for article in articles]
 #         future_doc = dict(zip(futures, articles))
@@ -262,5 +263,5 @@ chain = docs_getter + distill_extract + return_valid + Writer(result_db)
 # inspect_articles(articles_20)
 
 # articles_20 = os.listdir('articles_processed_300')[:20]
-# run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 5, 'heas_764_dist')
-chain.compose('10.1016&sol;j.vacuum.2024.113026.html')
+run_chains_with_extarction_history_multi_threads(chain, 'articles_processed', 10, 'heas_764_dist')
+# chain.compose('10.1016&sol;j.vacuum.2024.113026.html')

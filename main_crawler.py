@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("doi_file", help=".txt/.xlsx file contains dois you want to retrieve")
     parser.add_argument('-r', '--rate', default=0.15, help='the rate of single crawler (rsc, wiley, acs...), default to 0.15, increase the number if you want to speed up, but not recommand!')
-    parser.add_argument('--test', help='set to 1 to enable test mode', default=0)
+    parser.add_argument('--test', help='set to 1 to enable test mode', default=1) # recommend to enable test mode
     args = parser.parse_args()
 
     file: str = args.doi_file

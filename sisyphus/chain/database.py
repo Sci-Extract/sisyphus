@@ -160,9 +160,8 @@ class DocDB(DB):
 class ResultDB(DB):
     """provide functionality for creating database, saving data, searching through database"""
 
-    def __init__(self, engine, result_pydantic: BaseModel):
+    def __init__(self, engine):
         self.engine = engine
-        self.result_pydantic = result_pydantic
         self.NewBase = get_new_sql_base()
         self.Document, self.Result = self._define_sqltable()
 
@@ -190,14 +189,19 @@ class ResultDB(DB):
         getter = doc_getter(self.engine, self.Document)
         return getter(source)
         
-    def save_result(self, text: str, metadata: dict[str, str], results: list[BaseModel]):
+    def save_result(self, text: str, metadata: dict[str, str], results: list[BaseModel | dict]):
         """invoked by the `Writer`, save text with extracted resutls"""
         assert super().check_source(metadata), 'metadata must have a field named source'
         with Session(self.engine) as session, session.begin():
             document = self.Document(page_content=text, meta=metadata)
             for result in results:
-                result = self.Result(result=result.model_dump())
-                document.results.append(result)
+                if isinstance(result, BaseModel):
+                    result_ = self.Result(result=result.model_dump())
+                elif isinstance(result, dict):
+                    result_ = self.Result(result=result)
+                else:
+                    raise ValueError('result must be a dict or a pydantic model')
+                document.results.append(result_)
             session.add(document)
 
     def _complete_result_sqlmodel(self, base_model: Type[SQLModel]):

@@ -65,11 +65,10 @@ def get_chat_model(
     )
 
 
-def get_create_resultdb(db_name, pydantic_model: BaseModel, default_dir='db'):
+def get_create_resultdb(db_name, default_dir='db'):
     """helper function to easily get and create result database"""
     result_db = ResultDB(
-        create_engine('sqlite:///' + os.path.join(default_dir, db_name) + '.db'),
-        pydantic_model,
+        create_engine('sqlite:///' + os.path.join(default_dir, db_name) + '.db')
     )
     result_db.create_db()
     return result_db
@@ -173,3 +172,51 @@ def load_from_curated_examples(file, fields: tuple[str], input_keys: tuple[str],
         example[replace_key] = [output_model(**out_put) for out_put in outputs]
         loaded_examples.append(Example(**example).with_inputs(*input_keys)) 
     return loaded_examples
+
+def get_title_abs(docs):
+    """get abstract and title from the docs"""
+    title = docs[0].metadata['title']
+    abstract = [doc for doc in docs if doc.metadata['sub_titles'] == 'Abstract']
+    return title, abstract
+
+def render_docs(docs, title, tables_prefix):
+    """render docs to nicely formatted paper look.
+    Since the tables are the most information dense format, we put it at the tail"""
+    tables = [doc for doc in docs if doc.metadata['sub_titles'] == 'table']
+    paras = [doc for doc in docs if doc.metadata['sub_titles'] != 'table']
+
+    previous_titles = []
+    scratch_pad = [title]
+    for para in paras:
+        if not para.page_content:
+            continue
+        sub_titles = para.metadata['sub_titles'].split('/')
+        title_to_write = [title for title in sub_titles if title not in previous_titles]
+        previous_titles = sub_titles
+        rendered_text = '\n'.join(title_to_write + [para.page_content])
+        if title_to_write:
+            rendered_text = '\n' + rendered_text
+        scratch_pad.append(rendered_text)
+
+    if tables:
+        scratch_pad.append(tables_prefix)
+    for table in tables:
+        scratch_pad.append('\n' + table.page_content)
+    return '\n'.join(scratch_pad)
+
+def reorder_docs(ordered, docs):
+    """reorder the retrieved documents.
+    Note: this function can deal with duplication in the docs!
+    WARNING: do not modify the docs"""
+    with_order = []
+    used_i = []
+    for doc in docs:
+        for o_doc, i in ordered:
+            if i in used_i:
+                continue
+            if doc == o_doc:
+                with_order.append((doc, i))
+                used_i.append(i)
+                break
+    final = sorted(with_order, key=lambda x: x[1])
+    return [el[0] for el in final]
