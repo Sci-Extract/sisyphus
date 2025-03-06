@@ -179,7 +179,7 @@ def get_title_abs(docs):
     abstract = [doc for doc in docs if doc.metadata['sub_titles'] == 'Abstract']
     return title, abstract
 
-def render_docs(docs, title, tables_prefix):
+def render_docs(docs, title, tables_prefix='Tables:'):
     """render docs to nicely formatted paper look.
     Since the tables are the most information dense format, we put it at the tail"""
     tables = [doc for doc in docs if doc.metadata['sub_titles'] == 'table']
@@ -187,6 +187,31 @@ def render_docs(docs, title, tables_prefix):
 
     previous_titles = []
     scratch_pad = [title]
+    for para in paras:
+        if not para.page_content:
+            continue
+        sub_titles = para.metadata['sub_titles'].split('/')
+        title_to_write = [title for title in sub_titles if title not in previous_titles]
+        previous_titles = sub_titles
+        rendered_text = '\n'.join(title_to_write + [para.page_content])
+        if title_to_write:
+            rendered_text = '\n' + rendered_text
+        scratch_pad.append(rendered_text)
+
+    if tables:
+        scratch_pad.append(tables_prefix)
+    for table in tables:
+        scratch_pad.append('\n' + table.page_content)
+    return '\n'.join(scratch_pad)
+
+def render_docs_without_title(docs, tables_prefix='Tables:'):
+    """render docs to nicely formatted paper look.
+    Since the tables are the most information dense format, we put it at the tail"""
+    tables = [doc for doc in docs if doc.metadata['sub_titles'] == 'table']
+    paras = [doc for doc in docs if doc.metadata['sub_titles'] != 'table']
+
+    scratch_pad = []
+    previous_titles = []
     for para in paras:
         if not para.page_content:
             continue
@@ -220,3 +245,14 @@ def reorder_docs(ordered, docs):
                 break
     final = sorted(with_order, key=lambda x: x[1])
     return [el[0] for el in final]
+
+def reorder_paras(paras):
+    """reorder the paragraphs"""
+    # remove duplication
+    existed_id = []
+    removed_dupli = []
+    for para in paras:
+        if para.id not in existed_id:
+            removed_dupli.append(para)
+            existed_id.append(para.id)
+    return sorted(removed_dupli, key=lambda x: x.id)

@@ -426,7 +426,7 @@ class Chain:
         origin_input = input_
         for index, component in enumerate(self.components):
             input_ = await component.ainvoke(input_)
-            if input_ is None and index < len(self.components) - 1:
+            if not input_  and index < len(self.components) - 1:
                 logger.debug('file: %s no result find', origin_input)
                 return
         return input_
@@ -435,7 +435,7 @@ class Chain:
         origin_input = input_
         for index, component in enumerate(self.components):
             input_ = component.invoke(input_)
-            if input_ is None and index < len(self.components) - 1:
+            if not input_ and index < len(self.components) - 1:
                 logger.debug('file: %s no result find', origin_input)
                 return
         return input_

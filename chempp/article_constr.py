@@ -459,7 +459,7 @@ class ArticleFunctions:
         return article, article_component_check
 
     @staticmethod
-    def article_construct_xml_elsevier(root: ET.Element, doi: str):
+    def article_construct_xml_elsevier(root: ET.Element, doi: str, rm_fig_caption=True):
         article = Article()
         article_component_check = ArticleComponentCheck()
         article.doi = doi
@@ -511,12 +511,13 @@ class ArticleFunctions:
                 tbl = xml_table_extract_elsevier(table_element)
                 tbl_element = ArticleElement(type=ArticleElementType.TABLE, content=tbl)
                 section_list.append(tbl_element)
-            for figure_element in figure_elements:
-                fig = xml_figure_extract(figure_element)
-                if not fig.caption:
-                    continue
-                fig_element = ArticleElement(type=ArticleElementType.FIGURE, content=fig)
-                section_list.append(fig_element)
+            if not rm_fig_caption:
+                for figure_element in figure_elements:
+                    fig = xml_figure_extract(figure_element)
+                    if not fig.caption:
+                        continue
+                    fig_element = ArticleElement(type=ArticleElementType.FIGURE, content=fig)
+                    section_list.append(fig_element)
         except Exception:
             section_list = []
 
@@ -819,3 +820,4 @@ def parse_xml(file_path: str) -> Tuple[Article, ArticleComponentCheck]:
     article, component_check = article_construct_func(root=root, doi=doi)
 
     return article, component_check
+

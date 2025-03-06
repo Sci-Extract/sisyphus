@@ -120,7 +120,8 @@ def xml_section_extract_acs(section_root, element_list=None) -> List[ArticleElem
 
 
 def html_section_extract_nature(section_root,
-                                element_list: Optional[List] = None):
+                                element_list: Optional[List] = None,
+                                rm_fig_caption=True):
     """
     Depth-first search of the text in the sections
     """
@@ -142,9 +143,10 @@ def html_section_extract_nature(section_root,
                 target_txt = format_text(child.text)
                 element_list.append(ArticleElement(type=element_type, content=target_txt))
             elif 'figure' in block_name:
-                element_type = ArticleElementType.FIGURE
-                fig = html_figure_extract_springer(child)
-                element_list.append(ArticleElement(type=element_type, content=fig))
+                    if not rm_fig_caption:
+                        element_type = ArticleElementType.FIGURE
+                        fig = html_figure_extract_springer(child)
+                        element_list.append(ArticleElement(type=element_type, content=fig))
             elif 'table' in block_name:
                 continue
             else:
@@ -155,7 +157,8 @@ def html_section_extract_nature(section_root,
 
 
 def html_section_extract_wiley(section_root,
-                               element_list: Optional[List] = None):
+                               element_list: Optional[List] = None,
+                                rm_fig_caption=True):
     """
     Depth-first search of the text in the sections
     """
@@ -189,11 +192,12 @@ def html_section_extract_wiley(section_root,
                 tbl = html_table_extract_wiley(child)
                 element_list.append(ArticleElement(type=element_type, content=tbl))
             elif 'figure' in child_name:
-                element_type = ArticleElementType.FIGURE
-                fig = html_figure_extract_wiley(child)
-                if not fig.caption:
-                    continue
-                element_list.append(ArticleElement(type=element_type, content=fig))
+                if not rm_fig_caption:
+                    element_type = ArticleElementType.FIGURE
+                    fig = html_figure_extract_wiley(child)
+                    if not fig.caption:
+                        continue
+                    element_list.append(ArticleElement(type=element_type, content=fig))
             elif 'table' in child_name:
                 continue
             else:
@@ -205,7 +209,8 @@ def html_section_extract_wiley(section_root,
 
 def html_section_extract_rsc(section_root,
                              element_list: Optional[List] = None,
-                             n_h2: Optional[int] = None):
+                             n_h2: Optional[int] = None,
+                             rm_fig_caption=True):
     """
     Depth-first search of the text in the sections
     """
@@ -268,9 +273,10 @@ def html_section_extract_rsc(section_root,
                 continue
             # skip figures (for now)
             elif 'figure' in child_name or (child_name == 'div' and child_class == 'image_table'):
-                fig = html_figure_extract_rsc(child)
-                element_type = ArticleElementType.FIGURE
-                element_list.append(ArticleElement(type=element_type, content=fig))
+                if not rm_fig_caption:
+                    fig = html_figure_extract_rsc(child)
+                    element_type = ArticleElementType.FIGURE
+                    element_list.append(ArticleElement(type=element_type, content=fig))
             else:
                 html_section_extract_rsc(section_root=child, element_list=element_list, n_h2=n_h2)
         except TypeError:
@@ -279,7 +285,8 @@ def html_section_extract_rsc(section_root,
 
 
 def html_section_extract_springer(section_root,
-                                  element_list: Optional[List] = None):
+                                  element_list: Optional[List] = None,
+                                  rm_fig_caption=True):
     """
     Depth-first search of the text in the sections
     """
@@ -307,9 +314,10 @@ def html_section_extract_springer(section_root,
                 target_txt = format_text(child.text)
                 element_list.append(ArticleElement(type=element_type, content=target_txt))
             elif 'figure' in child_name:
-                element_type = ArticleElementType.FIGURE
-                fig = html_figure_extract_springer(child)
-                element_list.append(ArticleElement(type=element_type, content=fig))
+                if not rm_fig_caption:
+                    element_type = ArticleElementType.FIGURE
+                    fig = html_figure_extract_springer(child)
+                    element_list.append(ArticleElement(type=element_type, content=fig))
             elif 'table' in child_name or (child_name == 'div' and child_class == 'Table'):
                 continue
             elif child_name == 'div' and child_class == 'Table':
@@ -323,11 +331,12 @@ def html_section_extract_springer(section_root,
                     element_type = ArticleElementType.TABLE
                     tbl = html_table_extract_springer(table_element)
                     element_list.append(ArticleElement(type=element_type, content=tbl))
-                for s in child.find_all('figure'):
-                    fig_element = s.extract()
-                    element_type = ArticleElementType.FIGURE
-                    fig = html_figure_extract_springer(fig_element)
-                    element_list.append(ArticleElement(type=element_type, content=fig))
+                if not rm_fig_caption:
+                    for s in child.find_all('figure'):
+                        fig_element = s.extract()
+                        element_type = ArticleElementType.FIGURE
+                        fig = html_figure_extract_springer(fig_element)
+                        element_list.append(ArticleElement(type=element_type, content=fig))
 
                 if not child.find_all('p'):
                     element_type = ArticleElementType.PARAGRAPH
@@ -503,7 +512,8 @@ def html_section_extract_elsevier(section_root,
 
 
 def html_section_extract_acs(section_root,
-                             element_list: Optional[List] = None):
+                             element_list: Optional[List] = None,
+                             rm_fig_caption=True):
     """
     Depth-first search of the text in the sections
     """
@@ -529,12 +539,12 @@ def html_section_extract_acs(section_root,
                     div_class = ['']
 
                 elif div_class[0] == "NLM_p":
-
-                    for s in child.find_all('figure'):
-                        fig_element = s.extract()
-                        element_type = ArticleElementType.FIGURE
-                        fig = html_figure_extract_acs(fig_element)
-                        element_list.append(ArticleElement(type=element_type, content=fig))
+                    if not rm_fig_caption:
+                        for s in child.find_all('figure'):
+                            fig_element = s.extract()
+                            element_type = ArticleElementType.FIGURE
+                            fig = html_figure_extract_acs(fig_element)
+                            element_list.append(ArticleElement(type=element_type, content=fig))
                     html_section_extract_acs(section_root=child, element_list=element_list)
 
                     for s in child.find_all('div', {"class": "NLM_table-wrap"}):
@@ -1033,3 +1043,4 @@ def html_figure_extract_elsevier(html_figure):
         caption = None
 
     return Figure(idx=fig_id, caption=caption)
+
