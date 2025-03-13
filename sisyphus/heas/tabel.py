@@ -15,41 +15,44 @@ class ClassifyCompositionTable(dspy.Signature):
     is_composition: bool = dspy.OutputField()
 
 
-class LabelTablesProperties(dspy.Signature):
-    """From the provided CSV table, generate a Python list of item categories that have data present. The categories to check are:
+class LabelTablesStrength(dspy.Signature):
+    """You are an expert in materials science and mechanical testing. Given the following CSV table from a scientific paper on high entropy alloys, determine whether it contains at least one tensile or compressive test property.
 
-    1. strength (valid ONLY if at least one of these properties exists: YS, UTS, or strain)
-    2. youngs_modulus (elastic modulus of materials)
-    3. hardness (material hardness measurements)
-    4. grain_size (material grain size measurements, excluding lattice parameters)
+    Relevant Properties for Classification:
+    A table should be classified as relevant if it contains at least one of the following:
 
-    Requirements:
-    - Include a category in the output list ONLY if relevant data for that category exists in the CSV
-    - Return an empty list if any required category is completely missing data
-    - Do not include categories with no data
-    - For strength to be valid, the CSV must contain at least one of: YS, UTS, or strain
-    - Shear stress and corrosion resistance are NOT valid strength properties
-    - Lattice parameters are NOT valid grain_size properties
+    Yield Strength (YS) (MPa)
+    Ultimate Tensile Strength (UTS) (MPa)
+    Compressive Strength (MPa)
+    Strain (percentage or as a ratio, e.g., true strain or elongation)
+    Exclusions:
+    Do not classify table as relevant if they only mention:
 
-    Example output: ['strength', 'hardness'] or [] if missing data
-    """
+    Fracture strength
+    Hardness (e.g., Vickers, Brinell, Rockwell)
+    Fatigue strength
+    Shear strength"""
     table: str = dspy.InputField()
-    properties: list[Literal['strength', 'youngs_modulus', 'hardness', 'grain_size']] = dspy.OutputField(desc='if none of the above is present, return an empty list')   
+    contains: bool = dspy.OutputField()
 
 
 classifier = dspy.ChainOfThought(ClassifyCompositionTable)
-table_labeler = dspy.ChainOfThought(LabelTablesProperties)
+table_labeler = dspy.ChainOfThought(LabelTablesStrength)
 
 def label_table(paras: list[Paragraph]):
+    """label composition table and strength tables"""
     tables = [para for para in paras if para.is_table()]
     args = [{'table': table.page_content} for table in tables]
     results = label_multi_threads(classifier, tables, args, 5)
     for para, result in results:
         if result.is_composition:
             para.set_types('composition')
+    
+    # Label strength tables
     properties_results = label_multi_threads(table_labeler, tables, args, 5)
     for para, result in properties_results:
-        para.set_types(result.properties)
+        if result.contains:
+            para.set_types('strength')
 
 def label_multi_threads(labeler, paras, args, workers):
     """label the paragraphs in parallel, paras and args should match one by one
@@ -67,4 +70,3 @@ def label_multi_threads(labeler, paras, args, workers):
         for future in as_completed(futures):
             para_result_tp.append((future_para[future], future.result()))
     return para_result_tp
-            

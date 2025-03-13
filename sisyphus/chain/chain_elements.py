@@ -46,13 +46,11 @@ from sisyphus.chain.database import (
     add_manager_callback,
     aadd_manager_callback,
 )
+from sisyphus.chain.constants import *
 from sisyphus.utils.run_bulk import bulk_runner
 
 
 logger = logging.getLogger(__name__)
-RECORD_LOCATION = 'record'
-RECORD_NAME = 'extract_record.sqlite'
-
 
 class DocInfo():
     def __init__(self, doc, info):
@@ -426,6 +424,8 @@ class Chain:
         origin_input = input_
         for index, component in enumerate(self.components):
             input_ = await component.ainvoke(input_)
+            if input_ == FAILED:
+                return FAILED
             if not input_  and index < len(self.components) - 1:
                 logger.debug('file: %s no result find', origin_input)
                 return
@@ -435,6 +435,8 @@ class Chain:
         origin_input = input_
         for index, component in enumerate(self.components):
             input_ = component.invoke(input_)
+            if input_ == FAILED:
+                return FAILED
             if not input_ and index < len(self.components) - 1:
                 logger.debug('file: %s no result find', origin_input)
                 return
@@ -492,14 +494,13 @@ async def run_chains_with_extraction_history(
     )
 
 def run_chains_with_extarction_history_multi_threads(
-    chain: Chain, directory: Optional[str], batch_size: int, namespace: str, extract_nums: Optional[int] = None, file_names: list[str] = None
+    chain: Chain, directory: Optional[str], batch_size: int, namespace: str, extract_nums: Optional[int] = None, given_names: list[str] = None
 ):
     """run multiple chains with extraction history in multi-threads"""
+    file_names = given_names
     if not file_names:
         file_name_full = glob.glob(os.path.join(directory, '*.html'))
         file_names = [name.split(os.sep)[-1] for name in file_name_full]
-        if extract_nums:
-            file_names = file_names[:extract_nums]
         
     # skip extracted ones
     manager = ExtractManager(
@@ -511,6 +512,8 @@ def run_chains_with_extarction_history_multi_threads(
     file_names = [
         file_name for file_name, exist in zip(file_names, exists) if not exist
     ]
+    if not given_names and extract_nums:
+        file_names = file_names[:extract_nums]
     logger.debug('total processed files: %d', len(file_names))
     if not file_names:
         raise ValueError('no file needed to be extracted')

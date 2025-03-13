@@ -25,6 +25,7 @@ pvc/*
 inorganic_recipe_result/*
 optimize/*
 playground_valuable/*
+heas_test/*
 
 
 **/.DS_Store

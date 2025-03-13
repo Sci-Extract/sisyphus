@@ -20,6 +20,8 @@ from langchain_core.documents import Document
 from sqlmodel import SQLModel, Field, Session, select, JSON, Relationship, text, create_engine, col
 from sqlalchemy.orm import registry
 
+from sisyphus.chain.constants import FAILED
+
 
 def extend_fields(sql_model: SQLModel, pydantic_model: BaseModel) -> SQLModel:
     """update sqlmodel (not sql table!) with user defined pydantic model"""
@@ -305,6 +307,7 @@ def add_manager_callback(func: Callable, manager: ExtractManager):
     @wraps(func)
     def wrapper(key):
         r = func(key)
-        manager.update(key)
+        if r != FAILED:
+            manager.update(key)
         return r
     return wrapper
