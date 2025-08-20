@@ -36,3 +36,10 @@ def label_paras(docs: list[Document]):
         label_properties_restricted(docs, paras) # label phase and strength texts
 
     return paras
+
+def label_only_syn_paras(docs: list[Document]):
+    """label synthesis paragraphs only"""
+    paras = [Paragraph(doc, id_) for id_, doc in enumerate(docs)]
+    with dspy.context(lm=dspy.LM('openai/gpt-4o-mini')):
+        label_syn_paras(docs, paras) # label synthesis paragraphs
+    return paras

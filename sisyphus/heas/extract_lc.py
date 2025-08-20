@@ -2,6 +2,7 @@ import re
 import logging
 from typing import Optional, Literal
 
+import dspy
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -87,7 +88,7 @@ template = ChatPromptTemplate(
     ]
 )
 
-def extract(paragraphs: list[Paragraph]):
+def extract(paragraphs: list[Paragraph], synthesis_extract_model=dspy.LM('openai/gpt-4o'), extraction_model=model):
     syn_paras = [para for para in paragraphs if para.is_synthesis]
     strength_paras = [para for para in paragraphs if para.has_property('strength')]
     phase_paras = [para for para in paragraphs if para.has_property('phase')]
@@ -95,7 +96,7 @@ def extract(paragraphs: list[Paragraph]):
     last_intro_para = [para for para in paragraphs if re.search(r'introduction', para.metadata['sub_titles'], re.I)][-1:]
 
     # get synthesis prompt
-    synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras))
+    synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras), lm=synthesis_extract_model)
 
     # construct instruction
     instruction = INSTRUCTION_TEMPLATE.format(synthesis_prompt=synthesis_prompt)
@@ -104,7 +105,7 @@ def extract(paragraphs: list[Paragraph]):
     title, _ = get_title_abs(paragraphs)
     para_extend = ParagraphExtend.merge_paras(combined_paras, metadata={'doi': paragraphs[0].metadata['doi'], 'source': paragraphs[0].metadata['source']}, title=title)
     
-    chain = template | model.with_structured_output(Records, method='json_schema')
+    chain = template | extraction_model.with_structured_output(Records, method='json_schema')
     try:
         records = chain.invoke({'paper': para_extend.page_content, 'instruction': instruction}).records
     except LengthFinishReasonError:
@@ -114,3 +115,18 @@ def extract(paragraphs: list[Paragraph]):
     if records:
         return [DocInfo(para_extend, records)]
 
+def extract_full_docs(paragraphs):
+    syn_paras = [para for para in paragraphs if para.is_synthesis]
+    synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras))
+    instruction = INSTRUCTION_TEMPLATE.format(synthesis_prompt=synthesis_prompt)
+    title = get_title_abs(paragraphs)[0]
+    para_extend = ParagraphExtend.merge_paras(paragraphs, metadata={'doi': paragraphs[0].metadata['doi'], 'source': paragraphs[0].metadata['source']}, title=title)
+    chain = template | model.with_structured_output(Records, method='json_schema')
+    try:
+        records = chain.invoke({'paper': para_extend.page_content, 'instruction': instruction}).records
+    except LengthFinishReasonError:
+        source = paragraphs[0].metadata['source']
+        logger.exception('For source: %s', source, exc_info=1)
+        return FAILED
+    if records:
+        return [DocInfo(para_extend, records)]

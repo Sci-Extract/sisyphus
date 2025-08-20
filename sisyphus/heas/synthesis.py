@@ -132,11 +132,11 @@ def format_synthesis_prompt_str(processes):
     prompt = SYN_PROMPT_SIMPLE + f"""\nYou may include these processes in your response:\n{formatted_string}"""
     return prompt
 
-def get_synthesis_prompt(text):
+def get_synthesis_prompt(text, lm=dspy.LM('openai/gpt-4o')):
     """return the formatted prompt information for synthesis extraction"""
     if not text:
         return format_synthesis_prompt_str([])
-    with dspy.context(lm=dspy.LM('openai/gpt-4o')):
+    with dspy.context(lm=lm):
         types = predictor(paragraph=text).processes
     synthesis_prompt = format_synthesis_prompt_str(types)
     return synthesis_prompt
