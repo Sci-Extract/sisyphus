@@ -47,6 +47,7 @@ from sisyphus.chain.database import (
     aadd_manager_callback,
 )
 from sisyphus.chain.constants import *
+from sisyphus.chain.paragraph import ParagraphExtend
 from sisyphus.utils.run_bulk import bulk_runner
 
 
@@ -367,29 +368,31 @@ class Writer(BaseElement):
 
     def __init__(self, result_db: ResultDB):
         self.result_db = result_db
-
-    def save(self, results: list[BaseModel], document: Document):
+    
+    def save(self, paragraph: ParagraphExtend):
         """save document and correspond results"""
-        self.result_db.save_result(
-            text=document.page_content,
-            metadata=document.metadata,
-            results=results,
-        )
+        data = paragraph.data
+        if data:
+            self.result_db.save_result(
+                text=paragraph.page_content,
+                metadata=paragraph.metadata,
+                results=data
+            )
 
-    async def asave(self, results, document):
-        await asyncio.to_thread(self.save, results, document)
+    async def asave(self, paragraphs):
+        await asyncio.to_thread(self.save, paragraphs)
 
-    async def ainvoke(self, doc_with_info: list[DocInfo]) -> None:
+    async def ainvoke(self, paragraphs) -> None:
         await asyncio.gather(
             *[
-                self.asave(docinfo.info, docinfo.doc)
-                for docinfo in doc_with_info
+                self.asave(paragraph)
+                for paragraph in paragraphs
             ]
         )
     
-    def invoke(self, doc_with_info):
-        for docinfo in doc_with_info:
-            self.save(docinfo.info, docinfo.doc)
+    def invoke(self, paragraphs: list[ParagraphExtend]):
+        for paragraph in paragraphs:
+            self.save(paragraph)
 
 
 class ChainElementLambda(BaseElement):

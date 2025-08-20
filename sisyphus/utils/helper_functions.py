@@ -256,3 +256,17 @@ def reorder_paras(paras):
             removed_dupli.append(para)
             existed_id.append(para.id)
     return sorted(removed_dupli, key=lambda x: x.id)
+
+from concurrent.futures import ThreadPoolExecutor
+def run_concurrently(function, inputs, max_workers=4):
+    """
+    Return the results in the same order as inputs, identical to map, but using threads.
+    Supports functions that take one or two arguments. For two arguments, inputs should be iterable of tuples.
+    """
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [
+            executor.submit(function, *input_) if isinstance(input_, tuple) else executor.submit(function, input_)
+            for input_ in inputs
+        ]
+        results = [future.result() for future in futures]
+    return results
