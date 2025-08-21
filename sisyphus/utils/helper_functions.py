@@ -183,7 +183,7 @@ def render_docs(docs, title, tables_prefix='Tables:'):
     """render docs to nicely formatted paper look.
     Since the tables are the most information dense format, we put it at the tail"""
     tables = [doc for doc in docs if doc.metadata['sub_titles'] == 'table']
-    paras = [doc for doc in docs if doc.metadata['sub_titles'] != 'table']
+    paras = reorder_paras([doc for doc in docs if doc.metadata['sub_titles'] != 'table'])
 
     previous_titles = []
     scratch_pad = [title]

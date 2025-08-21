@@ -1,7 +1,5 @@
 from langchain_core.documents import Document
 
-from sisyphus.utils.helper_functions import render_docs
-
 
 class Paragraph:
     def __init__(self, document: Document, id_ = None):
@@ -48,12 +46,16 @@ class ParagraphExtend(Paragraph):
     @classmethod
     def merge_paras(cls, paras, metadata, title, table_prefix='Tables:'):
         """Merge multiple paragraphs into one paragraph with title."""
+        from sisyphus.utils.helper_functions import render_docs
         page_content = render_docs(paras, title, table_prefix)
         doc = Document(page_content, metadata=metadata)
         return cls(doc)
     
     @classmethod
     def from_paragraphs(cls, paras, **metadata):
+        from sisyphus.utils.helper_functions import render_docs
+        if not paras:
+            return
         new_metadata = {k: v for k, v in paras[0].metadata.items() if k in cls.metadata_keys_inherited}
         new_metadata.update(metadata)
         page_content = render_docs(paras, new_metadata['title'])
@@ -65,7 +67,7 @@ class ParagraphExtend(Paragraph):
             return self
         if type(data) is not list:
             data = [data]
-        self.data = data
+        self.data.extend(data)
         return self
     
     

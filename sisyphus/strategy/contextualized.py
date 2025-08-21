@@ -1,20 +1,18 @@
 # Implementation of contexualized extraction: Frist extract properties separately then link it with correponds synthesis routes via description of that material.
-from typing import Optional, Callable
+# TODO add property name. save result with DOI
+from typing import Optional, Callable, Union
 
 import dspy
-from dspy import Predict
-from pydantic import BaseModel, Field, create_model
-from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel
 from langchain_core.runnables import RunnableSequence
-from langchain_openai import ChatOpenAI
 
 from sisyphus.utils.helper_functions import run_concurrently
-from sisyphus.chain.paragraph import Paragraph, ParagraphExtend
-from sisyphus.strategy.pydantic_models_general import MaterialDescriptionBase, Processes
+from sisyphus.chain.paragraph import ParagraphExtend
+from sisyphus.strategy.pydantic_models_general import MaterialDescriptionBase, Processing, SafeDumpProcessing
 
 
-def extract_process(property: MaterialDescriptionBase, processing_format, material_process_dict, experimental_section: str, agent) -> list[Processes]:
-    composition, description, refered = property.composition, property.description, property.refered
+def extract_process(property_: MaterialDescriptionBase, processing_format, material_process_dict, experimental_section: str, agent) -> Processing:
+    composition, description, refered = property_.composition, property_.description, property_.refered
     if refered:
         # this is a reference, we do not extract processing route
         return
@@ -29,15 +27,15 @@ def extract_process(property: MaterialDescriptionBase, processing_format, materi
         process = material_process_dict[list(material_process_dict.keys())[key_index]]
         return process
     # otherwise, extract processing route
-    process = agent.invoke(
+    process: Processing = agent.invoke(
         {
             "material_description": f"{composition}: {description}",
             "process_format": processing_format,
             "text": experimental_section
         }
     )
-    if not process:
-        return []
+    process = SafeDumpProcessing.model_validate(process)
+    material_process_dict.update({(composition, description): process})
     return process
 
 def print_comp_description(material_process_dict):
@@ -62,7 +60,7 @@ def find_same_reference(composition: str, description: str, material_process_dic
         table=print_comp_description(material_process_dict),
         composition=composition,
         description=description
-    )
+    ).index
     return index
 
 def extract_property(input_, agent: RunnableSequence) -> list[BaseModel]:
@@ -72,48 +70,70 @@ def extract_property(input_, agent: RunnableSequence) -> list[BaseModel]:
     return r
 
 class PaperResult(BaseModel):
-    properties: list[BaseModel] 
-    synthesis: list[dict]
+    properties: list[BaseModel]
+    synthesis: Optional[Union[Processing, SafeDumpProcessing]]
+
+def ensure_valid_dict(d):
+    return {k: v for k, v in d.items() if v is not None}
     
 def extract_contextualized_main(paragraphs_reconstr: dict[str, ParagraphExtend], property_agents_d: dict[str, list[RunnableSequence]], formatted_func: Callable, synthesis_agent: RunnableSequence) -> list[ParagraphExtend]:
     output = []
     # extract properties
+    # user input paragraphs dict may contain None value (consider situation when specific property is absent for an article), we should remove such value
+    paragraphs_reconstr = ensure_valid_dict(paragraphs_reconstr)
+    print(paragraphs_reconstr)
     properties = [key for key in paragraphs_reconstr.keys() if key != "synthesis"]
     args = [({"text": paragraphs_reconstr[property].page_content}, property_agents_d[property]) for property in properties]
     results = run_concurrently(extract_property, args) # a list of lists, with each list contains serval dictionaries
-    # since the result returns in order, we can
+    # since the result returns in order, we can combine them
     results_dict = dict(zip(properties, results))
-    for k, para in paragraphs_reconstr.items():
-        para.set_data(results_dict[k])
+    for k in results_dict:
+        paragraphs_reconstr[k].set_data(results_dict[k])
 
     # extract synthesis routes
-    paras_store_exp_results = []
     material_process_d = {}
     experimental_section = paragraphs_reconstr['synthesis'].page_content
     formatted_instruction = formatted_func(experimental_section)
     for records_property in results:
         for record in records_property:
-            syn_routes = extract_process(
+            processing = extract_process(
                 record,
                 formatted_instruction,
                 material_process_d,
                 experimental_section,
                 synthesis_agent
             )
-            composition, description = record.composition, record.description
-            paras_store_exp_results.append(
-                ParagraphExtend.from_paragraphs(
-                    [paragraphs_reconstr['synthesis']],
-                    composition=composition,
-                    description=description,
-                ).set_data(syn_routes)
-            )
+            paragraphs_reconstr['synthesis'].set_data(processing)
+            output.append((record, processing))
+    results_merged = merge_output(output)
+    paras_save = list(paragraphs_reconstr.values())
+    return paras_save
 
-            output.append(PaperResult(
-                properties=record,
-                synthesis=syn_routes
-            ))
-    return paragraphs_reconstr.values().extend(paras_store_exp_results)
+def merge_output(output) -> list[PaperResult]:
+    # [(record, processing), ...]
+    process_record_dict = {}
+    process_pydantic_dict = {}
+    without_process = []
+    for record, processing in output:
+        if processing is None:
+            without_process.append(PaperResult(properties=[record], synthesis=None))
+            continue
+        
+        key = processing.model_dump_json()
+        if key in process_record_dict:
+                process_record_dict[key].append(record)
+                continue
+        process_pydantic_dict[key] = processing
+        process_record_dict[key] = [record]
+    keys = process_pydantic_dict.keys()
+    results = [PaperResult(properties=process_record_dict[key], synthesis=process_pydantic_dict[key]) for key in keys]
+    results.extend(without_process)
+    
+    return results
+
+def dump_paper_results(paper_results):
+    
+        
 
 # def reconstruct_paragraphs(paragraphs: list[Paragraph]) -> dict[str, ParagraphExtend]:
 #     # how you gonna reconstruct the paragraphs for your extraction targets

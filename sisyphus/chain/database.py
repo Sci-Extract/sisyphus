@@ -198,7 +198,8 @@ class ResultDB(DB):
             document = self.Document(page_content=text, meta=metadata)
             for result in results:
                 if isinstance(result, BaseModel):
-                    result_ = self.Result(result=result.model_dump())
+                    model_name = result.__class__.__name__
+                    result_ = self.Result(result={model_name: result.model_dump()})
                 elif isinstance(result, dict):
                     result_ = self.Result(result=result)
                 else:

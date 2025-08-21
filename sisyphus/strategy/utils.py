@@ -4,6 +4,7 @@ from pydantic import create_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models import BaseChatModel
 
+from sisyphus.chain.paragraph import Paragraph
 
 def build_result_model_contextualized(name: str, model_document: str, *bases):
     r = create_model(name, __base__=bases, __doc__=model_document)
@@ -41,3 +42,9 @@ def format_processes(processes: list[str], processes_format_dict) -> str:
             continue
         format_string += f"{processes_format_dict[process]}\n"
     return format_string.strip()
+
+def get_synthesis_paras(paras: list[Paragraph]):
+    return [para for para in paras if para.is_synthesis]
+
+def get_paras_with_props(paras: list[Paragraph], *property):
+    return [para for para in paras if len(set(para.property_types).intersection(set(property))) >= 1]

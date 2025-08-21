@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import dspy
 
-from .paragraph import Paragraph
+from sisyphus.chain.paragraph import Paragraph
 
 
 class ClassifyCompositionTable(dspy.Signature):
