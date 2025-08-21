@@ -8,7 +8,7 @@ from sisyphus.strategy.contextualized import extract_contextualized_main
 from sisyphus.strategy.utils import get_synthesis_paras
 
 
-def extract_main(paragraphs: list[Paragraph], reconstruct_paragraph: Callable, property_agents_d: dict[str, list[RunnableSequence]], formatted_func: Callable, synthesis_agent: RunnableSequence, categorize_agent = categorize_agent) -> list[ParagraphExtend]:
+def extract_main(paragraphs: list[Paragraph], reconstruct_paragraph: Callable, property_agents_d: dict[str, list[RunnableSequence]], formatted_func: Callable, synthesis_agent: RunnableSequence, categorize_agent = categorize_agent, save_to = 'output.json') -> list[ParagraphExtend]:
     """
     extract_main extract paragraphs and tables from paragraph with two mode: para-wise or contextualized
 
@@ -32,7 +32,8 @@ def extract_main(paragraphs: list[Paragraph], reconstruct_paragraph: Callable, p
             paragraphs_reconstr=paragraphs_reconstr,
             property_agents_d=property_agents_d,
             formatted_func=formatted_func,
-            synthesis_agent=synthesis_agent
+            synthesis_agent=synthesis_agent,
+            save_to=save_to
         )
     
     

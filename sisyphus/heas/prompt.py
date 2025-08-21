@@ -44,8 +44,11 @@ text
 
 PHASE_PROMPT = """Extract the phase information from the text. Material composition should be in the form of chemical formula, e.g., "Mn0.2CoCrNi", not any descriptive phrases.
 
+Important: If materials are synthesized with different parameters (e.g., temperature, duration, processing method), each should be considered a distinct sample. Extract phase information for each sample separately.
+
 Here are some common phase types:
 FCC, BCC, HCP, B2, intermetallic compounds (e.g., TiNi, Ti₂Ni, γ' precipitates, silicides, aluminides, sigma (σ) phases), carbides (e.g., WC), oxides (e.g., SiO₂), amorphous phases.
+
 Guideline for phase extraction:
 - If the author mentions ordered/disordered, include it in the phase information.
 - Same phase can be present multiple times, e.g., "FCC, FCC" extract as "FCC, FCC".
