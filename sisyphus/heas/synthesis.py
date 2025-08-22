@@ -45,13 +45,24 @@ def label_syn_paras(docs, paras):
 templates = {k:v for k,v in pt.__dict__.items() if not k.startswith('__')}
 # names = list(templates.keys())
 templates_abrev = {k:v for k,v in pt_abrev.__dict__.items() if not k.startswith('__')}
-names = list(templates_abrev.keys())
+names = list(templates.keys())
 
-detect_processes_system_message = f"""Find all the processes used during synthesis. Each process unconditionally must belong to one of the elements in the following list: {names}
-Note:
-- Do not fabricated any processes that are not in the list.
-- If you can't find any, return an empty list.
-- If the text are describing selective laser melting (SLM) also known as laser powder bed fusion (LPBF) or directed energy deposition (DED) or 3d printing, you should include additive manufacturing in the list."""
+detect_processes_system_message = f"""Task: Find all synthesis processes mentioned in the given text. Each identified process must exactly match one of the elements in this list: {names}
+Process Recognition Guidelines:
+
+annealed: known as stress relief annealing, full annealing, process annealing, recrystallization annealing, softening treatment
+aged: known as precipitation hardening, artificial aging, natural aging, age hardening or precipitation process
+homogenized: known as homogenization treatment, diffusion annealing, soaking treatment
+solution_treated: known as solution annealing, solution heat treatment, solutionizing
+additive_manufacturing: known as selective laser melting (SLM), laser powder bed fusion (LPBF), directed energy deposition (DED), 3D printing
+
+Requirements:
+
+Only return processes that appear in the provided list
+Do not infer or fabricate processes not explicitly mentioned in the text
+Return an empty list if no matching processes are found
+Each process should be returned using its standard name from the list (e.g., return "aged" even if text says "precipitation hardening")"""
+
 class DetectProcesses(dspy.Signature):
     paragraph: str = dspy.InputField()
     processes: list[str] = dspy.OutputField()
@@ -108,9 +119,10 @@ e.g.
 
     return prompt
 
-SYN_PROMPT_SIMPLE = """For the "processes" field in the results, here are guideline for the output format:
-- processes field must be a list of process in string format. {{"processes": list[str]}}
-- for each process in the list, you should include a brief description of the process."""
+SYN_PROMPT_SIMPLE = """For the "steps" field in the results, here are guideline for the output format:
+- Steps field must be a list of processing steps in JSON format.
+- For fields in steps, if they are quantitive value, you should provide unit along with it if possible.
+- You do not need to use all templates; only include those that are relevant to the synthesis described."""
 
 def format_synthesis_prompt_abbrev(processes):
     """format synthesis prompt to instruct LLM output more consistent synthesis route"""
@@ -123,16 +135,16 @@ def format_synthesis_prompt_abbrev(processes):
 
 def format_synthesis_prompt_str(processes):
     """format synthesis prompt to instruct LLM output more consistent synthesis route with string formatted instruction"""
-    processes_filtered = [process for process in processes if process in templates_abrev]
+    processes_filtered = [process for process in processes if process in templates]
     if not processes_filtered:
         return SYN_PROMPT_SIMPLE
     formatted_string = ''
     for process in processes_filtered:
-        formatted_string += f'- {templates_abrev[process]}\n'
+        formatted_string += f'- {templates[process]}\n'
     prompt = SYN_PROMPT_SIMPLE + f"""\nYou may include these processes in your response:\n{formatted_string}"""
     return prompt
 
-def get_synthesis_prompt(text, lm=dspy.LM('openai/gpt-4o')):
+def get_synthesis_prompt(text, lm=dspy.LM('openai/gpt-4.1')):
     """return the formatted prompt information for synthesis extraction"""
     if not text:
         return format_synthesis_prompt_str([])

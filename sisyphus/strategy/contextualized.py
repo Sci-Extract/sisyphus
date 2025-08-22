@@ -3,6 +3,7 @@
 import json
 import threading
 import os
+import warnings
 from typing import Optional, Callable, Union
 
 import dspy
@@ -14,7 +15,9 @@ from sisyphus.chain.paragraph import ParagraphExtend
 from sisyphus.strategy.pydantic_models_general import MaterialDescriptionBase, Processing, SafeDumpProcessing
 
 
-def extract_process(property_: MaterialDescriptionBase, processing_format, material_process_dict, experimental_section: str, agent) -> Processing:
+warnings.filterwarnings('ignore', category=UserWarning, module='pydantic') # due to the case we convert json string to python object trigger pydantic warning
+
+def extract_process(property_: MaterialDescriptionBase, processing_format, material_process_dict, experimental_section: str, agent) -> SafeDumpProcessing:
     composition, description, refered = property_.composition, property_.description, property_.refered
     if refered:
         # this is a reference, we do not extract processing route
@@ -22,7 +25,7 @@ def extract_process(property_: MaterialDescriptionBase, processing_format, mater
     if not any([composition, description]):
         # this is not a valid extraction
         return
-    if t:=(composition, description) in material_process_dict:
+    if (t:=(composition, description)) in material_process_dict:
         return material_process_dict[t]
     # find same reference if possible, based on composition, description
     key_index = find_same_reference(composition, description, material_process_dict)
@@ -77,10 +80,18 @@ class PaperResult(BaseModel):
     synthesis: Union[SafeDumpProcessing, None, Processing]
 
     def model_dump(self, **kwargs):
-        return {
-            "properties": [{prop.__class__.__name__: prop.model_dump(**kwargs)} for prop in self.properties],
-            "synthesis": self.synthesis.model_dump(**kwargs)
-        }
+        if self.properties and self.synthesis is None:
+            return {
+                "properties": [{prop.__class__.__name__: prop.model_dump(**kwargs)} for prop in self.properties],
+                "synthesis": None
+            }
+        if self.properties and self.synthesis:
+            return {
+                "properties": [{prop.__class__.__name__: prop.model_dump(**kwargs)} for prop in self.properties],
+                "synthesis": self.synthesis.model_dump(**kwargs)
+            }
+        else:
+            return super().model_dump(**kwargs)
 
 def ensure_valid_dict(d):
     return {k: v for k, v in d.items() if v is not None}
@@ -128,7 +139,7 @@ def merge_output(output, doi, save_to) -> list[PaperResult]:
             without_process.append(PaperResult(properties=[record], synthesis=None))
             continue
         
-        key = processing.model_dump_json()
+        key = processing.model_dump_json(warnings='none')
         if key in process_record_dict:
                 process_record_dict[key].append(record)
                 continue
@@ -137,47 +148,48 @@ def merge_output(output, doi, save_to) -> list[PaperResult]:
     keys = process_pydantic_dict.keys()
     results = [PaperResult(properties=process_record_dict[key], synthesis=process_pydantic_dict[key]) for key in keys]
     results.extend(without_process)
-    dumps = [r.model_dump().update({'doi': doi}) for r in results]
-    dump_paper_results(dumps, save_to)
+    dumps = [r.model_dump() for r in results]
+    dump_paper_results(dumps, doi, save_to)
     return results
 
 
 _json_write_lock = threading.Lock()
 
-def dump_paper_results(paper_results, json_path):
+def dump_paper_results(results, doi, jsonl_path):
     """
-    Thread-safe write of paper_results to a JSON file, overwriting by DOI if exists.
+    Thread-safe write of paper_results to a JSONL file, grouping all results with the same DOI as one object.
+    If a line with the same DOI already exists, replace it.
     Args:
-        paper_results: list of PaperResult (or dicts with 'doi' field)
-        json_path: path to output JSON file
+        results: list of dicts with 'doi' field (all with same doi per call)
+        jsonl_path: path to output JSONL file
     """
-    new_results = []
-    for r in paper_results:
-        doi = r.get('doi')
-        new_results.append((doi, r))
+    if not results:
+        return
+
+    if not doi:
+        return
+
+    obj = {
+        "doi": doi,
+        "results": results
+    }
 
     with _json_write_lock:
-        # Read existing data
-        if os.path.exists(json_path):
-            with open(json_path, 'r', encoding='utf-8') as f:
-                try:
-                    data = json.load(f)
-                except Exception:
-                    data = []
-        else:
-            data = []
-
-        # Build DOI map
-        doi_map = {item.get('doi'): item for item in data if 'doi' in item}
-
-        # Overwrite/add new results
-        for doi, d in new_results:
-            if doi:
-                doi_map[doi] = d
-            else:
-                data.append(d)
-
-        # Write back
-        out_list = list(doi_map.values())
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(out_list, f, ensure_ascii=False, indent=2)
+        # Read all lines and check for existing DOI
+        lines = []
+        if os.path.exists(jsonl_path):
+            with open(jsonl_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        data = json.loads(line)
+                        if data.get('doi') == doi:
+                            continue  # Skip old entry with same DOI
+                        lines.append(line.rstrip('\n'))
+                    except Exception:
+                        lines.append(line.rstrip('\n'))
+        # Add/replace with new obj
+        lines.append(json.dumps(obj, ensure_ascii=False))
+        # Write back all lines
+        with open(jsonl_path, 'w', encoding='utf-8') as f:
+            for line in lines:
+                f.write(line + '\n')

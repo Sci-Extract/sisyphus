@@ -11,7 +11,7 @@ from openai import LengthFinishReasonError
 from sisyphus.chain.chain_elements import DocInfo
 from sisyphus.chain.constants import FAILED
 from sisyphus.utils.helper_functions import render_docs, reorder_paras, render_docs_without_title, get_title_abs
-from .paragraph import Paragraph, ParagraphExtend
+from sisyphus.chain.paragraph import Paragraph, ParagraphExtend
 from .synthesis import get_synthesis_prompt
 
 

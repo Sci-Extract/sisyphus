@@ -32,7 +32,7 @@ def build_process_agent(system_message, user_message, pydantic_model, chat_model
     )
     input_vars = prompt.input_variables
     assert set(['text', 'material_description', 'process_format']) == set(input_vars), f"Input variables should be ['text', 'material_description', 'process_format'], but got {input_vars}"
-    agent = prompt | chat_model.with_structured_output(pydantic_model)
+    agent = prompt | chat_model.with_structured_output(pydantic_model, method='json_schema')
     return agent
 
 def format_processes(processes: list[str], processes_format_dict) -> str:
