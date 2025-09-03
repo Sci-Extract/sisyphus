@@ -6,7 +6,7 @@ from langchain_core.documents import Document
 
 from sisyphus.chain.paragraph import Paragraph
 from .synthesis import label_syn_paras
-from .properties import label_text
+from .properties import label_text, label_strain_rate
 from .tabel import label_table
 
 
@@ -33,6 +33,7 @@ def label_paras(docs: list[Document]):
     label_syn_paras(docs, paras) # label synthesis paragraphs
     label_table(paras) # label chemical composition and strength tables
     label_properties_restricted(docs, paras) # label phase and strength texts
+    label_strain_rate(paras)
 
     return paras
 

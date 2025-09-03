@@ -11,6 +11,15 @@ def build_result_model_contextualized(name: str, model_document: str, *bases):
     assert all(f in r.model_fields.keys() for f in ['composition', 'description', 'refered']), "Fields should include composition, description and refered"
     return create_model('Records', records=(Optional[list[r]], ...))
 
+def build_process_model_contexualized(name, model_document, *bases):
+    r = create_model(name, __base__=bases, __doc__=model_document)
+    return create_model('Record', record=(Optional[r], ...))
+
+def build_result_model_isolated(name: str, model_document: str, *bases):
+    r = create_model(name, __base__=bases, __doc__=model_document)
+    assert all(f in r.model_fields.keys() for f in ['composition', 'symbol']), "Fields should include composition and symbol"
+    return create_model('Records', records=(Optional[list[r]], ...))
+
 def build_property_agent(system_message, user_message, pydantic_model, chat_model):
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -20,10 +29,11 @@ def build_property_agent(system_message, user_message, pydantic_model, chat_mode
     )
     input_vars = prompt.input_variables
     assert set(['text']) == set(input_vars), f"Input variables should be ['text'], but got {input_vars}"
-    agent = prompt | chat_model.with_structured_output(pydantic_model)
+    agent = prompt | chat_model.with_structured_output(pydantic_model, method='json_schema')
     return agent
 
-def build_process_agent(system_message, user_message, pydantic_model, chat_model):
+
+def build_process_agent_contextualized(system_message, user_message, pydantic_model, chat_model):
     prompt = ChatPromptTemplate.from_messages(
         [
             ('system', system_message),
@@ -32,6 +42,18 @@ def build_process_agent(system_message, user_message, pydantic_model, chat_model
     )
     input_vars = prompt.input_variables
     assert set(['text', 'material_description', 'process_format']) == set(input_vars), f"Input variables should be ['text', 'material_description', 'process_format'], but got {input_vars}"
+    agent = prompt | chat_model.with_structured_output(pydantic_model, method='json_schema')
+    return agent
+
+def build_process_agent_isolated(system_message, user_message, pydantic_model, chat_model):
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ('system', system_message),
+            ('user', user_message)
+        ]
+    )
+    input_vars = prompt.input_variables
+    assert set(['text', 'process_format']) == set(input_vars), f"Input variables should be ['text', 'process_format'], but got {input_vars}"
     agent = prompt | chat_model.with_structured_output(pydantic_model, method='json_schema')
     return agent
 

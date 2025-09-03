@@ -27,7 +27,8 @@ CATEGORIZE_DSPY = """You are analyzing the experimental section of a high entrop
 - True: If every sample has either specific composition OR explicit symbol
 - False: If any sample lacks both composition and symbol"""
 
-EXTRACT_PROPERTY_SYS_GENERIC_PROMPT = """You are an expert in extracting structured material properties from scientific texts. Your task is to extract the following properties from the provided text, which should includes all relevant information, even if it is used for comparison purposes."""
+EXTRACT_PROPERTY_SYS_GENERIC_PROMPT = """You are an expert in extracting structured material properties from scientific texts. Your task is to extract the required properties from the provided text, which should includes all relevant information, even if it is used for comparison purposes.
+"""
 
 STRENGTH_PROMPT = """Extract all mechanical property relevant to ys, uts and strain from the text
 
@@ -59,11 +60,7 @@ text
 """
 
 EXTRACT_PROCESS_SYS_GENERIC_PROMPT = """You are an expert in extracting processing routes for materials from scientific texts.
-Requirements for the description field:
-**Description of the material state/condition. Extract ONLY the processing history or treatment condition that defines the material itself, such as 'as-cast', 'annealed at 900°C for 2h', 'cold-rolled to 50% reduction', or 'solution-treated and aged'.
-INCLUDE: Processing steps, heat treatments, mechanical working, surface treatments that permanently alter the material.
-EXCLUDE: Testing conditions (e.g., 'tested at 700°C', 'measured in salt water'), sample geometry (e.g., 'dog-bone shaped'), or measurement parameters that describe the experimental setup rather than the material's intrinsic state.
-If only composition is provided without any processing description, return 'None'.**"""
+"""
 
 PROCESS_PROMPT = """Extract the processing route and nominal chemical composition for the specified material from the experimental section.
 Guidance:
@@ -76,6 +73,18 @@ And follow below format rules, not all processing methods required, depending on
 Experimental section
 {text}
 
-The sample to extract processing route for is:
+The sample to extract processing route is:
 **{material_description}**
+"""
+
+PROCESS_ISOLATED_PROMPT = """Extract the processing route and nominal chemical compositions from the text.
+Guidance:
+- If different materials synthesized, extract each material separately.
+- If materials with different processing routes are described, extract each route separately.
+
+follow below format instruction, though some of the processing methods may not be applicable to all materials:
+{process_format}
+
+Experimental section
+{text}
 """

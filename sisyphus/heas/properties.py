@@ -71,6 +71,14 @@ def label_strength(docs, paragraphs):
         if result.relevant:
             para.set_types('strength')
 
+def label_strain_rate(paragraphs):
+    pattern = re.compile(r'strain rate', re.I)
+    location = re.compile(r'(experiment)|(preparation)|(method)', re.I)
+    para_cand = [para for para in paragraphs if location.search(para.metadata['sub_titles'])]
+    for para in para_cand:
+        if pattern.search(para.page_content):
+            para.set_types('strain_rate')
+
 def label_text(docs, paragraphs):
     """label text content of article"""
     label_phase(docs, paragraphs)
