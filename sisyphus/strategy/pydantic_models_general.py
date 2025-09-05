@@ -5,8 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 # context method
-MATERIAL_DESCRIPTION = """Description of the material, which help you identify the material's processing steps later. Give the description based on the processing method, e.g., 'as-cast', 'annealed at 900C'. INCLUDE: Processing steps, heat treatments, mechanical working, surface treatments that permanently alter the material.
-EXCLUDE: Testing conditions (e.g., 'tested at 700°C', 'measured in salt water'), sample geometry (e.g., 'dog-bone shaped'), or measurement parameters that describe the experimental setup rather than the material's intrinsic state.return None."""
+MATERIAL_DESCRIPTION = """Processing-related identifiers for the material (e.g., 'annealed at 900°C', 'HPT processed'). Include only permanent material modifications: heat treatments, mechanical processing, surface treatments. Exclude testing conditions, sample geometry, and measurement parameters. Return None if you are not sured or the material is cited from other publications."""
 
 class Material(BaseModel):
     composition: Optional[str] = Field(description="nominal composition of the material, in at% e.g., 'Mn0.2CoCrNi'")
@@ -14,8 +13,9 @@ class Material(BaseModel):
 
 class MaterialDescriptionBase(BaseModel):
     composition: Optional[str] = Field(description="nominal composition of the material, in at% e.g., 'Mn0.2CoCrNi'")
+    refered: bool = Field(description="Indicate whether the material data is cited from other publications")
+    symbol: Optional[str] = Field(description="The symbol used to represent the material in paper, e.g., 'A', 'A-800'. If no symbol is given, return None.")
     description: Optional[str] = Field(description=MATERIAL_DESCRIPTION)
-    refered: bool = Field(description="Indicate whether the material data is cited from other publications for comparison purposes.")
 
 
 class Processing(Material):

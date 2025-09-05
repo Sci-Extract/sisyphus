@@ -26,3 +26,25 @@ CATEGORIZE_DSPY = """You are analyzing the experimental section of a high entrop
 **Case 4 - Multiple processing routes, different compositions**:
 - True: If every sample has either specific composition OR explicit symbol
 - False: If any sample lacks both composition and symbol"""
+
+GROUP_DESCRIPTIONS = """You are given a list of material descriptions extracted from a research paper on high entropy alloys (HEAs). Each description may include information about composition, processing steps, and other identifiers. The descriptions may refer to the same material using slightly different wording, especially regarding processing conditions (e.g., "annealed", "after welding", "HPT-processed", etc.).
+
+Here is the synthesis paragraph for additional context:
+{text}
+
+Your task is to:
+
+Group the descriptions so that each group represents a distinct material (i.e., same composition and processing history), even if the wording varies.
+For each group, provide a representative and concise processing description that best summarizes the material and its processing route. 
+If a material does not have any processing description, just use the composition as its representative description.
+Output the result as a JSON array, where each element is an object with the following fields:
+
+"group_id": an integer starting from 1
+"representative_processing_description": a string summarizing the group
+"descriptions": a list of the original descriptions belonging to this group
+Example output: [ {{ "group_id": 1, "representative_processing_description": "FeCoNiCrMn alloy annealed at 1000°C", "descriptions": [ "FeCoNiCrMn alloy annealed at 1000°C for 2h", "FeCoNiCrMn, after annealing at 1000°C" ] }}, {{ "group_id": 2, "representative_processing_description": "FeCoNiCrMn alloy processed by high-pressure torsion (HPT)", "descriptions": [ "FeCoNiCrMn alloy, HPT-processed", "FeCoNiCrMn, after high-pressure torsion" ] }}, {{ "group_id": 3, "representative_processing_description": "V10Cr15Mn5Fe35Co10Ni25", "descriptions": [ "V10Cr15Mn5Fe35Co10Ni25" ] }} ]
+
+Now, given the following list of material descriptions, perform the grouping and provide representative processing descriptions for each group in the specified JSON format:
+{descriptions}
+start with ```json, end with ```
+"""

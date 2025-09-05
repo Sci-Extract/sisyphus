@@ -106,26 +106,35 @@ class ExtractStrategy:
             raise ValueError("Prompt config is required to build agents")
             
 
+    # def __call__(self, paragraphs: list[Paragraph]):
+    #     syn_paras = ParagraphExtend.from_paragraphs(get_synthesis_paras(paragraphs))
+    #     # context mode
+    #     if syn_paras:
+    #         labeled = categorize_agent(text=syn_paras.page_content).output
+    #         # only run below if materials are not clearly identified
+    #         if not labeled:
+    #             paragraphs_reconstructed = self.reconstr_con(paragraphs)
+    #             return extract_contextualized_main(
+    #                 paragraphs_reconstr=paragraphs_reconstructed,
+    #                 agents=self.agents[self.contextualized],
+    #                 formatted_func=self.formatted_func,
+    #                 save_to=self.save_to
+    #             )
+    #     # otherwise, run isolated extraction
+    #     paragraphs_reconstructed = self.reconstr_iso(paragraphs)
+    #     return extract_isolated_main(
+    #         paragraphs_reconstr=paragraphs_reconstructed,
+    #         agents=self.agents[self.isolated],
+    #         formatted_func=self.formatted_func,
+    #         save_to=self.save_to
+    #     )
+
     def __call__(self, paragraphs: list[Paragraph]):
-        syn_paras = ParagraphExtend.from_paragraphs(get_synthesis_paras(paragraphs))
-        # context mode
-        if syn_paras:
-            labeled = categorize_agent(text=syn_paras.page_content).output
-            # only run below if materials are not clearly identified
-            if not labeled:
-                paragraphs_reconstructed = self.reconstr_con(paragraphs)
-                return extract_contextualized_main(
-                    paragraphs_reconstr=paragraphs_reconstructed,
-                    agents=self.agents[self.contextualized],
-                    formatted_func=self.formatted_func,
-                    save_to=self.save_to
-                )
-        # otherwise, run isolated extraction
-        paragraphs_reconstructed = self.reconstr_iso(paragraphs)
-        return extract_isolated_main(
+        paragraphs_reconstructed = self.reconstr_con(paragraphs)
+        return extract_contextualized_main(
             paragraphs_reconstr=paragraphs_reconstructed,
-            agents=self.agents[self.isolated],
+            agents=self.agents[self.contextualized],
             formatted_func=self.formatted_func,
             save_to=self.save_to
         )
-            
+           

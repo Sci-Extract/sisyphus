@@ -1,75 +1,196 @@
 # Implementation of contexualized extraction: Frist extract properties separately then link it with correponds synthesis routes via description of that material.
-# TODO  1. add para-wise extraction
 import json
 import threading
+import re
 import os
 import warnings
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, List, Dict, Any
+from random import shuffle
 
 import dspy
 from pydantic import BaseModel
 from langchain_core.runnables import RunnableSequence
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 from sisyphus.utils.helper_functions import run_concurrently
 from sisyphus.chain.paragraph import ParagraphExtend
+from sisyphus.strategy.prompt_general import GROUP_DESCRIPTIONS
+from sisyphus.strategy.default_chat_models import model
 from sisyphus.strategy.pydantic_models_general import MaterialDescriptionBase, Processing, SafeDumpProcessing, ProcessingWithSymbol
 
 
 warnings.filterwarnings('ignore', category=UserWarning, module='pydantic') # the case that we convert json string to python object trigger pydantic warning
 
-def extract_process(property_: MaterialDescriptionBase, processing_format, material_process_dict, experimental_section: str, agent) -> SafeDumpProcessing:
-    composition, description, refered = property_.composition, property_.description, property_.refered
-    if refered:
-        # this is a reference, we do not extract processing route
-        return
-    if not any([composition, description]):
-        # this is not a valid extraction
-        return
-    if (t:=(composition, description)) in material_process_dict:
-        return material_process_dict[t]
-    # find same reference if possible, based on composition, description
-    key_index = find_same_reference(composition, description, material_process_dict)
-    if key_index is not None:
-        process = material_process_dict[list(material_process_dict.keys())[key_index]]
-        return process
-    # otherwise, extract processing route
-    process: Processing = agent.invoke(
-        {
-            "material_description": f"{composition}: {description}",
+group_prompt = ChatPromptTemplate.from_messages(
+    [
+        ('human', GROUP_DESCRIPTIONS)
+    ]
+)
+group_chain = group_prompt | model | StrOutputParser()
+
+def parse_result_string(result_str: str):
+    """
+    Parse a result string that may be wrapped in triple backticks and/or single quotes,
+    and contains a JSON array, into a Python object.
+    """
+    # Remove leading/trailing whitespace and single quotes
+    s = result_str.strip().strip("'").strip('"')
+    # Extract JSON part between ```json ... ```
+    match = re.search(r"```json\s*(.*?)\s*```", s, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+    else:
+        # Fallback: try to find the first [ ... ] block
+        match = re.search(r"(\[.*\])", s, re.DOTALL)
+        if match:
+            json_str = match.group(1)
+        else:
+            raise ValueError("No JSON array found in result string.")
+    return json.loads(json_str)
+
+def batch_items(items: List[Any], batch_size: int) -> List[List[Any]]:
+    """Split a list into batches of given size."""
+    return [items[i:i + batch_size] for i in range(0, len(items), batch_size)]
+
+def group_descriptions(batch: List[str]) -> List[Dict]:
+    """
+    Placeholder for your LLM grouping logic.
+    Each group is a dict with 'representative_processing_description' and 'descriptions'.
+    """
+    response = group_chain.invoke({"descriptions": batch})
+    return parse_result_string(response)
+
+def recursive_hierarchical_grouping(descriptions: List[str], batch_size: int = 12, depth: int = 1, max_depth: int = 3) -> List[Dict]:
+    """
+    Recursively group descriptions in batches, stopping when group size < batch_size or max_depth is reached.
+    Keeps track of all raw descriptions.
+    """
+    shuffle(descriptions)  # Shuffle to avoid order bias
+    if len(descriptions) < batch_size or depth > max_depth:
+        # Base case: group all remaining descriptions together
+        return group_descriptions(descriptions)
+
+    # First pass: group in batches
+    first_pass_groups = []
+    for batch in batch_items(descriptions, batch_size):
+        groups = group_descriptions(batch)
+        first_pass_groups.extend(groups)
+
+    # Prepare for next pass: flatten to representatives, keep mapping to raw descriptions
+    next_pass_inputs = []
+    for group in first_pass_groups:
+        next_pass_inputs.append({
+            "representative": group["representative_processing_description"],
+            "raw_descriptions": group["descriptions"]
+        })
+
+    # If the number of groups is less than batch_size, but recursion is allowed, regroup these groups
+    if len(next_pass_inputs) < batch_size:
+        if depth >= max_depth:
+            # Stop recursion, return as is
+            return [{
+                "representative_processing_description": item["representative"],
+                "descriptions": item["raw_descriptions"]
+            } for item in next_pass_inputs]
+        # Otherwise, regroup the representatives
+        reps = [item["representative"] for item in next_pass_inputs]
+        # Run grouping logic again on these representatives
+        regrouped = group_descriptions(reps)
+        merged_groups = []
+        for g in regrouped:
+            merged_raw = []
+            for rep in g["descriptions"]:
+                for item in next_pass_inputs:
+                    if item["representative"] == rep:
+                        merged_raw.extend(item["raw_descriptions"])
+            merged_groups.append({
+                "representative_processing_description": g["representative_processing_description"],
+                "descriptions": list(dict.fromkeys(merged_raw))
+            })
+        return merged_groups
+
+    # Otherwise, recursively group the representatives
+    reps = [item["representative"] for item in next_pass_inputs]
+    higher_groups = recursive_hierarchical_grouping(reps, batch_size, depth=depth+1, max_depth=max_depth)
+
+    # For each higher-level group, merge all raw descriptions from lower-level groups
+    merged_groups = []
+    for g in higher_groups:
+        merged_raw = []
+        for rep in g["descriptions"]:
+            for item in next_pass_inputs:
+                if item["representative"] == rep:
+                    merged_raw.extend(item["raw_descriptions"])
+        merged_groups.append({
+            "representative_processing_description": g["representative_processing_description"],
+            "descriptions": list(dict.fromkeys(merged_raw))
+        })
+    return merged_groups
+
+
+def extract_process(
+    material_descriptions: list[MaterialDescriptionBase],
+    processing_format,
+    experimental_section: str,
+    agent
+) -> list[dict]:
+    """
+    Group material descriptions using recursive_hierarchical_grouping, skip refered.
+    For each group, extract process and return a list of dicts with representative, properties, and processing object.
+    """
+    # Prepare descriptions for grouping: use a string key for each material
+    desc_to_obj = {}
+    no_categorization_materials = []
+    descriptions_for_grouping = []
+    for m in material_descriptions:
+        if getattr(m, 'refered', False):
+            no_categorization_materials.append(m)
+            continue
+        comp = getattr(m, 'composition', None)
+        sym = getattr(m, 'symbol', None)
+        desc = getattr(m, 'description', None)
+        if not any([comp, sym, desc]):
+            no_categorization_materials.append(m)
+            continue
+        key = f"{comp or ''}|{sym or ''}|{desc or ''}"
+        if key not in desc_to_obj:
+            desc_to_obj[key] = []
+            descriptions_for_grouping.append(key)
+        desc_to_obj[key].append(m)
+
+    # Use recursive_hierarchical_grouping to group the string keys
+    grouped = recursive_hierarchical_grouping(descriptions_for_grouping)
+
+    results = []
+    for group in grouped:
+        # For each group, collect all material description objects
+        all_objs = []
+        for key in group["descriptions"]:
+            all_objs.extend(desc_to_obj[key])
+        represented_description = group['representative_processing_description']
+        # Extract process for this group
+        process: Processing = agent.invoke({
+            "material_description": represented_description,
             "process_format": processing_format,
             "text": experimental_section
-        }
-    ).record
-    if process:
-        process = SafeDumpProcessing.model_validate(process)
-    material_process_dict.update({(composition, description): process})
-    return process
+        }).record
+        if process:
+            process = SafeDumpProcessing.model_validate(process)
+        results.append({
+            "representative": represented_description,
+            "properties": all_objs,
+            "synthesis": process
+        })
+    # append no categorization properties
+    for m in no_categorization_materials:
+        results.append({
+            "representative": None,
+            "properties": [m],
+            "synthesis": None
+        })
+    return results
 
-def print_comp_description(material_process_dict):
-    table = "| Index | Composition | Description |\n|-------|-------------|-------------|\n"
-    for idx, ((composition, description), _) in enumerate(material_process_dict.items()):
-        table += f"| {idx} | {composition or ''} | {description or ''} |\n"
-    return table
-
-class FindSameReference(dspy.Signature):
-    """Find which row in the table refered to the same material as provided composition and description.
-    Consider both composition and description.
-    Be very strict, only return the index if you are sure, otherwise return None."""
-    table: str = dspy.InputField(description="Table of material composition and description, in markdown format")
-    composition: str = dspy.InputField(description="The composition of the material, e.g., 'Mn0.2CoCrNi'")
-    description: str = dspy.InputField(description="The description of the material, e.g., 'as-cast', 'annealed at 900C'")
-    index: Optional[int] = dspy.OutputField(description="The index of the row")
-get_same_reference_agent = dspy.ChainOfThought(FindSameReference)
-
-def find_same_reference(composition: str, description: str, material_process_dict):
-    if len(material_process_dict) == 0:
-        return None
-    index = get_same_reference_agent(
-        table=print_comp_description(material_process_dict),
-        composition=composition,
-        description=description
-    ).index
-    return index
 
 def extract_property(input_, agent: RunnableSequence) -> list[BaseModel]:
     r = agent.invoke(input_).records
@@ -99,35 +220,37 @@ def ensure_valid_dict(d):
     return {k: v for k, v in d.items() if v is not None}
     
 def extract_contextualized_main(paragraphs_reconstr: dict[str, ParagraphExtend], agents: dict[str, RunnableSequence], formatted_func: Callable, save_to: str) -> list[ParagraphExtend]:
-    output = []
+    """Main function for contextualized extraction"""
     # extract properties
     # user input paragraphs dict may contain None value (consider situation when specific property is absent for an article), we should remove such value
     paragraphs_reconstr = ensure_valid_dict(paragraphs_reconstr)
     properties = [key for key in paragraphs_reconstr.keys() if key != "synthesis"]
     args = [({"text": paragraphs_reconstr[property].page_content}, agents[property]) for property in properties]
-    results = run_concurrently(extract_property, args) # a list of lists, with each list contains serval dictionaries
+    results = run_concurrently(extract_property, args)
+    results_flattened = [item for sublist in results for item in sublist]
+
     # since the result returns in order, we can combine them
     results_dict = dict(zip(properties, results))
     for k in results_dict:
         paragraphs_reconstr[k].set_data(results_dict[k])
 
     # extract synthesis routes
-    material_process_d = {}
     experimental_section = paragraphs_reconstr['synthesis'].page_content
     formatted_instruction = formatted_func(experimental_section)
-    for records_property in results:
-        for record in records_property:
-            processing = extract_process(
-                record,
-                formatted_instruction,
-                material_process_d,
-                experimental_section,
-                agents['synthesis']
-            )
-            paragraphs_reconstr['synthesis'].set_data(processing)
-            output.append((record, processing))
+    results_with_processing = extract_process(results_flattened, formatted_instruction, paragraphs_reconstr['synthesis'].page_content, agents['synthesis'])
+    paper_results = [PaperResult(**result) for result in results_with_processing]
+
+    # set synthesis routes for documents
+    synthesis_routes = [result['synthesis'] for result in results_with_processing]
+    paragraphs_reconstr['synthesis'].set_data(synthesis_routes)
+
+    # merge results and save
     doi = paragraphs_reconstr['synthesis'].metadata.get('doi', None)
-    merge_output(output, doi, save_to)
+    dump_paper_results(
+        [p.model_dump() for p in paper_results],
+        doi,
+        save_to
+    )
     paras_save = list(paragraphs_reconstr.values())
     return paras_save
 
@@ -139,10 +262,10 @@ def extract_isolated_main(paragraphs_reconstr: dict[str, ParagraphExtend], agent
     if (syn_para:=paragraphs_reconstr.get('synthesis', None)):
         experimental_section = paragraphs_reconstr['synthesis'].page_content
         formatted_instruction = formatted_func(experimental_section)
-        args.append({
+        args.append(({
             "text": syn_para.page_content,
             "process_format": formatted_instruction
-        }, agents['synthesis'])
+        }, agents['synthesis']))
     results = run_concurrently(extract_property, args) # a list of lists, with each list contains serval dictionaries
     # since the result returns in order, we can combine them
     results_dict = dict(zip(properties, results))

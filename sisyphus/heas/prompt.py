@@ -34,6 +34,7 @@ STRENGTH_PROMPT = """Extract all mechanical property relevant to ys, uts and str
 
 Follow these rules:
 - Material composition should be in the form of nominal chemical formula in atom percentage, e.g., "Mn0.2CoCrNi", not any descriptive phrases.
+- Prioritize table values over text if there is a conflict. 
 - If the value provided is a range, for example, "from 200 MPa to 300 MPa", extract it as "200-300 MPa".
 - If the value is given as "greater than" or "less than", for example, "greater than 400 MPa", extract it as ">400 MPa".
 - If the value is given as "approximately" or "around", for example, "approximately 250 MPa", extract it as "≈250 MPa".
@@ -67,7 +68,7 @@ Guidance:
 - Note that the given sample probably be one of many samples synthesised in the experimental section. You only need to extract the processing route for the specified sample.
 - The composition of the material should be in the form of nominal formula in atom percentage, e.g., "Mn0.2CoCrNi", not any descriptive phrases.
 
-And follow below format rules, not all processing methods required, depending on the material:
+Extract processing information using the predefined templates. Only include processing methods relevant to the material. For each included method, output all template fields - use empty strings for missing values, never omit fields. Use exact field names and maintain proper JSON format. 
 {process_format}
 
 Experimental section
@@ -82,7 +83,7 @@ Guidance:
 - If different materials synthesized, extract each material separately.
 - If materials with different processing routes are described, extract each route separately.
 
-follow below format instruction, though some of the processing methods may not be applicable to all materials:
+Extract processing information using the predefined templates. Only include processing methods relevant to the material. For each included method, output all template fields - use empty strings for missing values, never omit fields. Use exact field names and maintain proper JSON format.
 {process_format}
 
 Experimental section
