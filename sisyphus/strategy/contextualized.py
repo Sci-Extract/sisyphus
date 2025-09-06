@@ -14,9 +14,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from sisyphus.utils.helper_functions import run_concurrently
-from sisyphus.chain.paragraph import ParagraphExtend
+from sisyphus.chain.paragraph import Paragraph, ParagraphExtend
 from sisyphus.strategy.prompt_general import GROUP_DESCRIPTIONS
 from sisyphus.strategy.default_chat_models import model
+from sisyphus.strategy.utils import get_synthesis_paras
 from sisyphus.strategy.pydantic_models_general import MaterialDescriptionBase, Processing, SafeDumpProcessing, ProcessingWithSymbol
 
 
@@ -53,15 +54,15 @@ def batch_items(items: List[Any], batch_size: int) -> List[List[Any]]:
     """Split a list into batches of given size."""
     return [items[i:i + batch_size] for i in range(0, len(items), batch_size)]
 
-def group_descriptions(batch: List[str]) -> List[Dict]:
+def group_descriptions(batch: List[str], context: str) -> List[Dict]:
     """
     Placeholder for your LLM grouping logic.
     Each group is a dict with 'representative_processing_description' and 'descriptions'.
     """
-    response = group_chain.invoke({"descriptions": batch})
+    response = group_chain.invoke({"descriptions": batch, "context": context})
     return parse_result_string(response)
 
-def recursive_hierarchical_grouping(descriptions: List[str], batch_size: int = 12, depth: int = 1, max_depth: int = 3) -> List[Dict]:
+def recursive_hierarchical_grouping(descriptions: List[str], context: str, batch_size: int = 12, depth: int = 1, max_depth: int = 3) -> List[Dict]:
     """
     Recursively group descriptions in batches, stopping when group size < batch_size or max_depth is reached.
     Keeps track of all raw descriptions.
@@ -69,12 +70,12 @@ def recursive_hierarchical_grouping(descriptions: List[str], batch_size: int = 1
     shuffle(descriptions)  # Shuffle to avoid order bias
     if len(descriptions) < batch_size or depth > max_depth:
         # Base case: group all remaining descriptions together
-        return group_descriptions(descriptions)
+        return group_descriptions(descriptions, context)
 
     # First pass: group in batches
     first_pass_groups = []
     for batch in batch_items(descriptions, batch_size):
-        groups = group_descriptions(batch)
+        groups = group_descriptions(batch, context)
         first_pass_groups.extend(groups)
 
     # Prepare for next pass: flatten to representatives, keep mapping to raw descriptions
@@ -96,7 +97,7 @@ def recursive_hierarchical_grouping(descriptions: List[str], batch_size: int = 1
         # Otherwise, regroup the representatives
         reps = [item["representative"] for item in next_pass_inputs]
         # Run grouping logic again on these representatives
-        regrouped = group_descriptions(reps)
+        regrouped = group_descriptions(reps, context)
         merged_groups = []
         for g in regrouped:
             merged_raw = []
@@ -160,7 +161,7 @@ def extract_process(
         desc_to_obj[key].append(m)
 
     # Use recursive_hierarchical_grouping to group the string keys
-    grouped = recursive_hierarchical_grouping(descriptions_for_grouping)
+    grouped = recursive_hierarchical_grouping(descriptions_for_grouping, experimental_section)
 
     results = []
     for group in grouped:
@@ -219,8 +220,11 @@ class PaperResult(BaseModel):
 def ensure_valid_dict(d):
     return {k: v for k, v in d.items() if v is not None}
     
-def extract_contextualized_main(paragraphs_reconstr: dict[str, ParagraphExtend], agents: dict[str, RunnableSequence], formatted_func: Callable, save_to: str) -> list[ParagraphExtend]:
+def extract_contextualized_main(paragraphs: list[Paragraph], paragraphs_reconstr: dict[str, ParagraphExtend], agents: dict[str, RunnableSequence], formatted_func: Callable, save_to: str) -> list[ParagraphExtend]:
     """Main function for contextualized extraction"""
+    # check existence of synthesis paragraph
+    synthesis_paras = get_synthesis_paras(paragraphs)
+    # add logic to filter out those without synthesis paragraph 
     # extract properties
     # user input paragraphs dict may contain None value (consider situation when specific property is absent for an article), we should remove such value
     paragraphs_reconstr = ensure_valid_dict(paragraphs_reconstr)
@@ -237,7 +241,7 @@ def extract_contextualized_main(paragraphs_reconstr: dict[str, ParagraphExtend],
     # extract synthesis routes
     experimental_section = paragraphs_reconstr['synthesis'].page_content
     formatted_instruction = formatted_func(experimental_section)
-    results_with_processing = extract_process(results_flattened, formatted_instruction, paragraphs_reconstr['synthesis'].page_content, agents['synthesis'])
+    results_with_processing = extract_process(results_flattened, formatted_instruction, experimental_section, agents['synthesis'])
     paper_results = [PaperResult(**result) for result in results_with_processing]
 
     # set synthesis routes for documents

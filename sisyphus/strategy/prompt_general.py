@@ -30,7 +30,7 @@ CATEGORIZE_DSPY = """You are analyzing the experimental section of a high entrop
 GROUP_DESCRIPTIONS = """You are given a list of material descriptions extracted from a research paper on high entropy alloys (HEAs). Each description may include information about composition, processing steps, and other identifiers. The descriptions may refer to the same material using slightly different wording, especially regarding processing conditions (e.g., "annealed", "after welding", "HPT-processed", etc.).
 
 Here is the synthesis paragraph for additional context:
-{text}
+{context}
 
 Your task is to:
 

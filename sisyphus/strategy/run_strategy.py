@@ -132,6 +132,7 @@ class ExtractStrategy:
     def __call__(self, paragraphs: list[Paragraph]):
         paragraphs_reconstructed = self.reconstr_con(paragraphs)
         return extract_contextualized_main(
+            paragraphs=paragraphs,
             paragraphs_reconstr=paragraphs_reconstructed,
             agents=self.agents[self.contextualized],
             formatted_func=self.formatted_func,
