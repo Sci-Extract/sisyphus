@@ -154,7 +154,14 @@ def extract_process(
         if not any([comp, sym, desc]):
             no_categorization_materials.append(m)
             continue
-        key = f"{comp or ''}|{sym or ''}|{desc or ''}"
+        key_parts = []
+        if comp:
+            key_parts.append(str(comp))
+        if sym:
+            key_parts.append(str(sym))
+        if desc:
+            key_parts.append(str(desc))
+        key = "|".join(key_parts)
         if key not in desc_to_obj:
             desc_to_obj[key] = []
             descriptions_for_grouping.append(key)
@@ -224,7 +231,7 @@ def extract_contextualized_main(paragraphs: list[Paragraph], paragraphs_reconstr
     """Main function for contextualized extraction"""
     # check existence of synthesis paragraph
     synthesis_paras = get_synthesis_paras(paragraphs)
-    # add logic to filter out those without synthesis paragraph 
+    # add logic to filter out those without synthesis paragraph
     # extract properties
     # user input paragraphs dict may contain None value (consider situation when specific property is absent for an article), we should remove such value
     paragraphs_reconstr = ensure_valid_dict(paragraphs_reconstr)

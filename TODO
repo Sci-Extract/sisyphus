@@ -1,6 +1,10 @@
 synthesis template needs be optimized.
-add a filter for paper
 write extraction code for bulk extraction
 test for 50 articles
 
-optimize description to synthesis route reuse logic
+parallelize processing extraction
+handle edge case when no synthesis paragraphs found
+change phase location logic to only based on regex
+number = # properties (~3) + # categorization (~1) + # processing extraction (~3)
+
+Optional: store labeled paragraphs
