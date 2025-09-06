@@ -113,7 +113,7 @@ def recursive_hierarchical_grouping(descriptions: List[str], context: str, batch
 
     # Otherwise, recursively group the representatives
     reps = [item["representative"] for item in next_pass_inputs]
-    higher_groups = recursive_hierarchical_grouping(reps, batch_size, depth=depth+1, max_depth=max_depth)
+    higher_groups = recursive_hierarchical_grouping(reps, context, batch_size, depth=depth+1, max_depth=max_depth)
 
     # For each higher-level group, merge all raw descriptions from lower-level groups
     merged_groups = []
