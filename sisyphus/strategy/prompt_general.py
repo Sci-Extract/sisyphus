@@ -34,7 +34,7 @@ Here is the synthesis paragraph for additional context:
 
 Your task is to:
 
-Group the descriptions so that each group represents a distinct material (i.e., same composition and processing history), even if the wording varies.
+Group the descriptions so that each group represents a distinct material (i.e., same composition and processing history), even if the wording varies. If the processing parameters such as temperature, duration, number of cycles/times, or other specific processing conditions are different, you must separate them into different groups, even if the composition is the same.
 For each group, provide a representative and concise processing description that best summarizes the material and its processing route. 
 If a material does not have any processing description, just use the composition as its representative description.
 Output the result as a JSON array, where each element is an object with the following fields:

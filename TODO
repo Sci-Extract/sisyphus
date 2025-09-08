@@ -1,10 +1,14 @@
 synthesis template needs be optimized.
 write extraction code for bulk extraction
 test for 50 articles
+refactor code of labeling process
 
-parallelize processing extraction
-handle edge case when no synthesis paragraphs found
 change phase location logic to only based on regex
 number = # properties (~3) + # categorization (~1) + # processing extraction (~3)
 
+
 Optional: store labeled paragraphs
+
+1. refered are those not synthesised by the paper
+2. do not give the composition if you are not sure
+3. the description can't have ambigious parameters.

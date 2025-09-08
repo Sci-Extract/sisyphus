@@ -5,7 +5,7 @@ from langchain_core.runnables import RunnableSequence
 from sisyphus.chain.paragraph import ParagraphExtend, Paragraph
 from sisyphus.strategy.llm_models import categorize_agent
 from sisyphus.strategy.contextualized import extract_contextualized_main, extract_isolated_main
-from sisyphus.strategy.utils import get_synthesis_paras, build_process_agent_contextualized, build_process_agent_isolated, build_property_agent, build_result_model_contextualized , build_result_model_isolated, build_process_model_contexualized
+from sisyphus.strategy.utils import get_synthesis_paras, build_process_agent_contextualized, build_process_agent_isolated, build_property_agent, build_result_model_contextualized , build_result_model_isolated, build_process_model_contextualized
 from sisyphus.strategy.pydantic_models_general import Processing, ProcessingWithSymbol, MaterialDescriptionBase, MaterialWithSymbol, Material
 
 
@@ -72,7 +72,7 @@ class ExtractStrategy:
                     self.agents[self.contextualized][property] = build_process_agent_contextualized(
                         prompt_config[self.contextualized][property][0],
                         prompt_config[self.contextualized][property][1],
-                        build_process_model_contexualized(
+                        build_process_model_contextualized(
                             property,
                             self.pydantic_models_dict[property].__doc__,
                             self.pydantic_models_dict[property], Material

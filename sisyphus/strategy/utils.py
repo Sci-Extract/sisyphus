@@ -8,10 +8,10 @@ from sisyphus.chain.paragraph import Paragraph
 
 def build_result_model_contextualized(name: str, model_document: str, *bases):
     r = create_model(name, __base__=bases, __doc__=model_document)
-    assert all(f in r.model_fields.keys() for f in ['composition', 'description', 'refered']), "Fields should include composition, description and refered"
+    assert all(f in r.model_fields.keys() for f in ['composition', 'description', 'referred']), "Fields should include composition, description and referred"
     return create_model('Records', records=(Optional[list[r]], ...))
 
-def build_process_model_contexualized(name, model_document, *bases):
+def build_process_model_contextualized(name, model_document, *bases):
     r = create_model(name, __base__=bases, __doc__=model_document)
     return create_model('Record', record=(Optional[r], ...))
 

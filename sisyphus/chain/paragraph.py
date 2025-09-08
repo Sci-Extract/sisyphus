@@ -67,6 +67,7 @@ class ParagraphExtend(Paragraph):
             return self
         if type(data) is not list:
             data = [data]
+        data = [d for d in data if d]
         self.data.extend(data)
         return self
     

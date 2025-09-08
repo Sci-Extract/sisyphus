@@ -203,7 +203,7 @@ class ResultDB(DB):
                 elif isinstance(result, dict):
                     result_ = self.Result(result=result)
                 else:
-                    raise ValueError('result must be a dict or a pydantic model')
+                    raise ValueError(f'result must be a dict or a pydantic model. Got {result}')
                 document.results.append(result_)
             session.add(document)
 
