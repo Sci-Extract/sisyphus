@@ -1,3 +1,4 @@
+import re
 from typing import Literal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -35,9 +36,17 @@ class LabelTablesStrength(dspy.Signature):
     table: str = dspy.InputField()
     contains: bool = dspy.OutputField()
 
+class LabelProcessingParams(dspy.Signature):
+    """Decide whether the table contains processing parameters of HEAs materials, such as temperature, power, duration, etc.
+    Note:
+    - Must be parameters related to synthesis or processing of materials, while only fabrication method is not sufficient."""
+    table: str = dspy.InputField()
+    contains: bool = dspy.OutputField()
+
 
 classifier = dspy.ChainOfThought(ClassifyCompositionTable)
 table_labeler = dspy.ChainOfThought(LabelTablesStrength)
+processing_params_labeler = dspy.ChainOfThought(LabelProcessingParams)
 
 def label_table(paras: list[Paragraph]):
     """label composition table and strength tables"""
@@ -53,6 +62,19 @@ def label_table(paras: list[Paragraph]):
     for para, result in properties_results:
         if result.contains:
             para.set_types('strength')
+    
+    # label processing parameters tables
+    processing_results = label_multi_threads(processing_params_labeler, tables, args, 5)
+    for para, result in processing_results:
+        if result.contains:
+            para.set_types('processing_parameters')
+    
+    # label phase
+    phase_pattern = re.compile(r'\b(FCC|BCC|HCP|L12|B2|Laves|f.c.c.|b.c.c.|h.c.p.|face-centered cubic|body-centered cubic|hexagonal close-packed|intermetallic|IM)\b', re.I)
+    for table in tables:
+        if phase_pattern.search(table.page_content):
+            table.set_types('phase')
+    
 
 def label_multi_threads(labeler, paras, args, workers):
     """label the paragraphs in parallel, paras and args should match one by one

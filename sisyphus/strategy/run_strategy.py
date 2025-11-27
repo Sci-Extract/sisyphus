@@ -42,63 +42,37 @@ def extract_main(paragraphs: list[Paragraph], save_to: str, reconstruct_paragrap
 
     
 class ExtractStrategy:
-    def __init__(self, reconstruct_paragraph_context_func, reconstruct_paragraph_isolate_func, formatted_func, categorize_agent, pydantic_models_dict, save_to):
+    def __init__(self, reconstruct_paragraph_context_func, formatted_func, pydantic_models_dict, save_to):
         self.categorize_agent = categorize_agent
         self.formatted_func = formatted_func
         self.pydantic_models_dict = pydantic_models_dict
         self.reconstr_con = reconstruct_paragraph_context_func
-        self.reconstr_iso = reconstruct_paragraph_isolate_func
         self.save_to = save_to
-        self.contextualized = 'contextualized'
-        self.isolated = 'isolated'
-        self.agents = {'contextualized': {}, 'isolated': {}}
+        self.agents = {}
 
     def build(self, prompt_config, chat_model):
-        """{'contextualized': {'property_1': (system_message, user_message), ...}, 'isolated': {...}}"""
+        """{'property_1': (system_message, user_message), ...}"""
         if prompt_config:
-            for property in prompt_config[self.contextualized]:
-                if property != 'synthesis':
-                    self.agents[self.contextualized][property] = build_property_agent(
-                        prompt_config[self.contextualized][property][0],
-                        prompt_config[self.contextualized][property][1],
+            for property_ in prompt_config.keys():
+                if property_ != 'synthesis':
+                    self.agents[property_] = build_property_agent(
+                        prompt_config[property_][0],
+                        prompt_config[property_][1],
                         build_result_model_contextualized(
-                            property,
-                            self.pydantic_models_dict[property].__doc__,
-                            self.pydantic_models_dict[property], MaterialDescriptionBase
+                            property_,
+                            self.pydantic_models_dict[property_].__doc__,
+                            self.pydantic_models_dict[property_], MaterialDescriptionBase
                         ),
                         chat_model
                     )
                 else:
-                    self.agents[self.contextualized][property] = build_process_agent_contextualized(
-                        prompt_config[self.contextualized][property][0],
-                        prompt_config[self.contextualized][property][1],
+                    self.agents[property_] = build_process_agent_contextualized(
+                        prompt_config[property_][0],
+                        prompt_config[property_][1],
                         build_process_model_contextualized(
-                            property,
-                            self.pydantic_models_dict[property].__doc__,
-                            self.pydantic_models_dict[property], Material
-                        ),
-                        chat_model
-                    )
-            for property in prompt_config[self.isolated]:
-                if property != 'synthesis':
-                    self.agents[self.isolated][property] = build_property_agent(
-                        prompt_config[self.isolated][property][0],
-                        prompt_config[self.isolated][property][1],
-                        build_result_model_isolated(
-                            property,
-                            self.pydantic_models_dict[property].__doc__,
-                            self.pydantic_models_dict[property], MaterialWithSymbol
-                        ),
-                        chat_model
-                    )
-                else:
-                    self.agents[self.isolated][property] = build_process_agent_isolated(
-                        prompt_config[self.isolated][property][0],
-                        prompt_config[self.isolated][property][1],
-                        build_result_model_isolated(
-                            property,
-                            self.pydantic_models_dict[property].__doc__,
-                            self.pydantic_models_dict[property], MaterialWithSymbol
+                            property_,
+                            self.pydantic_models_dict[property_].__doc__,
+                            self.pydantic_models_dict[property_], Material
                         ),
                         chat_model
                     )
@@ -134,7 +108,7 @@ class ExtractStrategy:
         return extract_contextualized_main(
             paragraphs=paragraphs,
             paragraphs_reconstr=paragraphs_reconstructed,
-            agents=self.agents[self.contextualized],
+            agents=self.agents,
             formatted_func=self.formatted_func,
             save_to=self.save_to
         )

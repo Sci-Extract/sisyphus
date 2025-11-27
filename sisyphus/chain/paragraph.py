@@ -38,7 +38,27 @@ class Paragraph:
     def update_metadata(self, key, value):
         self.metadata[key] = value
 
-    
+    @classmethod
+    def from_labeled_document(cls, labeled_document: Document, id_):
+        # check labels field in metadata
+        assert 'labels' in labeled_document.metadata, "labeled_document should have 'labels' field in metadata"
+        labels = labeled_document.metadata['labels']
+        instance = cls(Document(labeled_document.page_content, metadata={k: v for k, v in labeled_document.metadata.items() if k != 'labels'}), id_=id_)
+        if 'is_synthesis' in labels:
+            instance.set_synthesis()
+        if 'property_types' in labels:
+            instance.set_types(labels['property_types'])
+        return instance
+
+    def set_data(self, data):
+        if not data:
+            return self
+        if type(data) is not list:
+            data = [data]
+        data = [d for d in data if d]
+        self.data.extend(data)
+        return self
+
 
 class ParagraphExtend(Paragraph):
     """This class does not inherited paragraphs type attribute! You should set it again if needed."""
@@ -61,14 +81,4 @@ class ParagraphExtend(Paragraph):
         page_content = render_docs(paras, new_metadata['title'])
         doc = Document(page_content, metadata=new_metadata)
         return cls(doc)
-    
-    def set_data(self, data):
-        if not data:
-            return self
-        if type(data) is not list:
-            data = [data]
-        data = [d for d in data if d]
-        self.data.extend(data)
-        return self
-    
     

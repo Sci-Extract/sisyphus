@@ -1,0 +1,381 @@
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction”). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Effect of Initial Grain Size on Deformation Mechanism during High‐Pressure Torsion in V10Cr15Mn5Fe35Co10Ni25 High‐Entropy Alloy
+
+2 Experimental Section
+The HEA with a nominal composition of V10Cr15Mn5Fe35Co10Ni25 (at%) was fabricated using vacuum induction melting furnace using pure elements of V, Cr, Mn, Fe, Co, and Ni (purity >99.9%). The as-cast sample was subjected to homogenization heat treatment at 1100 °C for 6 h under an Ar atmosphere, followed by water quenching. The homogenized sample was cold rolled through multiple passes with a final rolling reduction ratio of ≈79% (from 6.2 to 1.3 mm). The disk-shaped samples (10 mm diameter) were prepared from the cold rolled sheet using electro-discharge machining. The disk samples were annealed at two different conditions (900 °C for 10 min and 1100 °C for 60 min) to obtain microstructure with fine grains and coarse grains, respectively. Finally, the HPT process was carried out on the annealed samples at different turns (N = 1/4, 1, and 5) using a pressure of 6 GPa and a rotation rate of 1 revolution per minute (rpm).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | V10Cr15Mn5Fe35Co10Ni25 | FG annealed | ['annealed at 900C for 10min'] |
+|  | 1 | V10Cr15Mn5Fe35Co10Ni25 | CG annealed | ['annealed at 1100C for 60min'] |
+|  | 2 | V10Cr15Mn5Fe35Co10Ni25 | FG HPT N=5 | ['annealed at 900C for 10min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+|  | 3 | V10Cr15Mn5Fe35Co10Ni25 | CG HPT N=5 | ['annealed at 1100C for 60min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+|  | 4 | V10Cr15Mn5Fe35Co10Ni25 | FG HPT N=1/4 | ['annealed at 900C for 10min', 'HPT 1/4 turn, 6 GPa, 1 rpm'] |
+|  | 5 | V10Cr15Mn5Fe35Co10Ni25 | FG HPT N=1 | ['annealed at 900C for 10min', 'HPT 1 turn, 6 GPa, 1 rpm'] |
+| 1 | 6 | V10Cr15Mn5Fe35Co10Ni25 | FG, N=0 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 900C 10min'] |
+|  | 7 | V10Cr15Mn5Fe35Co10Ni25 | CG, N=0 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 1100C 60min'] |
+|  | 8 | V10Cr15Mn5Fe35Co10Ni25 | FG, N=1/4 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 900C 10min', 'HPT 1/4 turn, 6 GPa, 1 rpm'] |
+|  | 9 | V10Cr15Mn5Fe35Co10Ni25 | CG, N=1/4 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 1100C 60min', 'HPT 1/4 turn, 6 GPa, 1 rpm'] |
+|  | 10 | V10Cr15Mn5Fe35Co10Ni25 | FG, N=1 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 900C 10min', 'HPT 1 turn, 6 GPa, 1 rpm'] |
+|  | 11 | V10Cr15Mn5Fe35Co10Ni25 | CG, N=1 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 1100C 60min', 'HPT 1 turn, 6 GPa, 1 rpm'] |
+|  | 12 | V10Cr15Mn5Fe35Co10Ni25 | FG, N=5 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 900C 10min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+|  | 13 | V10Cr15Mn5Fe35Co10Ni25 | CG, N=5 | ['homogenized at 1100C 6h', 'water quenched', 'cold rolled 79%', 'annealed at 1100C 60min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+| 2 | 14 | V10Cr15Mn5Fe35Co10Ni25 |  | ['annealed at 900C for 10min'] |
+|  | 15 | V10Cr15Mn5Fe35Co10Ni25 |  | ['annealed at 1100C for 60min'] |
+|  | 16 | V10Cr15Mn5Fe35Co10Ni25 | FG, after HPT 5 turns | ['annealed at 900C for 10min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+|  | 17 | V10Cr15Mn5Fe35Co10Ni25 | CG, after HPT 5 turns | ['annealed at 1100C for 60min', 'HPT 5 turns, 6 GPa, 1 rpm'] |
+LLM output partitions: [[0, 6, 14], [1, 7, 15], [2, 12, 16], [3, 13, 17], [4, 8], [5, 10], [9], [11]]
+reason: The records all refer to the same alloy composition (V10Cr15Mn5Fe35Co10Ni25) and describe a sequence of processing steps as detailed in the synthesis paragraph. The main variables are the annealing condition (900C/10min for FG, 1100C/60min for CG) and the HPT condition (number of turns: 0, 1/4, 1, 5). Group 1 records (indices 6-13) are the most complete, listing all processing steps. Group 0 and 2 records (indices 0-5, 14-17) are less complete, omitting some steps (e.g., homogenization, cold rolling, water quenching), but the synthesis paragraph confirms these steps are always present before annealing and HPT. Therefore, records with matching annealing and HPT conditions (even if processing_kw is incomplete) refer to the same material entity. Within each group, no two records have identical metadata, so no intra-group clustering. Clusters are formed by matching annealing and HPT conditions across groups, as justified by the synthesis context.
+----
+
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Laser Beam Welding of CoCuFeMnNi High Entropy Alloy: Processing, Microstructure, and Mechanical Properties
+
+2 Experimental Section
+The CoCuFeMnNi alloy was obtained by vacuum arc remelting (VAR) of pure raw materials under low-pressure pure Ar atmosphere (450 mbar). The obtained buttons were remelted 6 times inside water-cooled copper crucible to ensure compositional homogeneity. Thereafter, the alloy was cold pressed to improve its workability and finally cold rolled into 1 mm thick laminas (90% cold work). The obtained samples were solution treated under Ar atmosphere at 1000 °C for 1 h and quenched in water. Such temperature was selected to obtain a single phase FCC microstructure: in fact, available CALPHAD simulations indicate that at 1000 °C the alloy falls well within a single FCC phase field. [, ]
+Laser welding was performed in bead-on-plate configuration by means of an active fiber laser (mod. YLR300/3000 by IPG Photonics). The main features of the laser source are listed in Table , while the associated power distribution and laser beam caustic are depicted in Figure . Flowing Ar at a pressure of 2 bar was used as shielding gas during the experiments. Laser power was kept constant at 300 W (the maximum power of the used laser source), to maximize the productivity in the view of a possible real application of the process. On the contrary, beam focusing and scanning speed were varied according to a full factorial design, as reported in Table , to find the most suitable process condition. The effect of the varied process parameters was correlated to the main geometrical features of the welded bead, namely penetration depth and top width (see a schematic of Figure ).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | CoCuFeMnNi | BM (Base Metal) | ['vacuum arc remelted', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated 1000C 1h under Ar', 'water quenched'] |
+|  | 1 | CoCuFeMnNi | MZ (Melted Zone) | ['laser welded (bead-on-plate)', 'laser power 300W', 'Ar shielding gas 2 bar'] |
+|  | 2 | CoCuFeMnNi | HAZ (Heat Affected Zone) | ['laser welded (bead-on-plate)', 'laser power 300W', 'Ar shielding gas 2 bar'] |
+| 1 | 3 | Co20.6Cu18.9Fe21.0Mn20.2Ni19.3 | Base Material (BM) | ['VAR', 'remelted 6x', 'cold pressed', 'cold rolled 90%', 'solution treated 1000C 1h Ar', 'water quenched'] |
+|  | 4 | Co20.6Cu18.9Fe21.0Mn20.2Ni19.3 | Laser Welded | ['VAR', 'remelted 6x', 'cold pressed', 'cold rolled 90%', 'solution treated 1000C 1h Ar', 'water quenched', 'laser beam welded 300W Ar shield'] |
+LLM output partitions: [[0, 3], [1], [2], [4]]
+reason: First, we check for records from the same group: indices 0,1,2 are from group 0, and 3,4 are from group 1. Within each group, only records with exactly matching composition, label, and processing_kw can be clustered. In group 0, all three records have different label_norm and processing_kw_norm, so they must be separate. In group 1, records 3 and 4 have different label_norm and processing_kw_norm, so they must be separate.
+
+Next, we consider clustering across groups. Records 0 and 3 both refer to the base material (BM/Base Material), and their compositions are very close (CoCuFeMnNi vs. Co20.6Cu18.9Fe21.0Mn20.2Ni19.3), which is a normalized vs. measured composition of the same alloy. Their processing_kw_norm are also equivalent (VAR/vacuum arc remelted, remelted 6x/6 times, cold pressed, cold rolled 90%, solution treated 1000C 1h Ar/under Ar, water quenched). The synthesis paragraph confirms that the base material is made by VAR, remelted 6 times, cold pressed, cold rolled 90%, solution treated at 1000C 1h under Ar, and water quenched. Thus, 0 and 3 are the same entity.
+
+Record 4 (group 1) is 'Laser Welded' with the same base processing as 3, but with added 'laser beam welded 300W Ar shield'. This matches the processing of records 1 and 2 (group 0), which are 'MZ' and 'HAZ' of the laser welded sample. However, label_norm is different: 1 is 'MZ', 2 is 'HAZ', 4 is 'Laser Welded'. The synthesis paragraph and processing_kw_norm indicate that 4 is a general description of the laser welded material, while 1 and 2 are specific zones. Since the rules do not allow clustering records from the same group unless all metadata match, and since 1,2,4 have different label_norm, they must be separate.
+
+Therefore, the clusters are: [0,3] (base material), [1], [2], [4].
+----
+
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Metalloid substitution elevates simultaneously the strength and ductility of face-centered-cubic high-entropy alloys
+
+2 Methodology
+2.1 Alloy design and preparation
+We designed Si-substituted HEAs based on the following considerations. We selected the well-known Co20Cr20Fe20Ni20Mn20 (at%) Cantor alloy as the base HEA. The Si was utilized as a representative metalloid, which is a substitutional element for Mn but differs in atomic size, crystal structure, electronic structure, and physical properties of all the constituent transition metals. We aimed to obtain single-phase solid solutions containing as much Si as possible, limited by the solubility of Si in the HEA. For instance, (Mn, Cr, Si)-rich precipitates were found when 10 at% Si was added into the Cantor alloy (forming Co18Cr18Fe18Ni18Mn18Si10 (at.%), Fig. S1). Because Mn has the largest atomic radius, decreasing the content of Mn could help to increase the solubility of Si, as suggested by the Hume-Rothery theory and its derivatives [25-27]. Therefore, we decreased the content of Mn to increase the solubility of Si and successfully prepared a single-phase Co20Cr20Fe20Ni20Mn10Si10 (at%) sample without precipitates, hereinafter denoted as Si10 HEA. In addition, we removed Mn altogether to further increase the solubility of Si and successfully prepared Co22Cr22Fe22Ni22Si12 (at%) HEA with a single-phase structure, hereinafter denoted as Si12 HEA.
+All the Cantor alloy, Si10 HEA, and Si12 HEA were prepared via arc melting of high-purity elements (purity > 99.9%) under an argon gas atmosphere, and the melting was repeated more than five times to ensure chemical homogenization. The as-cast ingots were homogenized at 1423 K for 12 h under a high-purity argon gas atmosphere, followed by water quenching to ambient temperature. The ingots were then hot-compressed to 3 mm-thick plates (50% reduction in thickness) at 1373 K in air, followed by water quenching. The oxide layers were removed by grinding and then the plates were cold rolled to 1.8 mm (40% reduction in thickness) at room temperature. Finally, the samples were annealed at 1373 K for a short period (Cantor, 10 min; Si10 HEA and Si12 HEA, 2 min), followed by water quenching to ambient temperature, to obtain recrystallized microstructures with grain sizes of approximately 60 μm (similar for the three alloys, see Fig. 1 and Table 2). The grain sizes were determined using a scanning electron microscope (SEM, JSM-7100F) equipped with an electron backscatter diffraction (EBSD) detector. The observations were made at an acceleration voltage of 15 kV, and the EBSD data were analyzed using OIM analysis software (version 7.0).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted >5x', 'homogenized 1423K 12h Ar', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed 1373K 2min', 'water quenched'] |
+|  | 1 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted >5x', 'homogenized 1423K 12h Ar', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed 1373K 2min', 'water quenched'] |
+|  | 2 | Co20Cr20Fe20Ni20Mn20 | Cantor alloy | ['arc melted >5x', 'homogenized 1423K 12h Ar', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed 1373K 10min', 'water quenched'] |
+|  | 3 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA, strained to 82% | ['arc melted >5x', 'homogenized 1423K 12h Ar', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed 1373K 2min', 'water quenched', 'tensile strained 82%'] |
+|  | 4 | Co22Cr22Fe22Ni22Si12 | Si12 HEA, strained to 82% | ['arc melted >5x', 'homogenized 1423K 12h Ar', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed 1373K 2min', 'water quenched', 'tensile strained 82%'] |
+| 1 | 5 | Co20Cr20Fe20Ni20Mn20 | Cantor alloy | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 10min'] |
+|  | 6 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+|  | 7 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+| 2 | 8 | Co20Cr20Fe20Ni20Mn20(at%) | Cantor alloy | ['arc melted', 'homogenized at 1423K 12h', 'hot-compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 10min', 'water quenched'] |
+|  | 9 | Co20Cr20Fe20Ni20Mn10Si10(at%) | Si10 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot-compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min', 'water quenched'] |
+|  | 10 | Co22Cr22Fe22Ni22Si12(at%) | Si12 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot-compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min', 'water quenched'] |
+LLM output partitions: [[2, 5, 8], [0, 6, 9], [1, 7, 10], [3], [4]]
+reason: The records describe three main alloy compositions: Cantor alloy (Co20Cr20Fe20Ni20Mn20), Si10 HEA (Co20Cr20Fe20Ni20Mn10Si10), and Si12 HEA (Co22Cr22Fe22Ni22Si12). Each is prepared by a nearly identical process, as described in the synthesis paragraphs. The differences in processing_kw_norm between groups are due to normalization and partial capture (e.g., 'arc melted' vs. 'arc melted >5x', 'hot-compressed' vs. 'hot compressed'), but the synthesis paragraph confirms that all samples were arc melted more than five times, homogenized at 1423K for 12h, hot-compressed at 1373K, cold rolled 40%, annealed at 1373K (10min for Cantor, 2min for Si10/Si12), and water quenched. The strained samples (indices 3 and 4) have an additional 'tensile strained 82%' step, making them distinct entities. Within each group, no two records with the same group_index are clustered unless their metadata are exactly identical. Thus, the clusters are: (i) Cantor alloy as-cast (indices 2, 5, 8), (ii) Si10 HEA as-cast (indices 0, 6, 9), (iii) Si12 HEA as-cast (indices 1, 7, 10), (iv) Si10 HEA strained (index 3), (v) Si12 HEA strained (index 4).
+----
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Metalloid substitution elevates simultaneously the strength and ductility of face-centered-cubic high-entropy alloys
+
+2 Methodology
+2.1 Alloy design and preparation
+We designed Si-substituted HEAs based on the following considerations. We selected the well-known Co20Cr20Fe20Ni20Mn20 (at%) Cantor alloy as the base HEA. The Si was utilized as a representative metalloid, which is a substitutional element for Mn but differs in atomic size, crystal structure, electronic structure, and physical properties of all the constituent transition metals. We aimed to obtain single-phase solid solutions containing as much Si as possible, limited by the solubility of Si in the HEA. For instance, (Mn, Cr, Si)-rich precipitates were found when 10 at% Si was added into the Cantor alloy (forming Co18Cr18Fe18Ni18Mn18Si10 (at.%), Fig. S1). Because Mn has the largest atomic radius, decreasing the content of Mn could help to increase the solubility of Si, as suggested by the Hume-Rothery theory and its derivatives [25-27]. Therefore, we decreased the content of Mn to increase the solubility of Si and successfully prepared a single-phase Co20Cr20Fe20Ni20Mn10Si10 (at%) sample without precipitates, hereinafter denoted as Si10 HEA. In addition, we removed Mn altogether to further increase the solubility of Si and successfully prepared Co22Cr22Fe22Ni22Si12 (at%) HEA with a single-phase structure, hereinafter denoted as Si12 HEA.
+All the Cantor alloy, Si10 HEA, and Si12 HEA were prepared via arc melting of high-purity elements (purity > 99.9%) under an argon gas atmosphere, and the melting was repeated more than five times to ensure chemical homogenization. The as-cast ingots were homogenized at 1423 K for 12 h under a high-purity argon gas atmosphere, followed by water quenching to ambient temperature. The ingots were then hot-compressed to 3 mm-thick plates (50% reduction in thickness) at 1373 K in air, followed by water quenching. The oxide layers were removed by grinding and then the plates were cold rolled to 1.8 mm (40% reduction in thickness) at room temperature. Finally, the samples were annealed at 1373 K for a short period (Cantor, 10 min; Si10 HEA and Si12 HEA, 2 min), followed by water quenching to ambient temperature, to obtain recrystallized microstructures with grain sizes of approximately 60 μm (similar for the three alloys, see Fig. 1 and Table 2). The grain sizes were determined using a scanning electron microscope (SEM, JSM-7100F) equipped with an electron backscatter diffraction (EBSD) detector. The observations were made at an acceleration voltage of 15 kV, and the EBSD data were analyzed using OIM analysis software (version 7.0).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min', 'water quenched'] |
+|  | 1 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min', 'water quenched'] |
+|  | 2 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA, strained to 82% | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min', 'water quenched'] |
+|  | 3 | Co22Cr22Fe22Ni22Si12 | Si12 HEA, strained to 82% | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min', 'water quenched'] |
+| 1 | 4 | Co20Cr20Fe20Ni20Mn20 | Cantor alloy | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 10min'] |
+|  | 5 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+|  | 6 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+| 2 | 7 | Co20Cr20Fe20Ni20Mn20(at%) | Cantor alloy | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 10min'] |
+|  | 8 | Co20Cr20Fe20Ni20Mn10Si10(at%) | Si10 HEA | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min'] |
+|  | 9 | Co22Cr22Fe22Ni22Si12(at%) | Si12 HEA | ['arc melted', 'homogenized at 1423 K 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K 2min'] |
+LLM output partitions: [[0, 5, 8], [1, 6, 9], [2], [3], [4, 7]]
+reason: First, records from the same group can only be clustered if their normalized metadata are exactly identical. For group 0, records 0 and 2 have the same composition and processing_kw, but their label_norm differs ('Si10 HEA' vs 'Si10 HEA, strained to 82%'), so they must be separate. The same applies to records 1 and 3. For group 1, all records have unique combinations of composition and label_norm, so no within-group clustering. For group 2, the same applies. Now, across groups: The composition_norm and processing_kw_norm for records 0 (group 0), 5 (group 1), and 8 (group 2) are all for 'Co20Cr20Fe20Ni20Mn10Si10' (with or without '(at%)'), label_norm is 'Si10 HEA', and processing_kw are nearly identical (minor formatting differences, e.g., 'hot-compressed' vs 'hot compressed', but the synthesis paragraph confirms these refer to the same process). Thus, 0, 5, and 8 are clustered. Similarly, 1 (group 0), 6 (group 1), and 9 (group 2) are for 'Co22Cr22Fe22Ni22Si12', label_norm 'Si12 HEA', and processing_kw are equivalent, so they are clustered. For the Cantor alloy, 4 (group 1) and 7 (group 2) are for 'Co20Cr20Fe20Ni20Mn20' (with or without '(at%)'), label_norm 'Cantor alloy', and processing_kw are equivalent, so they are clustered. Records 2 and 3 (group 0) are 'strained to 82%' versions of Si10 and Si12 HEA, respectively, and have no matching records in other groups, so they are singletons.
+----
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Metalloid substitution elevates simultaneously the strength and ductility of face-centered-cubic high-entropy alloys
+
+2 Methodology
+2.1 Alloy design and preparation
+We designed Si-substituted HEAs based on the following considerations. We selected the well-known Co20Cr20Fe20Ni20Mn20 (at%) Cantor alloy as the base HEA. The Si was utilized as a representative metalloid, which is a substitutional element for Mn but differs in atomic size, crystal structure, electronic structure, and physical properties of all the constituent transition metals. We aimed to obtain single-phase solid solutions containing as much Si as possible, limited by the solubility of Si in the HEA. For instance, (Mn, Cr, Si)-rich precipitates were found when 10 at% Si was added into the Cantor alloy (forming Co18Cr18Fe18Ni18Mn18Si10 (at.%), Fig. S1). Because Mn has the largest atomic radius, decreasing the content of Mn could help to increase the solubility of Si, as suggested by the Hume-Rothery theory and its derivatives [25-27]. Therefore, we decreased the content of Mn to increase the solubility of Si and successfully prepared a single-phase Co20Cr20Fe20Ni20Mn10Si10 (at%) sample without precipitates, hereinafter denoted as Si10 HEA. In addition, we removed Mn altogether to further increase the solubility of Si and successfully prepared Co22Cr22Fe22Ni22Si12 (at%) HEA with a single-phase structure, hereinafter denoted as Si12 HEA.
+All the Cantor alloy, Si10 HEA, and Si12 HEA were prepared via arc melting of high-purity elements (purity > 99.9%) under an argon gas atmosphere, and the melting was repeated more than five times to ensure chemical homogenization. The as-cast ingots were homogenized at 1423 K for 12 h under a high-purity argon gas atmosphere, followed by water quenching to ambient temperature. The ingots were then hot-compressed to 3 mm-thick plates (50% reduction in thickness) at 1373 K in air, followed by water quenching. The oxide layers were removed by grinding and then the plates were cold rolled to 1.8 mm (40% reduction in thickness) at room temperature. Finally, the samples were annealed at 1373 K for a short period (Cantor, 10 min; Si10 HEA and Si12 HEA, 2 min), followed by water quenching to ambient temperature, to obtain recrystallized microstructures with grain sizes of approximately 60 μm (similar for the three alloys, see Fig. 1 and Table 2). The grain sizes were determined using a scanning electron microscope (SEM, JSM-7100F) equipped with an electron backscatter diffraction (EBSD) detector. The observations were made at an acceleration voltage of 15 kV, and the EBSD data were analyzed using OIM analysis software (version 7.0).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+|  | 1 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 2min'] |
+|  | 2 | Co20Cr20Fe20Ni20Mn20 | Cantor alloy | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K', 'cold rolled 40%', 'annealed at 1373K 10min'] |
+| 1 | 3 | Co20Cr20Fe20Ni20Mn20 | Cantor alloy | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 10min', 'water quenched'] |
+|  | 4 | Co20Cr20Fe20Ni20Mn10Si10 | Si10 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 2min', 'water quenched'] |
+|  | 5 | Co22Cr22Fe22Ni22Si12 | Si12 HEA | ['arc melted', 'homogenized at 1423K 12h', 'hot compressed at 1373K 50%', 'cold rolled 40%', 'annealed at 1373K 2min', 'water quenched'] |
+| 2 | 6 | Co20Cr20Fe20Ni20Mn20(at%) | Cantor alloy | ['arc melted', 'homogenized at 1423 K for 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K for 10min'] |
+|  | 7 | Co20Cr20Fe20Ni20Mn10Si10(at%) | Si10 HEA | ['arc melted', 'homogenized at 1423 K for 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K for 2min'] |
+|  | 8 | Co22Cr22Fe22Ni22Si12(at%) | Si12 HEA | ['arc melted', 'homogenized at 1423 K for 12h', 'hot-compressed at 1373 K', 'cold rolled 40%', 'annealed at 1373 K for 2min'] |
+LLM output partitions: [[0, 4, 7], [1, 5, 8], [2, 3, 6]]
+reason: First, within each group, only records with exactly matching composition, label, and processing_kw can be clustered. In group 0, all records have different compositions and/or labels, so none are clustered together. In group 1, the same applies. In group 2, the same applies. 
+
+Next, across groups, we look for records that refer to the same material entity, considering possible variations in processing_kw wording and the synthesis paragraph for context. The synthesis paragraph describes that all three alloys (Cantor, Si10 HEA, Si12 HEA) are prepared by arc melting, homogenization at 1423K for 12h, hot compression at 1373K (50% reduction), cold rolling 40%, and annealing at 1373K (10 min for Cantor, 2 min for Si10 and Si12), followed by water quenching. The oxide layers are removed by grinding, but this is not always captured in processing_kw.
+
+Comparing records across groups:
+- Records 0, 4, 7 (Si10 HEA): All have the same composition and label. Processing_kw in 0 omits 'water quenched' and 'hot compressed at 50%' (uses 'hot compressed at 1373K'), but the synthesis paragraph confirms that all Si10 HEA samples underwent the same process, including water quenching and 50% reduction. The differences are due to incomplete extraction, not actual differences in the material. So, 0, 4, 7 are clustered.
+- Records 1, 5, 8 (Si12 HEA): Same logic as above. 1 omits 'water quenched' and 'hot compressed at 50%', but synthesis confirms the process is the same. 1, 5, 8 are clustered.
+- Records 2, 3, 6 (Cantor alloy): 2 omits 'water quenched' and 'hot compressed at 50%', but synthesis confirms the process is the same. 2, 3, 6 are clustered.
+
+No other clusters are possible, as all records are accounted for.
+----
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, label, processing_kw) are exactly identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Laser Beam Welding of CoCuFeMnNi High Entropy Alloy: Processing, Microstructure, and Mechanical Properties
+
+2 Experimental Section
+The CoCuFeMnNi alloy was obtained by vacuum arc remelting (VAR) of pure raw materials under low-pressure pure Ar atmosphere (450 mbar). The obtained buttons were remelted 6 times inside water-cooled copper crucible to ensure compositional homogeneity. Thereafter, the alloy was cold pressed to improve its workability and finally cold rolled into 1 mm thick laminas (90% cold work). The obtained samples were solution treated under Ar atmosphere at 1000 °C for 1 h and quenched in water. Such temperature was selected to obtain a single phase FCC microstructure: in fact, available CALPHAD simulations indicate that at 1000 °C the alloy falls well within a single FCC phase field. [, ]
+Laser welding was performed in bead-on-plate configuration by means of an active fiber laser (mod. YLR300/3000 by IPG Photonics). The main features of the laser source are listed in Table , while the associated power distribution and laser beam caustic are depicted in Figure . Flowing Ar at a pressure of 2 bar was used as shielding gas during the experiments. Laser power was kept constant at 300 W (the maximum power of the used laser source), to maximize the productivity in the view of a possible real application of the process. On the contrary, beam focusing and scanning speed were varied according to a full factorial design, as reported in Table , to find the most suitable process condition. The effect of the varied process parameters was correlated to the main geometrical features of the welded bead, namely penetration depth and top width (see a schematic of Figure ).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | CoCuFeMnNi | BM | ['vacuum arc remelted', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched'] |
+|  | 1 | CoCuFeMnNi | MZ | ['vacuum arc remelted', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched', 'laser beam welded'] |
+|  | 2 | CoCuFeMnNi | HAZ | ['vacuum arc remelted', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched', 'laser beam welded'] |
+| 1 | 3 | Co20.6Cu18.9Fe21.0Mn20.2Ni19.3 | BM | ['vacuum arc remelted', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched'] |
+|  | 4 | Co20.6Cu18.9Fe21.0Mn20.2Ni19.3 | Welded | ['vacuum arc remelted', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched', 'laser beam welded at 300 W'] |
+LLM output partitions: [[0, 3], [1, 2, 4]]
+reason: First, records from the same group (group_index) can only be clustered if their normalized metadata are exactly identical. Records 0, 1, and 2 are from group 0, and their metadata differ (label_norm and processing_kw_norm), so they must be separate. Records 3 and 4 are from group 1, and their metadata also differ (label_norm and processing_kw_norm), so they must be separate.
+
+Next, for clustering across groups: The compositions CoCuFeMnNi (group 0) and Co20.6Cu18.9Fe21.0Mn20.2Ni19.3 (group 1) are essentially the same, with the latter being a more precise version of the former. The synthesis paragraph confirms that the alloy is made by vacuum arc remelting, remelted 6 times, cold pressed, cold rolled 90%, solution treated at 1000C 1h under Ar, and water quenched. The group 1 records omit 'remelted 6 times' but otherwise match the process, and the synthesis paragraph confirms this is the same material. Thus, the BM records (0 and 3) refer to the same entity. Similarly, the welded records (1, 2, and 4) all refer to the same material after laser beam welding, with group 1 specifying 'at 300 W', which matches the synthesis description. The labels 'MZ', 'HAZ', and 'Welded' all refer to regions of the welded sample, and the processing is consistent. Therefore, 1, 2, and 4 can be clustered together.
+----
+
+
+prompt: You are given a list of extracted material records. Each record has been normalized and is identified by a zero-based integer index.
+Each record belongs to a source group (for example, “phase extraction” or “strength extraction” or "grain size extraction"). A separate list provides the group index for every record.
+Your task is to cluster records that refer to the same underlying experimental material entity. These identities originate from different extraction sources because the original paper describes material information in scattered paragraphs.
+
+Important rules (strict):
+Do NOT cluster two records that come from the same source group unless their normalized metadata
+(composition, processing_kw) are identical.
+When clustering records from different source groups, determine whether they describe the same experimental entity.
+Processing_kw may be incomplete or partially captured in some records. Use the provided synthesis paragraphs as contextual evidence to resolve cases where partial or mismatched processing_kw might still refer to the same material.
+Synthesis paragraphs describe the actual experimental procedure of the paper. Use them to infer whether incomplete processing_kw in different records is still consistent with a single underlying material identity.
+Sometimes noise may be present in metadata fields, which was introduced during previous extraction stages, such as property-relevant parameters mistakenly included in processing_kw or label fields. Focus on the synthsis relevant information to resolve such discrepancies.
+
+Output Format:
+Return ONLY valid JSON with the following structure:
+{{
+"reason": "",
+"partitions": [
+[list of integer indices forming one cluster],
+...
+]
+}}
+Example:
+{{
+"reason": "",
+"partitions": [[0, 3], [1], [2, 4]]
+}}
+Do not output anything else besides the JSON object.
+
+Synthesis paragraphs
+Laser Beam Welding of CoCuFeMnNi High Entropy Alloy: Processing, Microstructure, and Mechanical Properties
+
+2 Experimental Section
+The CoCuFeMnNi alloy was obtained by vacuum arc remelting (VAR) of pure raw materials under low-pressure pure Ar atmosphere (450 mbar). The obtained buttons were remelted 6 times inside water-cooled copper crucible to ensure compositional homogeneity. Thereafter, the alloy was cold pressed to improve its workability and finally cold rolled into 1 mm thick laminas (90% cold work). The obtained samples were solution treated under Ar atmosphere at 1000 °C for 1 h and quenched in water. Such temperature was selected to obtain a single phase FCC microstructure: in fact, available CALPHAD simulations indicate that at 1000 °C the alloy falls well within a single FCC phase field. [, ]
+Laser welding was performed in bead-on-plate configuration by means of an active fiber laser (mod. YLR300/3000 by IPG Photonics). The main features of the laser source are listed in Table , while the associated power distribution and laser beam caustic are depicted in Figure . Flowing Ar at a pressure of 2 bar was used as shielding gas during the experiments. Laser power was kept constant at 300 W (the maximum power of the used laser source), to maximize the productivity in the view of a possible real application of the process. On the contrary, beam focusing and scanning speed were varied according to a full factorial design, as reported in Table , to find the most suitable process condition. The effect of the varied process parameters was correlated to the main geometrical features of the welded bead, namely penetration depth and top width (see a schematic of Figure ).
+
+Here is the normalized records list (index+group_index+normalized metadata):
+
+| group_index | index | composition_norm | label_norm | processing_kw_norm |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | CoCuFeMnNi |  | ['vacuum arc remelted (VAR) under Ar', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched'] |
+|  | 1 | CoCuFeMnNi |  | ['vacuum arc remelted (VAR) under Ar', 'remelted 6 times', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched', 'laser beam welded'] |
+| 1 | 2 | Co20.3Cu18.8Fe20.9Mn20.9Ni19.1 | BM | ['vacuum arc remelted', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched'] |
+|  | 3 | Co20.3Cu18.8Fe20.9Mn20.9Ni19.1 | Welded | ['vacuum arc remelted', 'cold pressed', 'cold rolled 90%', 'solution treated at 1000C 1h under Ar', 'water quenched', 'laser beam welded at 300 W, Ar shielding'] |
+LLM output partitions: [[0, 2], [1, 3]]
+reason: Records 0 and 1 (group 0) have the same composition and nearly identical processing_kw, except that 1 includes 'laser beam welded' as an additional step. According to the rules, within the same group, only records with identical composition and processing_kw can be clustered, so 0 and 1 must be separate. Records 2 and 3 (group 1) are similar: 3 has 'laser beam welded at 300 W, Ar shielding' as an additional step compared to 2. Their compositions are also identical (just more precise than group 0, but clearly referring to the same alloy). Within group 1, 2 and 3 must be separate. 
+
+Between groups, we can cluster records if they refer to the same material entity. The synthesis paragraph makes clear that the base material is always the same (CoCuFeMnNi, made by VAR, cold pressed, cold rolled, solution treated, water quenched), and then some samples are laser beam welded. The difference in composition notation (elemental vs. atomic percent) is not significant for clustering, as the atomic percentages sum to 100 and match the nominal composition. The processing_kw for 0 and 2 are equivalent (base material, not welded), and for 1 and 3 are equivalent (base material plus laser beam welding, with 3 giving more detail). Thus, 0 and 2 should be clustered, and 1 and 3 should be clustered, as they represent the same material entities across extraction sources.
+----
+
+

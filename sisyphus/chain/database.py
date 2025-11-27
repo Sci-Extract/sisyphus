@@ -21,6 +21,7 @@ from sqlmodel import SQLModel, Field, Session, select, JSON, Relationship, text,
 from sqlalchemy.orm import registry
 
 from sisyphus.chain.constants import FAILED
+from sisyphus.chain.paragraph import Paragraph
 
 
 def extend_fields(sql_model: SQLModel, pydantic_model: BaseModel) -> SQLModel:
@@ -45,7 +46,9 @@ def doc_getter(engine, sql_table: SQLModel, with_abstract: bool = False):
     def get_article(source):
         with Session(bind=engine) as session, session.begin():
             result = session.exec(text(f"SELECT page_content, meta from documents WHERE json_extract(meta, '$.source') = '{source}'")).all() # TODO: find a solution using orm, which is more generalizable, ^_^ I hate sql.
-            assert result, f'not find given {source}'
+            # assert result, f'not find given {source}'
+            if not result:
+                return
             if not with_abstract:
                 documents = [Document(page_content=res[0], metadata=json.loads(res[1])) for res in result]
             else:
@@ -158,6 +161,21 @@ class DocDB(DB):
             for record in records:
                 session.add(record)
 
+    def dump_state(self, paragraphs: list[Paragraph]):
+        """dump paragraph state (lables) into database"""
+        with Session(self.engine) as session, session.begin():
+            for para in paragraphs:
+                labels = {}
+                if para.is_synthesis:
+                    labels['is_synthesis'] = True
+                if para.property_types:
+                    labels['property_types'] = para.property_types
+                meta = para.metadata.copy() if hasattr(para, 'metadata') else {}
+                meta['labels'] = labels
+                doc = self.Document(page_content=para.page_content, meta=meta)
+                session.add(doc)
+            session.commit()
+     
 
 class ResultDB(DB):
     """provide functionality for creating database, saving data, searching through database"""
@@ -234,8 +252,9 @@ class ResultDB(DB):
             for result, document in results:
                 pydantic_json = result.result
                 if with_doi:
-                    doi = document.meta['doi']
-                    pydantic_json.update(doi=doi)
+                    doi = document.meta.get('doi')
+                    # ensure 'doi' is the first key (dict preserves insertion order since Python 3.7)
+                    pydantic_json = {'doi': doi, **pydantic_json}
                 datas.append(pydantic_json)
         return datas
     
@@ -293,6 +312,19 @@ class ExtractManager:
     
     async def aupdate(self, key):
         await asyncio.to_thread(self.update, key)
+    
+    def delete_namespace(self):
+        """delete all records within this namespace"""
+        with Session(bind=self.engine) as session, session.begin():
+            records = session.exec(select(ExtractRecord).where(ExtractRecord.namespace == self.namespace)).all()
+            for record in records:
+                session.delete(record)
+            session.commit()
+
+    def return_extracted(self):
+        with Session(bind=self.engine) as session, session.begin():
+            records = session.exec(select(ExtractRecord.key).where(ExtractRecord.namespace == self.namespace)).all()
+        return records
 
 
 def aadd_manager_callback(func: Callable, manager: ExtractManager):

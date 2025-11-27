@@ -1,9 +1,12 @@
 import re
+import json
 import logging
-from typing import Optional, Literal
+import warnings
+from ast import literal_eval
+from typing import Optional, Literal, List
 
 import dspy
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model, field_validator, ConfigDict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from openai import LengthFinishReasonError
@@ -12,8 +15,19 @@ from sisyphus.chain.chain_elements import DocInfo
 from sisyphus.chain.constants import FAILED
 from sisyphus.utils.helper_functions import render_docs, reorder_paras, render_docs_without_title, get_title_abs
 from sisyphus.chain.paragraph import Paragraph, ParagraphExtend
-from .synthesis import get_synthesis_prompt
+from sisyphus.heas.synthesis import get_synthesis_prompt, get_synthesis_prompt_all
+from sisyphus.heas.prompt import (
+    SYSTEM_MESSAGE_SYN,
+    SYSTEM_MESSAGE_NO_SYN,
+    INSTRUCTION_TEMPLATE,
+    strength_instruction,
+    phase_instruction,
+    grain_size_instruction,
+)
+from sisyphus.heas.models import MetaData, Strength, Phase, GrainSize, Synthesis
 
+
+warnings.filterwarnings('ignore', category=UserWarning, module='pydantic') # avoide the case that we convert json string to python object will trigger pydantic warning
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -22,111 +36,157 @@ fh.setLevel(logging.DEBUG)
 formatter= logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger.addHandler(fh)
 
-SYSTEM_MESSAGE = """You are an expert at structured data extraction from HEAs (high entropy alloys) domain. You will be given unstructured text from a research paper and should convert it into the given structure"""
-INSTRUCTION_TEMPLATE = \
-"""Extract all HEAs' tensile and compressive properties along with their synthesis methods from the text.  
-- **Composition Format:** (e.g., `Hf0.5Mo0.5NbTiZrC0.3`).  
-- **Handling Unknown Compositions:** If a nominal composition is missing (e.g., due to doping), use a **descriptive name** (e.g., `W-Co0.5Cr0.3FeMnNi`).  
-- **Acronyms Prohibited:** Do **not** use labels like `HEA-1` or `Sample A`.  
----
-### **General Guidelines:**  
-- **Extract data for all materials** with reported mechanical properties, even if they are:  
-  - Mentioned in **comparisons** with other samples.  
-  - Referenced from a **previous study** but include numerical properties in the current text.  
-  - Not the main focus of the paragraph.
-- If multiple materials are described under different conditions, **each must be recorded separately** with its corresponding processing conditions.  
+def create_instruction_dynamic(properties: List[Literal['strength', 'phase', 'grain_size']], synthesis_instruction: str):
+    instruction = INSTRUCTION_TEMPLATE
+    if 'strength' in properties:
+        instruction += "\n### **Strength**\n" + strength_instruction + '\n'
+    if 'phase' in properties:
+        instruction += "\n### **Phase**\n" + phase_instruction + '\n'
+    if 'grain_size' in properties:
+        instruction += "\n### **Grain size**\n" + grain_size_instruction + '\n'
+    if synthesis_instruction:
+        instruction += "\n### **Processes formatted**\n" + synthesis_instruction
+    return instruction
 
-### **Mechanical Properties to Extract:**  
-- **Tensile properties:** yield strength, ultimate tensile strength, elongation
-- **Compressive properties:** Compressive yield strength, ultimate compressive strength, compressive strain
-- **Synthesis method** If present, extract the synthesis information from text
-
-### **Properties to Explicitly EXCLUDE:**  
-- **Shear strength/stress** (do NOT misinterpret this as yield strength)
-- **Critical resolved shear stress (CRSS)**
-- **Fracture strength**
-- **Hardness** (e.g., Vickers, Brinell, Rockwell)
-- **Fatigue strength**
-- **Young's modulus**
-
-### **Extraction Rules:**  
-- If properties are reported as "mean ± standard deviation," use the **mean value** (e.g., **700 ± 30 → 700**).  
-- If properties are reported as a range, use the **lower bound** (e.g., **500–600 → 500**).  
-- **Prioritize table values** over text if there is a conflict. 
-- **If a material is mentioned in comparison to another material, still extract its properties.**  
-- **If a material from a previous study is mentioned with numerical values, extract it as well.**
-
-### **Processes formatted**  
-{synthesis_prompt}
-
-### **Ensuring Comprehensive Extraction:**  
-- **Materials with mechanical properties mentioned in comparisons must be extracted.**  
-- **Materials referenced from past studies must be extracted if numerical values are given.**
-- **Materials which are not the main focus of the paper should also be extracted if they have mechanical properties.**
-"""
-
-class StrengthRecord(BaseModel):
-    composition: str = Field()
-    composition_type: Literal['atomic', 'weight']
-    phase: Optional[list[str]]
-    ys: Optional[float] = Field(description='convert to MPa if the unit is not MPa, e.g. 1 GPa -> 1000 MPa')
-    uts: Optional[float] = Field(description='convert to MPa if the unit is not MPa, e.g. 1 GPa -> 1000 MPa')
-    strain: Optional[float]
-    processes: Optional[list[str]] = Field(description='eg., [induction melting: atmosphere: Ar, remelting times: 5, annealed: temperature: 700 °C, duration: 1 h, homogenized: temperature: 1200 °C, duration: 2 h]')
-    test_type: Literal['tensile', 'compressive']
-    test_temperature: str = Field(description='if not explicitly mentioned, record as 25 °C')
-
-class Records(BaseModel):
-    records: Optional[list[StrengthRecord]]
-
-
-model = ChatOpenAI(model='gpt-4o', temperature=0, max_tokens=15000)
-template = ChatPromptTemplate(
+template_with_syn = ChatPromptTemplate(
     [
-        ('system', SYSTEM_MESSAGE),
+        ('system', SYSTEM_MESSAGE_SYN),
         ('user', '[START OF PAPER]\n{paper}\n[END OF PAPER]\n\nInstruction:\n{instruction}')
     ]
 )
 
-def extract(paragraphs: list[Paragraph], synthesis_extract_model=dspy.LM('openai/gpt-4o'), extraction_model=model):
+template_without_syn = ChatPromptTemplate(
+    [
+        ('system', SYSTEM_MESSAGE_NO_SYN),
+        ('user', '[START OF PAPER]\n{paper}\n[END OF PAPER]\n\nInstruction:\n{instruction}')
+    ]
+)
+
+
+# ======MODELS======
+class Record(BaseModel):
+    metadata: MetaData
+    strength: List[Strength] = Field(description='tensile or compressive strength data')
+    phase: List[Phase] = Field(description='phase information')
+    grain_size: GrainSize = Field(description='grain size information')
+
+class Records(BaseModel):
+    records: List[Record]
+
+def create_result_model_dynamic(properties: List[Literal['strength', 'phase', 'grain_size']], has_synthesis: bool):
+    """Dynamically create a Pydantic model for Records based on the requested properties using create_model."""
+    fields = {
+        'metadata': (MetaData, ...)
+    }
+
+    if 'strength' in properties:
+        fields['strength'] = (List[Strength], Field(..., description='tensile or compressive strength data'))
+    if 'phase' in properties:
+        fields['phase'] = (List[Phase], Field(..., description='phase information'))
+    if 'grain_size' in properties:
+        fields['grain_size'] = (List[GrainSize], Field(..., description='grain size information'))
+    if has_synthesis:
+        fields['synthesis'] = (Synthesis, Field(..., description='synthesis information'))
+
+    Record = create_model('Record', __base__=BaseModel, **fields)
+    # ensure dynamic models forbid extra properties so the LM JSON schema includes additionalProperties=false
+    Record.model_config = ConfigDict(extra="forbid")
+    doc = "List of extracted records, encourage to split into multiple records if processing parameters varied"
+    Records = create_model('Records', __base__=BaseModel, records=(List[Record], Field(..., description='list of extracted records')), __doc__=doc)
+    Records.model_config = ConfigDict(extra="forbid")
+    return Records
+
+
+# ======Extract======
+def extract(paragraphs: list[Paragraph], extraction_model, synthesis_extract_model=dspy.LM('openai/gpt-4.1')):
     syn_paras = [para for para in paragraphs if para.is_synthesis]
-    strength_paras = [para for para in paragraphs if para.has_property('strength')]
-    phase_paras = [para for para in paragraphs if para.has_property('phase')]
-    composition_paras = [para for para in paragraphs if para.has_property('composition')]
-    last_intro_para = [para for para in paragraphs if re.search(r'introduction', para.metadata['sub_titles'], re.I)][-1:]
+    abstract_paras = [para for para in paragraphs if para.is_abstract()]
+    intro_candidates = [
+        p for p in paragraphs
+        if isinstance(p.metadata, dict) and re.search(r'introduction', str(p.metadata.get('sub_titles', '')), re.I)
+    ]
+    last_intro_para = intro_candidates[-1:] if intro_candidates else []
 
-    # get synthesis prompt
-    synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras), lm=synthesis_extract_model)
+    def paras_with_property(prop: str):
+        """Return paragraphs that report a given property (safe against missing methods)."""
+        return [p for p in paragraphs if hasattr(p, "has_property") and p.has_property(prop)]
 
-    # construct instruction
-    instruction = INSTRUCTION_TEMPLATE.format(synthesis_prompt=synthesis_prompt)
-
-    combined_paras = reorder_paras(syn_paras + phase_paras + composition_paras + strength_paras + last_intro_para)
-    title, _ = get_title_abs(paragraphs)
-    para_extend = ParagraphExtend.merge_paras(combined_paras, metadata={'doi': paragraphs[0].metadata['doi'], 'source': paragraphs[0].metadata['source']}, title=title)
+    strength_paras = paras_with_property('strength')
+    phase_paras = paras_with_property('phase')
+    grain_size_paras = paras_with_property('grain_size')
+    strain_rate_paras = paras_with_property('strain_rate')
+    composition_paras = paras_with_property('composition')
+    processing_param_paras = paras_with_property('processing_parameters')
     
-    chain = template | extraction_model.with_structured_output(Records, method='json_schema')
-    try:
-        records = chain.invoke({'paper': para_extend.page_content, 'instruction': instruction}).records
-    except LengthFinishReasonError:
-        source = paragraphs[0].metadata['source']
-        logger.exception('For source: %s', source, exc_info=1)
-        return FAILED
-    if records:
-        return [DocInfo(para_extend, records)]
+    properties = []
+    if strength_paras:
+        properties.append('strength')
+    if phase_paras:
+        properties.append('phase')
+    if grain_size_paras:
+        properties.append('grain_size')
+    if syn_paras:
+        has_synthesis = True
+    else:
+        has_synthesis = False
 
-def extract_full_docs(paragraphs):
-    syn_paras = [para for para in paragraphs if para.is_synthesis]
-    synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras))
-    instruction = INSTRUCTION_TEMPLATE.format(synthesis_prompt=synthesis_prompt)
-    title = get_title_abs(paragraphs)[0]
-    para_extend = ParagraphExtend.merge_paras(paragraphs, metadata={'doi': paragraphs[0].metadata['doi'], 'source': paragraphs[0].metadata['source']}, title=title)
-    chain = template | model.with_structured_output(Records, method='json_schema')
+    if len(properties) == 0:
+        # try abstract
+        if abstract_paras:
+            chain = template_without_syn | extraction_model.with_structured_output(Records, method='json_schema')
+            para_extend = ParagraphExtend.from_paragraphs(abstract_paras)
+            records = chain.invoke({'paper': para_extend.page_content, 'instruction': INSTRUCTION_TEMPLATE}).records
+            para_extend.set_data(records)
+            return para_extend
+        return
+
+    if has_synthesis:
+        result_model = create_result_model_dynamic(properties, True)
+        synthesis_prompt = get_synthesis_prompt(render_docs_without_title(syn_paras), lm=synthesis_extract_model)
+        instruction = create_instruction_dynamic(properties, synthesis_prompt)
+        template = template_with_syn
+    else:
+        result_model = create_result_model_dynamic(properties, False)
+        instruction = create_instruction_dynamic(properties, "")
+        template = template_without_syn
+
+    combined_paras = reorder_paras(abstract_paras + syn_paras + phase_paras + composition_paras + strength_paras + last_intro_para + grain_size_paras + strain_rate_paras + processing_param_paras)
+    para_extend = ParagraphExtend.from_paragraphs(combined_paras)
+    # with open("debug_extract_lc_prompt.txt", "w+", encoding="utf-8") as f:
+    #     f.write(f'paper:{para_extend.page_content}\n\n instruction:{instruction}')
+    # return
+    
+    chain = template | extraction_model.with_structured_output(result_model, method='json_schema')
     try:
+        # debug
+        # with open("debug_extract_lc_prompt.txt", "w+", encoding="utf-8") as f:
+        #     f.write(instruction)
         records = chain.invoke({'paper': para_extend.page_content, 'instruction': instruction}).records
+        para_extend.set_data(records)
     except LengthFinishReasonError:
         source = paragraphs[0].metadata['source']
         logger.exception('For source: %s', source, exc_info=1)
         return FAILED
-    if records:
-        return [DocInfo(para_extend, records)]
+    return para_extend
+
+def extract_bulk(paragraphs, extraction_model):
+    template = template_with_syn
+    para_extend = ParagraphExtend.from_paragraphs(paragraphs)
+    synthesis_instr = get_synthesis_prompt_all()
+    def construct_instruction(synthesis_instruction):
+        instruction = INSTRUCTION_TEMPLATE
+        instruction += "\n### **Strength**\n" + strength_instruction + '\n'
+        instruction += "\n### **Phase**\n" + phase_instruction + '\n'
+        instruction += "\n### **Grain size**\n" + grain_size_instruction + '\n'
+        instruction += "\n### **Processes formatted**\n" + synthesis_instruction
+        return instruction
+    result_model = create_result_model_dynamic(['strength', 'phase', 'grain_size'], has_synthesis=True)
+    chain = template | extraction_model.with_structured_output(result_model, method='json_schema')
+    try:
+        records = chain.invoke({'paper': para_extend.page_content, 'instruction': construct_instruction(synthesis_instr)}).records
+        para_extend.set_data(records)
+    except LengthFinishReasonError:
+        source = paragraphs[0].metadata['source']
+        logger.exception('For source: %s', source, exc_info=1)
+        return FAILED
+    return para_extend

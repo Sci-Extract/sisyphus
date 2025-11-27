@@ -8,7 +8,6 @@ from sisyphus.chain.paragraph import Paragraph
 
 def build_result_model_contextualized(name: str, model_document: str, *bases):
     r = create_model(name, __base__=bases, __doc__=model_document)
-    assert all(f in r.model_fields.keys() for f in ['composition', 'description', 'referred']), "Fields should include composition, description and referred"
     return create_model('Records', records=(Optional[list[r]], ...))
 
 def build_process_model_contextualized(name, model_document, *bases):
@@ -17,7 +16,6 @@ def build_process_model_contextualized(name, model_document, *bases):
 
 def build_result_model_isolated(name: str, model_document: str, *bases):
     r = create_model(name, __base__=bases, __doc__=model_document)
-    assert all(f in r.model_fields.keys() for f in ['composition', 'symbol']), "Fields should include composition and symbol"
     return create_model('Records', records=(Optional[list[r]], ...))
 
 def build_property_agent(system_message, user_message, pydantic_model, chat_model):

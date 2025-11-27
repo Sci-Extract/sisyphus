@@ -79,6 +79,23 @@ def label_strain_rate(paragraphs):
         if pattern.search(para.page_content):
             para.set_types('strain_rate')
 
+def label_grain_size(paragraphs):
+    pattern = re.compile(r'(?:grain|grains)\s+(?:\w+\s+)*size|size\s+(?:\w+\s+)*(?:grain|grains)', re.I)
+    unit_pattern = re.compile(r'(?:\b\d+(?:\.\d+)?\s*)?\b(?:[μµ]m|um|nm|mm|microns?)\b', re.I)
+    res_pattern = re.compile(r'result', re.I)
+    res_titles = match_subtitles(paragraphs, res_pattern)
+    if res_titles:
+        para_cand = [para for para in paragraphs if res_pattern.search(para.metadata['sub_titles'])]
+        para_cand.extend(para for para in paragraphs if para.is_table())
+        for para in para_cand:
+            if pattern.search(para.page_content) and unit_pattern.search(para.page_content):
+                para.set_types('grain_size')
+    else:
+        for para in paragraphs:
+            if pattern.search(para.page_content) and unit_pattern.search(para.page_content):
+                para.set_types('grain_size')
+    return paragraphs
+
 def label_text(docs, paragraphs):
     """label text content of article"""
     label_phase(docs, paragraphs)

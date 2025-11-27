@@ -1,5 +1,8 @@
 """creating an article database without embedding vectors, just plain text"""
 import argparse
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 from sisyphus.index import create_plaindb
 
 

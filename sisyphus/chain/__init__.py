@@ -6,3 +6,5 @@ from .chain_elements import (
     Writer,
     run_chains_with_extraction_history
 )
+
+from .paragraph import Paragraph, ParagraphExtend

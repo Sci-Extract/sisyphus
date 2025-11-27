@@ -35,7 +35,7 @@ from .loader import ArticleLoader, Loader, FullTextLoader
 DEFAULT_DB_DIR = 'db'
 logger = logging.getLogger(__name__)
 
-embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
+# embedding = OpenAIEmbeddingThrottle(http_async_client=aembed_httpx_client)
 
 
 def choose_loader(file_path, full_text: bool) -> Loader:

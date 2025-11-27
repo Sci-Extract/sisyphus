@@ -9,6 +9,7 @@ nlo_extract_data/
 wos_doi/
 chroma/
 articles/
+TEST_FILES/
 
 temp/*
 db/*

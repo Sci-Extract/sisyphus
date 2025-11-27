@@ -135,10 +135,10 @@ def create_descriptions_dict(material_descriptions: List[MaterialDescriptionBase
     desc_to_obj = {}
     no_catgo_moterials = []
     for m in material_descriptions:
-        if getattr(m, 'referred', False):
+        if m.referred:
             no_catgo_moterials.append(m)
             continue
-        comp = getattr(m, 'composition', None)
+        comp = m.composition 
         sym = getattr(m, 'symbol', None)
         desc = getattr(m, 'description', None)
         if not any([comp, sym, desc]):
@@ -274,7 +274,7 @@ class PaperResult(BaseModel):
             return super().model_dump(**kwargs)
 
 def ensure_valid_dict(d):
-    return {k: v for k, v in d.items() if v is not None}
+    return {k: v for k, v in d.items() if v}
     
 def extract_contextualized_main(paragraphs: list[Paragraph], paragraphs_reconstr: dict[str, ParagraphExtend], agents: dict[str, RunnableSequence], formatted_func: Callable, save_to: str) -> list[ParagraphExtend]:
     """Main function for contextualized extraction"""
@@ -301,6 +301,8 @@ def extract_contextualized_main(paragraphs: list[Paragraph], paragraphs_reconstr
     results_dict = dict(zip(properties, results))
     for k in results_dict:
         paragraphs_reconstr[k].set_data(results_dict[k])
+    # test, end here
+    # return list(paragraphs_reconstr.values())
 
     # extract synthesis routes
     if synthesis_paras:

@@ -1,0 +1,724 @@
+[
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "1136 MPa",
+          "uts": "1207 MPa",
+          "strain": "11%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.0 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "1.26 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.0 mm"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "600 MPa",
+          "uts": "984 MPa",
+          "strain": "25%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.0 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "1.95 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.0 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "10 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "588 MPa",
+          "uts": "968 MPa",
+          "strain": "26%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.0 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.13 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.0 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "30 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "512 MPa",
+          "uts": "924 MPa",
+          "strain": "29%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.0 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.29 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.0 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "300 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "516 MPa",
+          "uts": "930 MPa",
+          "strain": "30%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.0 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.30 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.0 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "720 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "1074 MPa",
+          "uts": "1217 MPa",
+          "strain": "12%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.6 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "1.21 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.6 mm"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "712 MPa",
+          "uts": "1018 MPa",
+          "strain": "20%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.6 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "1.84 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.6 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "10 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "617 MPa",
+          "uts": "996 MPa",
+          "strain": "25%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.6 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.08 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.6 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "30 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "518 MPa",
+          "uts": "938 MPa",
+          "strain": "33%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.6 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.19 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.6 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "300 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "496 MPa",
+          "uts": "922 MPa",
+          "strain": "33%",
+          "temperature": "room temperature",
+          "strain_rate": "2e-4 s^-1",
+          "test_env": "fiber diameter 1.6 mm",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [
+        {
+          "phases": [
+            "FCC",
+            "B2"
+          ],
+          "test_env": null
+        }
+      ],
+      "grain_size": {
+        "grain_size": "2.22 μm"
+      },
+      "synthesis": {
+        "steps": [
+          {
+            "levitation melting": {
+              "atmosphere": "vacuum",
+              "pressure": "",
+              "power": "",
+              "coil frequency": "",
+              "liquid mixing time": "",
+              "number of remelts": ""
+            }
+          },
+          {
+            "forging": {
+              "temperature": "1050 °C",
+              "strain rate": "",
+              "deformation degree": ""
+            }
+          },
+          {
+            "rotary swaging": {
+              "temperature": "1000 °C",
+              "final diameter": "6 mm"
+            }
+          },
+          {
+            "hot drawing": {
+              "temperature": "900 °C",
+              "final diameter": "1.6 mm"
+            }
+          },
+          {
+            "annealing": {
+              "temperature": "900 °C",
+              "duration": "720 min",
+              "atmosphere": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "doi": "10.1016/j.jallcom.2018.11.116",
+    "Record": {
+      "metadata": {
+        "composition": "Al0.3CoCrFeNi@at"
+      },
+      "strength": [
+        {
+          "ys": "~1200 MPa",
+          "uts": "~1200 MPa",
+          "strain": "8%",
+          "temperature": "room temperature",
+          "strain_rate": null,
+          "test_env": "fiber (prior study, as-drawn)",
+          "test_type": "tensile"
+        }
+      ],
+      "phase": [],
+      "grain_size": {
+        "grain_size": ""
+      },
+      "synthesis": {
+        "steps": []
+      }
+    }
+  }
+]

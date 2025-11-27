@@ -1,2 +1,0 @@
-## DSPy document
-Here is the thing, why DSPy says that we need programming not prompting, in the doc, it says "Standard prompts conflate interface (“what should the LM do?”) with implementation (“how do we tell it to do that?”). DSPy signatures isolate the former so we can infer and learn the latter from data — in the context of a bigger program."

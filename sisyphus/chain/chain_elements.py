@@ -47,7 +47,7 @@ from sisyphus.chain.database import (
     aadd_manager_callback,
 )
 from sisyphus.chain.constants import *
-from sisyphus.chain.paragraph import ParagraphExtend
+from sisyphus.chain.paragraph import ParagraphExtend, Paragraph
 from sisyphus.utils.run_bulk import bulk_runner
 
 
@@ -166,6 +166,8 @@ class Filter(BaseElement):
 
     def invoke(self, input_):
         docs = self.locate(input_)
+        if not docs:
+            return
         filter_results = [self.filter_(doc) for doc in docs]
         filter_docs = []
         for filter_boolean, doc in zip(filter_results, docs):
@@ -391,6 +393,9 @@ class Writer(BaseElement):
         )
     
     def invoke(self, paragraphs: list[ParagraphExtend]):
+        if isinstance(paragraphs, Paragraph):
+            self.save(paragraphs)
+            return
         for paragraph in paragraphs:
             self.save(paragraph)
 
