@@ -63,7 +63,8 @@ class DetectProcesses(dspy.Signature):
 
 
 DetectProcesses.__doc__ = detect_processes_system_message
-predictor = dspy.LabeledFewShot().compile(dspy.Predict(DetectProcesses), trainset=examples_detect)
+# predictor = dspy.LabeledFewShot().compile(dspy.Predict(DetectProcesses), trainset=examples_detect)
+predictor = dspy.Predict(DetectProcesses)
 
 def format_synthesis_prompt(processes):
     templates_string = ""

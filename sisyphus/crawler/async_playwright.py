@@ -164,7 +164,7 @@ class BaseCrawler(ABC):
                     await self.context.clear_cookies()
 
                 page = await self.context.new_page()
-                await page.goto(url, wait_until='domcontentloaded', timeout=60000)
+                await page.goto(url, wait_until='documentloaded', timeout=60000)
                 
                 # stay on page for 1~3 second(s)
                 choices = [1000, 2000, 3000]

@@ -80,7 +80,7 @@ def create_result_model_dynamic(properties: List[Literal['strength', 'phase', 'g
     }
 
     if 'strength' in properties:
-        fields['strength'] = (List[Strength], Field(..., description='tensile or compressive strength data'))
+        fields['strength'] = (List[Strength], Field(..., description='Create multiple strength items in list if multiple testing conditions (temperature, strain rate, environment) are reported and every condition has correspond strength value. Each entry should correspond to a unique set of testing conditions. Only using range if no other information is available.'))
     if 'phase' in properties:
         fields['phase'] = (List[Phase], Field(..., description='phase information'))
     if 'grain_size' in properties:

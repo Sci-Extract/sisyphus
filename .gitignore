@@ -43,3 +43,7 @@ test_forloop.py
 test_jsonload.py
 temp.py
 
+router.py
+files_50/
+csv_files/
+show.sh
