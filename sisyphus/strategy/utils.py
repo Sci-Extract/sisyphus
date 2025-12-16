@@ -67,4 +67,6 @@ def get_synthesis_paras(paras: list[Paragraph]):
     return [para for para in paras if para.is_synthesis]
 
 def get_paras_with_props(paras: list[Paragraph], *property):
+    if not property:
+        return []
     return [para for para in paras if len(set(para.property_types).intersection(set(property))) >= 1]

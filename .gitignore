@@ -30,7 +30,6 @@ heas_test/*
 
 
 **/.DS_Store
-data/*
 .env
 log.txt
 .streamlit/

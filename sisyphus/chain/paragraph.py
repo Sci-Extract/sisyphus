@@ -10,12 +10,16 @@ class Paragraph:
         self.is_synthesis = False
         self.property_types = []
         self.data = []
+        self.instruction = ''
     
     def is_abstract(self):
         return True if self.metadata['sub_titles'] == 'Abstract' else False
     
     def is_table(self):
         return True if self.metadata['sub_titles'] == 'table' else False
+    
+    def set_instruction(self, instruction): 
+        self.instruction = instruction
 
     def has_property(self, property):
         return property in self.property_types
