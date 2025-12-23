@@ -10,7 +10,9 @@ class Paragraph:
         self.is_synthesis = False
         self.property_types = []
         self.data = []
-        self.instruction = ''
+        self.pydantic_model = None  # to store the pydantic model used for extraction
+        self.prompt_template = None
+        self.prompt_vars_dict = None
     
     def is_abstract(self):
         return True if self.metadata['sub_titles'] == 'Abstract' else False
@@ -18,8 +20,12 @@ class Paragraph:
     def is_table(self):
         return True if self.metadata['sub_titles'] == 'table' else False
     
-    def set_instruction(self, instruction): 
-        self.instruction = instruction
+    def set_prompt(self, prompt_template, prompt_vars_dict=None):
+        self.prompt_template = prompt_template
+        self.prompt_vars_dict = prompt_vars_dict
+    
+    def set_pydantic_model(self, model):
+        self.pydantic_model = model
 
     def has_property(self, property):
         return property in self.property_types
@@ -76,7 +82,7 @@ class ParagraphExtend(Paragraph):
         return cls(doc)
     
     @classmethod
-    def from_paragraphs(cls, paras, **metadata):
+    def from_paragraphs(cls, paras, inherit_properties: bool = False, **metadata):
         from sisyphus.utils.helper_functions import render_docs
         if not paras:
             return
@@ -84,5 +90,10 @@ class ParagraphExtend(Paragraph):
         new_metadata.update(metadata)
         page_content = render_docs(paras, new_metadata['title'])
         doc = Document(page_content, metadata=new_metadata)
+        if inherit_properties:
+            instance = cls(doc)
+            for p in paras:
+                instance.set_types(p.property_types)
+            return instance
         return cls(doc)
     

@@ -10,14 +10,10 @@ from sisyphus.chain.paragraph import Paragraph, ParagraphExtend
 
 
 class BaseExtractor:
-    def __init__(self, target_properties: list[str], context_properties: list[str], model: ChatOpenAI):
-        """init with corresponded properties and chat model used for extraction. If use another chat model, make sure change extract method"""
-        self.target_properties = target_properties
-        self.context_properties = context_properties
-        self.model = model
-        self.output_model = None
-        self.prompt = None
-        self.lock = Lock()
+
+    target_properties: list[str] = []
+    context_properties: list[str] = []
+    model: ChatOpenAI = None  # chat model
 
     def regroup_(self, paragraphs: list[Paragraph]) -> list[Paragraph]:
         target_paras = []
@@ -33,19 +29,24 @@ class BaseExtractor:
         """regroup paragraphs with respect to property, default to merge paragraphs to one paragraph object""" 
         p = ParagraphExtend.from_paragraphs(
             self.regroup_(paragraphs),
+            inherit_properties=True, # merged paragraph should contain all paragraph's property types
             type=self.target_properties[0]
-        ) # merge paragraphs and add a type attribute
+        ) # merge paragraphs and add a type metadata
         return [p]
 
     def extract(self, paragraph: ParagraphExtend) -> ParagraphExtend: 
-        chain = self.prompt | self.model.with_structured_output(
-            schema=self.output_model,
+        chain = paragraph.prompt_template | self.model.with_structured_output(
+            schema=paragraph.pydantic_model,
             method='json_schema'
         )
+        if paragraph.prompt_vars_dict:
+            extra_kwargs = paragraph.prompt_vars_dict
+        else:
+            extra_kwargs = {}
         results = chain.invoke(
             {
                'text': paragraph.page_content,
-               'instruction': paragraph.instruction
+               **extra_kwargs
             }
         )
         if records:=getattr(results, 'records'):
@@ -62,19 +63,21 @@ class BaseExtractor:
         return paras
     
     def regroup_then_extract(self, paragraphs: list[Paragraph]):
-        with self.lock:
-            self.create_model_prompt(paragraphs)
-            if not(self.output_model and self.prompt):
-                raise RuntimeError('please implement the create_model_prompt method')
-            regrouped_pragraphs = self.regroup(paragraphs)
-            if not regrouped_pragraphs:
-                return
-            data_paragraphs = self.extract_parallel(regrouped_pragraphs)
-            data_paragraphs = [p for p in data_paragraphs if p]
-            return data_paragraphs
+        regrouped_pragraphs = self.regroup(paragraphs)
+        self.create_model_prompt(regrouped_pragraphs)
+        for paragraph in regrouped_pragraphs:
+            if not(paragraph.prompt_template and paragraph.pydantic_model):
+                raise RuntimeError('please set prompt_template and pydantic_model for each paragraph before extraction!')
+        if not regrouped_pragraphs:
+            return
+        data_paragraphs = self.extract_parallel(regrouped_pragraphs)
+        data_paragraphs = [p for p in data_paragraphs if p]
+        return data_paragraphs
     
-    def create_model_prompt(self, paragraphs: list[Paragraph]):
-        """dynamically create output_model and prompt w.r.t input paragraphs, update `self.output_model` and `self.prompt`"""
+    def create_model_prompt(self, paragraphs: list[ParagraphExtend]):
+        """dynamically create output_model and prompt w.r.t merged paragraphs, update `paragraph.output_model`, `paragraph.prompt_template` and `paragraph.prompt_vars_dict` for each paragraph
+        - Note: invoke paragraph.set_pydantic_model and paragraph.set_prompt in this function
+        """
         pass
     
 
