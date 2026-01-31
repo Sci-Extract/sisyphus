@@ -27,6 +27,7 @@ inorganic_recipe_result/*
 optimize/*
 playground_valuable/*
 heas_test/*
+articles/
 
 
 **/.DS_Store

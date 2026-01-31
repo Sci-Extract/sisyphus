@@ -21,6 +21,8 @@ python version == 3.10; use poetry as package management tool, run `poetry insta
 │     └─ crawler/                   # crawler for article downloading
 │     └─ heas/                      # high entropy alloys relevant prompt and code
 │     └─ utils/                     # helpful functions
+│─ pipeline                         # example here
+│─ test_file                        # example article files
 └─ script/
 ```
 

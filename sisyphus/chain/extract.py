@@ -75,7 +75,7 @@ class BaseExtractor:
         return data_paragraphs
     
     def create_model_prompt(self, paragraphs: list[ParagraphExtend]):
-        """dynamically create output_model and prompt w.r.t merged paragraphs, update `paragraph.output_model`, `paragraph.prompt_template` and `paragraph.prompt_vars_dict` for each paragraph
+        """dynamically create output_model and prompt w.r.t merged paragraphs. Update `paragraph.output_model`, `paragraph.prompt_template` and `paragraph.prompt_vars_dict` for each paragraph
         - Note: invoke paragraph.set_pydantic_model and paragraph.set_prompt in this function
         """
         pass
@@ -86,8 +86,8 @@ class Extraction(BaseElement):
         self.extractors = []
         self.merge_func = merge_func
 
-    def add_extractors(self, extractors: list[BaseExtractor]):
-        self.extractors.append(extractors)
+    def add_extractor(self, extractor: BaseExtractor):
+        self.extractors.append(extractor)
 
     def extract(self, paragraphs: list[Paragraph]):
         with ThreadPoolExecutor(max_workers=5) as executor:

@@ -16,7 +16,7 @@ class BaseLabeler:
     
     def regex_label(self, paragraph: Paragraph):
         text = paragraph.page_content
-        if self.regex_pattern.search(text):
+        if self.regex_pattern is None or self.regex_pattern.search(text):
             return True
     
     def semantic_label(self, paragraphs: list[Paragraph]) -> list[Paragraph]:
@@ -45,7 +45,7 @@ class BaseLabeler:
 
         return paragraphs
     
-class Labling(BaseElement):
+class Labeling(BaseElement):
     def __init__(self):
         self.labelers = []
     
